@@ -5,7 +5,7 @@ import ProfileDropdown from "../components/ProfileDropdown";
 function Uppernav() {
   const [selected, setSelected] = useState("Today");
   const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
+  // const containerRef = useRef(null);
 
   // close dropdown when clicking outside
   useEffect(() => {
@@ -41,10 +41,10 @@ function Uppernav() {
           <MdUpload className="ml-2 w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-6" ref={containerRef}>
+        {/* <div className="flex items-center gap-6" ref={containerRef}>
           <button className="p-2 rounded-full hover:bg-gray-100 transition">
             <MdSettings className="text-2xl text-gray-700" />
-          </button>
+          </button> */}
 
           <div className="relative flex items-center space-x-2 cursor-pointer pr-5">
             <img
@@ -61,7 +61,7 @@ function Uppernav() {
           </div>
         </div>
       </div>
-    </div>
+    // </div>
   );
 }
 

@@ -6,7 +6,9 @@ import { BsPeople, BsImageFill } from "react-icons/bs";
 import { LuScissors, LuWallet } from "react-icons/lu";
 import { SlUserFemale } from "react-icons/sl";
 import { IoAnalyticsOutline } from "react-icons/io5";
-import { NavLink } from "react-router-dom";
+import { NavLink,} from "react-router-dom";
+import { FiLogOut } from "react-icons/fi";
+
 
 function Sidenav() { 
   return (
@@ -79,6 +81,24 @@ function Sidenav() {
             <BsImageFill className="h-8 w-10 pl-3"/> Upload Gallery
           </NavLink>
         </li>
+       
+
+          <li>
+      <NavLink
+        to="/r"
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-md font-medium transition-all duration-200
+           cursor-pointer ${
+             isActive
+               ? "bg-[#930101] text-white"
+               : "text-gray-700 hover:bg-[#ef1212] hover:text-white"
+           }`
+        }
+      >
+        <FiLogOut className="h-6 w-6" />
+        Logout
+      </NavLink>
+    </li>
       </ul>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function Loginpage() {
   return (
@@ -47,15 +48,15 @@ function Loginpage() {
               type="submit"
               className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-3 rounded-md hover:opacity-90 transition"
             >
-              Register
+              Login
             </button>
           </form>
 
           <p className="text-center text-sm mt-6 text-gray-400">
             Already have an account?{" "}
-            <a href="#" className="text-yellow-400 hover:underline">
-              Login
-            </a>
+             <Link to="/r" className="text-yellow-400 hover:underline">
+            Register
+            </Link>
           </p>
         </div>
       </div>
