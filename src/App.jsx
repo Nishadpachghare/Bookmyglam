@@ -15,6 +15,7 @@ import Pending from "./components/Pending";
 import AddExpense from "./components/Addexpenses";
 import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const location = useLocation();
@@ -35,17 +36,17 @@ const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
       <Routes>
         <Route path="/" element={<Loginpage />} />
         <Route path="/r" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/booking" element={<Booking />} />
-        <Route path="/managestyle" element={<ManageStyle />} />
-        <Route path="/managestyle1" element={<ManageStyle1 />} />
-        <Route path="/earning" element={<Earning />} />
-        <Route path="/earningweek" element={<Earningweek />} />
-        <Route path="/manageservice" element={<ManageService />} />
-        <Route path="/pending" element={<Pending />} />
-        <Route path="/addexpense" element={<AddExpense />} />
-        <Route path="/summary" element={<Summary />} />
-        <Route path="/uploadimg" element={<Uploadimg />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
+        <Route path="/managestyle" element={<ProtectedRoute><ManageStyle /></ProtectedRoute>} />
+        <Route path="/managestyle1" element={<ProtectedRoute><ManageStyle1 /></ProtectedRoute>} />
+        <Route path="/earning" element={<ProtectedRoute><Earning /></ProtectedRoute>} />
+        <Route path="/earningweek" element={<ProtectedRoute><Earningweek /></ProtectedRoute>} />
+        <Route path="/manageservice" element={<ProtectedRoute><ManageService /></ProtectedRoute>} />
+        <Route path="/pending" element={<ProtectedRoute><Pending /></ProtectedRoute>} />
+        <Route path="/addexpense" element={<ProtectedRoute><AddExpense /></ProtectedRoute>} />
+        <Route path="/summary" element={<ProtectedRoute><Summary /></ProtectedRoute>} />
+        <Route path="/uploadimg" element={<ProtectedRoute><Uploadimg /></ProtectedRoute>} />
       </Routes>
     </>
   );

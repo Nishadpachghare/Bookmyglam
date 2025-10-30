@@ -37,7 +37,7 @@ export default function Uploadimg() {
         <p className="text-gray-400 text-sm mb-4">Or click to browse your files</p>
         <label className="inline-block">
           <input type="file" multiple className="hidden" onChange={handleFileChange} />
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white rounded px-4 py-2">
+          <button className="bg-[#D3AF37] hover:bg-[#cda82f] text-white rounded px-4 py-2">
             Select Photos
           </button>
         </label>
@@ -63,7 +63,7 @@ export default function Uploadimg() {
         </div>
 
         <div className="flex justify-end">
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg px-6 py-2 font-semibold">
+          <button className="bg-[#D3AF37] hover:bg-[#b8982f] text-white rounded-lg px-6 py-2 font-semibold">
             Upload
           </button>
         </div>
