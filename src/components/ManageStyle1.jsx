@@ -1,14 +1,25 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function ManageStyle1() {
+  const navigate = useNavigate();
   return (  <> 
   <div className="flex gap-8 mt-6 pb-2 pl-100 text-lg font-medium shadow-xl">
-        <button className="text-gray-500 hover:text-[#D3AF37] pb-1">
+        <button 
+          onClick={() => navigate('/managestyle')}
+          className="text-gray-500 hover:text-[#D3AF37] pb-1"
+        >
           All Stylists
         </button>
-        <button className="text-[#D3AF37]  border-b- #D3AF37 pb-1">
+
+
+        <button 
+        
+          className="text-[#D3AF37] border-b- #D3AF37 pb-1"
+        >
           Active Stylists
         </button>
+       
       </div>
     
     <div className="p-10 max-w-3xl mx-auto text-gray-800">
@@ -21,7 +32,7 @@ function ManageStyle1() {
           <input
             type="text"
             placeholder="Enter stylist's full name"
-            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37] "
           />
         </div>
 
@@ -31,7 +42,7 @@ function ManageStyle1() {
           <input
             type="text"
             placeholder="Enter stylist's phone number"
-            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37]"
           />
         </div>
 
@@ -41,7 +52,7 @@ function ManageStyle1() {
           <input
             type="email"
             placeholder="Enter stylist's email address"
-            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37]"
           />
         </div>
 
@@ -51,7 +62,7 @@ function ManageStyle1() {
           <input
             type="text"
             placeholder="Select stylist's role"
-            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+            className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37]"
           />
         </div>
 
@@ -64,7 +75,7 @@ function ManageStyle1() {
             />
             <button
               type="button"
-              className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
+              className="bg-[#D3AF37] text-white px-4 py-2 rounded-md hover:bg-[#c7a433]"
             >
               Upload
             </button>
@@ -78,14 +89,14 @@ function ManageStyle1() {
               <label className="block text-sm mb-1">Start Time</label>
               <input
                 type="time"
-                className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+                className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37]"
               />
             </div>
             <div>
               <label className="block text-sm mb-1">End Time</label>
               <input
                 type="time"
-                className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-yellow-600"
+                className="w-full border border-gray-200 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-[#D3AF37]"
               />
             </div>
           </div>
@@ -94,13 +105,14 @@ function ManageStyle1() {
         <div className="flex justify-end gap-3 pt-6">
           <button
             type="button"
+            onClick={() => navigate('/managestyle')}
             className="border border-gray-300 bg-gray-50 px-5 py-2 rounded-md hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-yellow-600 text-white px-5 py-2 rounded-md hover:bg-yellow-700"
+            className="bg-[#D3AF37] text-white px-5 py-2 rounded-md hover:bg-[#c5a230]"
           >
             Save Stylist
           </button>

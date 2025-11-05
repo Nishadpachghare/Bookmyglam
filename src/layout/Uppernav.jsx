@@ -5,7 +5,7 @@ import ProfileDropdown from "../components/ProfileDropdown";
 function Uppernav() {
   const [selected, setSelected] = useState("Today");
   const [open, setOpen] = useState(false);
-  // const containerRef = useRef(null);
+  const containerRef = useRef(null);
 
   // close dropdown when clicking outside
   useEffect(() => {

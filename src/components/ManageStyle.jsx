@@ -1,7 +1,9 @@
 import React from "react";
 import { FiSearch } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 function ManageStyle() {
+  const navigate = useNavigate();
   const stylists = [
     { name: "Sophia Bennett", phone: "(555) 123-4567", status: "Active" },
     { name: "Ethan Carter", phone: "(555) 987-6543", status: "Active" },
@@ -17,7 +19,7 @@ function ManageStyle() {
         Manage Stylists
       </h1>
 
-      <div className="flex items-center bg-[#F5F0E6] rounded-md px-4 py-3 w-full max-w-5xl">
+      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-5xl border rounded-md p-3">
         <FiSearch className="text-gray-500 text-xl" />
         <input
           type="text"
@@ -28,11 +30,17 @@ function ManageStyle() {
 
      
       <div className="flex gap-8 mt-6 pb-2 text-lg font-medium">
-        <button className="text-[#D3AF37]  border-b- #D3AF37 pb-1">
+        <button 
+          
+          className="text-[#D3AF37] border-b- #D3AF37 pb-1"
+        >
           All Stylists
         </button>
-        <button className="text-gray-500 hover:text-[#D3AF37] pb-1">
-          Active Stylists
+        <button 
+          onClick={() => navigate('/managestyle1')} 
+          className="text-gray-500 hover:text-[#D3AF37] pb-1"
+        >
+         Add stylist
         </button>
       </div>
 
@@ -86,7 +94,10 @@ function ManageStyle() {
 
       {/* Add Button */}
       <div className="mt-6 flex justify-end w-270 ">
-        <button className="bg-[#D3AF37] text-white px-5 py-2 rounded-md hover:bg-[#b6912f] transition">
+        <button 
+          onClick={() => navigate('/managestyle1')}
+          className="bg-[#D3AF37] text-white px-5 py-2 rounded-md hover:bg-[#b6912f] transition"
+        >
           Add New Stylist
         </button>
       </div>
