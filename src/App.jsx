@@ -16,6 +16,7 @@ import AddExpense from "./components/Addexpenses";
 import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
 import ProtectedRoute from "./components/ProtectedRoute";
+import InactiveStylish from "./components/InactiveStylish";
 
 function App() {
   const location = useLocation();
@@ -40,6 +41,7 @@ const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
         <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
         <Route path="/managestyle" element={<ProtectedRoute><ManageStyle /></ProtectedRoute>} />
         <Route path="/managestyle1" element={<ProtectedRoute><ManageStyle1 /></ProtectedRoute>} />
+         <Route path="/Inactivestylist" element={<ProtectedRoute><InactiveStylish /></ProtectedRoute>} />
         <Route path="/earning" element={<ProtectedRoute><Earning /></ProtectedRoute>} />
         <Route path="/earningweek" element={<ProtectedRoute><Earningweek /></ProtectedRoute>} />
         <Route path="/manageservice" element={<ProtectedRoute><ManageService /></ProtectedRoute>} />
