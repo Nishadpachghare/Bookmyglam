@@ -1,20 +1,29 @@
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function Summary() {
   const data = [
-    { name: "Jan", value: 6000 },
-    { name: "Feb", value: 3000 },
-    { name: "Mar", value: 8500 },
-    { name: "Apr", value: 3200 },
-    { name: "May", value: 200 },
-    { name: "Jun", value: 4500 },
+    { name: "Jan", value: 6561 },
+    { name: "Feb", value: 3060 },
+    { name: "Mar", value: 3000 },
+    { name: "Apr", value: 6000 },
+    { name: "May", value: 3000 },
+    { name: "Jun", value: 9000 },
     { name: "Jul", value: 1800 },
-    { name: "Aug", value: 9000 },
+    { name: "Aug", value: 8000 },
     { name: "Sep", value: 4200 },
     { name: "Oct", value: 8800 },
     { name: "Nov", value: 5300 },
-    { name: "Dec", value: 6000 },
+    { name: "Dec", value: 10000 },
   ];
 
   return (
@@ -29,8 +38,8 @@ export default function Summary() {
         <h2 className="text-sm text-gray-500 mb-2">
           Total Revenue vs Total Expenses (Profit/Loss)
         </h2>
-        <p className="text-3xl font-bold text-gray-800">$15,000</p>
-        <p className="text-green-600 text-sm mb-4">This Month +10%</p>
+        <p className="text-3xl font-bold text-gray-800">₹15,000</p>
+        <p className="text-green-600 text-sm mb-4">This Month +45%</p>
 
         <div className="w-full h-52">
           <ResponsiveContainer width="100%" height="100%">

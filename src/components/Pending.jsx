@@ -49,17 +49,17 @@ const Pending = () => {
           View your Pending amount summary
         </p>
       </div>
-        {/* Action Buttons */}
-        <div className="flex gap-4 w-280 text-sm my-5 pl-218 m-2">
-          <button className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50">
-            🗑 Delete
-          </button>
-          <button className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50">
-            🔍 Filters
-          </button>
-        </div>
+      {/* Action Buttons */}
+      <div className="flex gap-4 w-285 text-sm my-5 pl-236 m-2">
+        <button className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50">
+          🗑 Delete
+        </button>
+        <button className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50">
+          🔍 Filters
+        </button>
+      </div>
       {/* Table */}
-      <div className="bg-white w-full max-w-5xl rounded-lg shadow border overflow-x-auto">
+      <div className="bg-white w-full max-w-6xl rounded-lg shadow border overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[#D3AF37] text-black">

@@ -32,23 +32,53 @@ function Booking() {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/Manageservices');
-      setServices(response.data);
+      const response = await axios.get(
+        "http://localhost:5000/api/Manageservices"
+      );
+      const raw = response?.data;
+      const list = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.data)
+        ? raw.data
+        : Array.isArray(raw?.services)
+        ? raw.services
+        : [];
+
+      const normalized = list.map((s) => ({
+        _id:
+          s._id?.toString?.() ??
+          s.id?.toString?.() ??
+          String(s._id ?? s.id ?? ""),
+        serviceName: s.serviceName ?? s.service ?? "",
+        duration: s.duration ?? s.time ?? "",
+        price: Number(s.price ?? 0),
+        // keep original for any other fields
+        ...s,
+      }));
+
+      setServices(normalized);
     } catch (error) {
-      console.error('Error fetching services:', error);
+      console.error("Error fetching services:", error);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'service') {
-      const selectedService = services.find(s => s.service === value);
-      if (selectedService && !selectedServices.some(s => s._id === selectedService._id)) {
+    if (name === "service") {
+      const selectedService = services.find(
+        (s) => (s._id ?? "").toString() === value.toString()
+      );
+      if (
+        selectedService &&
+        !selectedServices.some((s) => s._id === selectedService._id)
+      ) {
         const updatedSelectedServices = [...selectedServices, selectedService];
         setSelectedServices(updatedSelectedServices);
         setFormData({
           ...formData,
-          service: updatedSelectedServices.map(s => s.service)
+          service: updatedSelectedServices.map(
+            (s) => s.serviceName ?? s.service
+          ),
         });
       }
     } else {
@@ -57,16 +87,16 @@ function Booking() {
   };
 
   const removeService = (serviceId) => {
-    const updatedServices = selectedServices.filter(s => s._id !== serviceId);
+    const updatedServices = selectedServices.filter((s) => s._id !== serviceId);
     setSelectedServices(updatedServices);
     setFormData({
       ...formData,
-      service: updatedServices.map(s => s.service)
+      service: updatedServices.map((s) => s.serviceName),
     });
   };
   const validateForm = () => {
     const errors = {};
-    
+
     if (selectedServices.length === 0) {
       errors.services = "Please select at least one service";
     }
@@ -104,12 +134,15 @@ function Booking() {
     try {
       const bookingData = {
         selectedServices,
-        ...formData
+        ...formData,
       };
 
-      console.log('Sending booking data:', bookingData);
+      console.log("Sending booking data:", bookingData);
 
-      const res = await axios.post("http://localhost:5000/api/bookings/add", bookingData);
+      const res = await axios.post(
+        "http://localhost:5000/api/bookings",
+        bookingData
+      );
       if (res.status === 201) {
         setMessage("✅ Booking added successfully!");
         setFormData({
@@ -126,15 +159,16 @@ function Booking() {
     } catch (err) {
       console.error("Error:", err);
       console.error("Error response:", err.response?.data);
-      
+
       // Get detailed error message
-      const errorMessage = err.response?.data?.message || "Failed to add booking";
-      const errorDetails = err.response?.data?.details 
-        ? Array.isArray(err.response.data.details) 
-          ? err.response.data.details.join(', ')
+      const errorMessage =
+        err.response?.data?.message || "Failed to add booking";
+      const errorDetails = err.response?.data?.details
+        ? Array.isArray(err.response.data.details)
+          ? err.response.data.details.join(", ")
           : err.response.data.details
         : "Please try again";
-      
+
       setError(`${errorMessage}: ${errorDetails}`);
       setMessage(`❌ ${errorMessage}: ${errorDetails}`);
     }
@@ -155,17 +189,22 @@ function Booking() {
                 name="service"
                 value=""
                 onChange={handleChange}
-                className={`w-full border ${formErrors.services ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+                className={`w-full border ${
+                  formErrors.services ? "border-red-500" : "border-gray-300"
+                } rounded-md px-4 py-3 bg-[#fdfaf6]`}
               >
                 <option value="">Select Service</option>
                 {services.map((service) => (
-                  <option key={service._id} value={service.service}>
-                    {service.service} ({service.duration}) - ₹{service.price}
+                  <option key={service._id} value={service._id}>
+                    {service.serviceName} ({service.duration}) - ₹
+                    {service.price}
                   </option>
                 ))}
               </select>
               {formErrors.services && (
-                <p className="text-red-500 text-sm mt-1">{formErrors.services}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors.services}
+                </p>
               )}
             </div>
 
@@ -174,11 +213,18 @@ function Booking() {
               <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-300">
                 <h3 className="font-medium mb-2">Selected Services:</h3>
                 {selectedServices.map((service) => (
-                  <div key={service._id} className="flex justify-between items-center py-2 ">
+                  <div
+                    key={service._id}
+                    className="flex justify-between items-center py-2 "
+                  >
                     <div>
-                      <span className="font-medium">{service.service}</span>
-                      <span className="text-sm text-gray-600 ml-2">({service.duration})</span>
-                      <span className="text-sm text-gray-600 ml-2">₹{service.price}</span>
+                      <span className="font-medium">{service.serviceName}</span>
+                      <span className="text-sm text-gray-600 ml-2">
+                        ({service.duration})
+                      </span>
+                      <span className="text-sm text-gray-600 ml-2">
+                        ₹{service.price}
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -195,7 +241,7 @@ function Booking() {
                 </div>
               </div>
             )}
-            </div>
+          </div>
 
           <div>
             <input
@@ -204,10 +250,14 @@ function Booking() {
               placeholder="Customer Name"
               value={formData.customerName}
               onChange={handleChange}
-              className={`w-full border ${formErrors.customerName ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              className={`w-full border ${
+                formErrors.customerName ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
             />
             {formErrors.customerName && (
-              <p className="text-red-500 text-sm mt-1">{formErrors.customerName}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {formErrors.customerName}
+              </p>
             )}
           </div>
 
@@ -218,7 +268,9 @@ function Booking() {
               placeholder="Phone"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full border ${formErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              className={`w-full border ${
+                formErrors.phone ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
             />
             {formErrors.phone && (
               <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
@@ -232,7 +284,9 @@ function Booking() {
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full border ${formErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              className={`w-full border ${
+                formErrors.email ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
             />
             {formErrors.email && (
               <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
@@ -245,7 +299,9 @@ function Booking() {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className={`w-full border ${formErrors.date ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              className={`w-full border ${
+                formErrors.date ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
             />
             {formErrors.date && (
               <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>
@@ -258,7 +314,9 @@ function Booking() {
               name="time"
               value={formData.time}
               onChange={handleChange}
-              className={`w-full border ${formErrors.time ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              className={`w-full border ${
+                formErrors.time ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
             />
             {formErrors.time && (
               <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
@@ -267,7 +325,7 @@ function Booking() {
 
           <button
             type="submit"
-            className="w-full bg-[#d6b740] text-black font-semibold py-3 rounded-md hover:bg-[#c9a938]"
+            className="w-full bg-[#d6b740] text-black font-semibold py-3 rounded-md hover:bg-[#c1a235]"
           >
             Add Booking
           </button>
