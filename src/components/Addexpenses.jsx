@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AddExpense = () => {
   const [amount, setAmount] = useState("");
@@ -7,24 +10,40 @@ const AddExpense = () => {
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState(null);
 
-  const [expenses, setExpenses] = useState([]); // ✅ list of added expenses
-  const [selectedExpenses, setSelectedExpenses] = useState([]); // ✅ for checkbox selection
+  const [expenses, setExpenses] = useState([]); // list from backend
+  const [selectedExpenses, setSelectedExpenses] = useState([]);
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [sortOrder, setSortOrder] = useState("asc"); // asc / desc for date
+
+  const [editingId, setEditingId] = useState(null); // ✅ currently editing expense _id
+
+  // ✅ Fetch expenses from backend on mount
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/expenses");
+        setExpenses(res.data);
+      } catch (error) {
+        console.error("Error fetching expenses:", error);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSubmit = (e) => {
+  // ✅ Submit → add OR update (depending on editingId)
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount || !date || !notes) {
-      alert("Please fill required fields!");
+      toast.error("Please fill required fields!");
       return;
     }
 
-    const newExpense = {
-      id: Date.now().toString(), // simple unique id
+    const payload = {
       amount: Number(amount),
       date,
       expiryDate,
@@ -32,44 +51,84 @@ const AddExpense = () => {
       fileName: file ? file.name : null,
     };
 
-    // ✅ Add to list
-    setExpenses((prev) => [newExpense, ...prev]);
+    try {
+      if (editingId) {
+        // 🔁 UPDATE EXISTING EXPENSE (PUT)
+        const res = await axios.put(
+          `http://localhost:5000/api/expenses/${editingId}`,
+          payload
+        );
 
-    // Log just for checking
-    console.log("New Expense Added:", newExpense);
+        const updated = res.data.expense || res.data;
 
-    // Reset form
-    setAmount("");
-    setDate("");
-    setExpiryDate("");
-    setNotes("");
-    setFile(null);
+        setExpenses((prev) =>
+          prev.map((exp) => (exp._id === editingId ? updated : exp))
+        );
+
+        toast.success("Your expense has been updated ✅");
+      } else {
+        // ➕ CREATE NEW EXPENSE (POST)
+        const res = await axios.post(
+          "http://localhost:5000/api/expenses",
+          payload
+        );
+
+        const newExpense = res.data.expense || res.data;
+
+        // Add to list
+        setExpenses((prev) => [newExpense, ...prev]);
+
+        toast.success("Your expense has been added successfully ✅");
+      }
+
+      // Reset form & editing mode
+      setAmount("");
+      setDate("");
+      setExpiryDate("");
+      setNotes("");
+      setFile(null);
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error saving expense:", error);
+      toast.error("Failed to save expense. Check console.");
+    }
   };
 
-  // ✅ Handle select / unselect expense
+  // ✅ Select / Unselect
   const handleCheckbox = (id) => {
     setSelectedExpenses((prev) =>
       prev.includes(id) ? prev.filter((expId) => expId !== id) : [...prev, id]
     );
   };
 
-  // ✅ Delete selected expenses (frontend only)
-  const handleDelete = () => {
+  // ✅ Delete from backend + frontend
+  const handleDelete = async () => {
     if (selectedExpenses.length === 0) return;
-    const remaining = expenses.filter(
-      (exp) => !selectedExpenses.includes(exp.id)
-    );
-    setExpenses(remaining);
-    setSelectedExpenses([]);
+
+    try {
+      for (const id of selectedExpenses) {
+        await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+      }
+
+      const remaining = expenses.filter(
+        (exp) => !selectedExpenses.includes(exp._id)
+      );
+      setExpenses(remaining);
+      setSelectedExpenses([]);
+
+      toast.success("Selected expenses deleted ✅");
+    } catch (error) {
+      console.error("Error deleting expenses:", error);
+      toast.error("Failed to delete some expenses. Check console.");
+    }
   };
 
-  // ✅ Sort by date
+  // ✅ Sort
   const handleSort = (order) => {
     setSortOrder(order);
     setShowSortOptions(false);
   };
 
-  // ✅ Derived sorted expenses
   const sortedExpenses = useMemo(() => {
     const copy = [...expenses];
     copy.sort((a, b) => {
@@ -81,16 +140,48 @@ const AddExpense = () => {
     return copy;
   }, [expenses, sortOrder]);
 
-  // ✅ Dummy edit
+  // ✅ Edit: load data into form
   const handleEdit = (id) => {
-    alert(`Edit clicked for expense ID: ${id}`);
+    const exp = expenses.find((e) => e._id === id);
+    if (!exp) return;
+
+    setEditingId(id);
+    setAmount(exp.amount?.toString() || "");
+    setDate(exp.date || "");
+    setExpiryDate(exp.expiryDate || "");
+    setNotes(exp.notes || "");
+
+    // Sirf naam store kar rahe hain, purana file object nahi milta,
+    // isliye yaha virtual file object bana rahe hain just for UI.
+    setFile(exp.fileName ? { name: exp.fileName } : null);
+
+    // Optionally scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ✅ Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setAmount("");
+    setDate("");
+    setExpiryDate("");
+    setNotes("");
+    setFile(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 pl-55">
+      <ToastContainer />
+
       <div className="w-full max-w-xl bg-white p-6 rounded-lg shadow border">
-        <h2 className="text-2xl font-bold text-gray-800 mb-1">Add expenses</h2>
-        <p className="text-[#D3AF37] text-sm mb-6">Add expenses for remind</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-1">
+          {editingId ? "Edit expense" : "Add expenses"}
+        </h2>
+        <p className="text-[#D3AF37] text-sm mb-6">
+          {editingId
+            ? "Update the selected expense"
+            : "Add expenses for remind"}
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Amount */}
@@ -103,7 +194,7 @@ const AddExpense = () => {
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded-md p-2 focus:ring-1 focus:ring-[#D3AF37] outline-none"
+              className="w-full border rounded-md p-2"
             />
           </div>
 
@@ -116,11 +207,11 @@ const AddExpense = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border rounded-md p-2 focus:ring-1 focus:ring-yellow-400 outline-none"
+              className="w-full border rounded-md p-2"
             />
           </div>
 
-          {/* Expiry Date */}
+          {/* Expiry */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Expiry Date
@@ -129,7 +220,7 @@ const AddExpense = () => {
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full border rounded-md p-2 focus:ring-1 focus:ring-yellow-400 outline-none"
+              className="w-full border rounded-md p-2"
             />
           </div>
 
@@ -142,51 +233,67 @@ const AddExpense = () => {
               placeholder="Enter notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full border rounded-md p-2 h-24 focus:ring-1 focus:ring-yellow-400 outline-none"
+              className="w-full border rounded-md p-2 h-24"
             />
           </div>
 
-          {/* Upload Receipt */}
-          <div className="border-2 border-dashed border-gray-400 rounded-md p-6 text-center">
-            <p className="font-medium text-gray-700">
-              Upload Receipt (Optional)
+          {/* Receipt Upload */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+            <p className="font-medium text-gray-700 mb-1">
+              Upload Receipt{" "}
+              <span className="text-gray-500 text-sm">(Optional)</span>
             </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Drag and drop or browse to upload a receipt
-            </p>
-            <label className="bg-[#d6b740] text-black font-semibold p-2 rounded-md hover:bg-[#c1a235] cursor-pointer">
-              Browse Files
+
+            {/* Upload Button */}
+            <label className="inline-block mt-3 bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-[#c1a235] transition">
+              Browse File
               <input
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
               />
             </label>
-            {file && <p className="text-xs text-gray-600 mt-2">{file.name}</p>}
+
+            {/* File Name */}
+            {file && (
+              <p className="text-xs text-gray-600 mt-3 bg-white p-2 rounded-md inline-block border">
+                Selected: <span className="font-medium">{file.name}</span>
+              </p>
+            )}
           </div>
 
-          {/* Save Button */}
-          <div className="flex justify-end">
+          {/* Save / Update Buttons */}
+          <div className="flex justify-end gap-3">
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="border border-gray-400 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="submit"
-              className="bg-[#d6b740] text-black font-semibold p-2 rounded-md hover:bg-[#c1a235] cursor-pointer"
+              className="bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md"
             >
-              Save Expense
+              {editingId ? "Update Expense" : "Save Expense"}
             </button>
           </div>
         </form>
       </div>
 
-      {/* 👉 Expense List Section */}
+      {/* EXPENSE LIST */}
       <div className="w-full max-w-6xl bg-white mt-10 p-6 rounded-lg shadow border">
         <h3 className="text-center text-2xl font-semibold text-gray-800 mb-4">
           All Expenses
         </h3>
 
+        {/* Controls */}
         <div className="flex gap-4 items-center m-3 pl-195">
           <button
             onClick={handleDelete}
-            className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-red-600 border border-red-600 px-3 py-1 rounded-md"
             disabled={selectedExpenses.length === 0}
           >
             🗑 Delete{" "}
@@ -196,26 +303,24 @@ const AddExpense = () => {
           <div className="relative">
             <button
               onClick={() => setShowSortOptions(!showSortOptions)}
-              className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md"
             >
               🔍 Sort by {sortOrder === "asc" ? "(Old–New)" : "(New–Old)"}
             </button>
             {showSortOptions && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                <div className="py-1">
-                  <button
-                    onClick={() => handleSort("asc")}
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Oldest → Newest
-                  </button>
-                  <button
-                    onClick={() => handleSort("desc")}
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Newest → Oldest
-                  </button>
-                </div>
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow bg-white border z-10">
+                <button
+                  onClick={() => handleSort("asc")}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                >
+                  Oldest → Newest
+                </button>
+                <button
+                  onClick={() => handleSort("desc")}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                >
+                  Newest → Oldest
+                </button>
               </div>
             )}
           </div>
@@ -225,41 +330,37 @@ const AddExpense = () => {
         <table className="w-full border text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border p-2 w-16 text-center">Select</th>
-              <th className="border p-2 text-left w-1/6">Amount</th>
-              <th className="border p-2 text-left w-1/5">Date</th>
-              <th className="border p-2 text-left w-1/5">Expiry</th>
-              <th className="border p-2 text-left">Notes</th>
-              <th className="border p-2 text-left w-1/6">Receipt</th>
-              <th className="border p-2 w-16 text-center">Edit</th>
+              <th className="border p-2 text-center">Select</th>
+              <th className="border p-2">Amount</th>
+              <th className="border p-2">Date</th>
+              <th className="border p-2">Expiry</th>
+              <th className="border p-2">Notes</th>
+              <th className="border p-2">Receipt</th>
+              <th className="border p-2 text-center">Edit</th>
             </tr>
           </thead>
           <tbody>
             {sortedExpenses.map((exp) => (
               <tr
-                key={exp.id}
+                key={exp._id}
                 className="even:bg-gray-50 hover:bg-gray-100 transition-colors"
               >
-                <td className="border py-3 px-2 text-center">
+                <td className="border text-center p-2">
                   <input
                     type="checkbox"
+                    checked={selectedExpenses.includes(exp._id)}
+                    onChange={() => handleCheckbox(exp._id)}
                     className="w-4 h-4 accent-[#d6b740] cursor-pointer"
-                    checked={selectedExpenses.includes(exp.id)}
-                    onChange={() => handleCheckbox(exp.id)}
                   />
                 </td>
-                <td className="border py-3 px-2">₹{exp.amount}</td>
-                <td className="border py-3 px-2">{exp.date || "-"}</td>
-                <td className="border py-3 px-2">{exp.expiryDate || "-"}</td>
-                <td className="border py-3 px-2 max-w-xs truncate">
-                  {exp.notes || "-"}
-                </td>
-                <td className="border py-3 px-2">
-                  {exp.fileName || "No file"}
-                </td>
-                <td className="border py-3 px-2 text-center">
+                <td className="border p-2">₹{exp.amount}</td>
+                <td className="border p-2">{exp.date || "-"}</td>
+                <td className="border p-2">{exp.expiryDate || "-"}</td>
+                <td className="border p-2 max-w-xs truncate">{exp.notes}</td>
+                <td className="border p-2">{exp.fileName || "No file"}</td>
+                <td className="border text-center p-2">
                   <button
-                    onClick={() => handleEdit(exp.id)}
+                    onClick={() => handleEdit(exp._id)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     Edit
@@ -272,9 +373,9 @@ const AddExpense = () => {
               <tr>
                 <td
                   colSpan={7}
-                  className="border py-6 px-2 text-center text-gray-500"
+                  className="text-center text-gray-500 py-5 border"
                 >
-                  No expenses added yet. Add one from the form above.
+                  No expenses added yet.
                 </td>
               </tr>
             )}

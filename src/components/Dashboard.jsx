@@ -296,7 +296,7 @@ function Dashboard() {
       </div>
 
       {/* ✅ Controls */}
-      <div className="flex gap-4 text-sm my-5 pl-236">
+      <div className="flex gap-4 text-sm my-5 pl-233">
         <button
           onClick={handleDelete}
           className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"

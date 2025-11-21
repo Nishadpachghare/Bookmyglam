@@ -1,104 +1,169 @@
 import React from "react";
 import { GoHomeFill } from "react-icons/go";
 import { PiCalendarFill } from "react-icons/pi";
-import { MdOutlineInventory, MdOutlinePendingActions, MdAddBox } from "react-icons/md";
+import {
+  MdOutlineInventory,
+  MdOutlinePendingActions,
+  MdAddBox,
+} from "react-icons/md";
 import { BsPeople, BsImageFill } from "react-icons/bs";
 import { LuScissors, LuWallet } from "react-icons/lu";
 import { SlUserFemale } from "react-icons/sl";
 import { IoAnalyticsOutline } from "react-icons/io5";
-import { NavLink,} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
 
-
-function Sidenav() { 
+function Sidenav() {
   return (
     <div className="w-64 bg-white fixed inset-0 z-50  overflow-auto shadow-2xl top-0 left-0 flex flex-col">
       {/* Logo */}
       <div className="flex justify-center items-center  border-b">
-        <img src="./SBMS_LOGO.png" alt="Logo" className="w-32 h-22 pb-2" />
+        <img src="./SBMS_LOGO.png" alt="Logo" className="w-32 h-22 pt-2" />
       </div>
 
       {/* Menu Items */}
       <ul className="flex flex-col mt-6 text-gray-700 text-base font-medium gap-5">
         <li>
-          <NavLink to="/dashboard" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <GoHomeFill className="h-8 w-10 pl-3"/> Dashboard
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <GoHomeFill className="h-8 w-10 pl-3" /> Dashboard
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/booking" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <PiCalendarFill className="h-8 w-10 pl-3"/> Booking
+          <NavLink
+            to="/booking"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <PiCalendarFill className="h-8 w-10 pl-3" /> Booking
           </NavLink>
         </li>
 
         <li className="flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black">
-          <MdOutlineInventory className="h-8 w-10 pl-3"/> Inventory
+          <MdOutlineInventory className="h-8 w-10 pl-3" /> Inventory
         </li>
 
         <li className="flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black">
-          <BsPeople className="h-8 w-10 pl-3"/> Attendance
+          <BsPeople className="h-8 w-10 pl-3" /> Attendance
         </li>
 
         <li>
-          <NavLink to="/managestyle" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
+          <NavLink
+            to="/managestyle"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
             <LuScissors className="h-8 w-10 pl-3" /> Manage Style
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/manageservice" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <SlUserFemale className="h-8 w-10 pl-3"/> Manage Service
+          <NavLink
+            to="/manageservice"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <SlUserFemale className="h-8 w-10 pl-3" /> Manage Service
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/earning" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
+          <NavLink
+            to="/earning"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
             <LuWallet className="h-8 w-10 pl-3" /> View Earning
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/pending" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <MdOutlinePendingActions className="h-8 w-10 pl-3"/> Pending Amount
+          <NavLink
+            to="/pending"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <MdOutlinePendingActions className="h-8 w-10 pl-3" /> Pending Amount
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/addexpense" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <MdAddBox className="h-8 w-10 pl-3"/> Add Expenses
+          <NavLink
+            to="/addexpense"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <MdAddBox className="h-8 w-10 pl-3" /> Add Expenses
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/summary" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <IoAnalyticsOutline className="h-8 w-10 pl-3"/> Summary
+          <NavLink
+            to="/summary"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <IoAnalyticsOutline className="h-8 w-10 pl-3" /> Summary
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/uploadimg" className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${isActive ? 'bg-[#D3AF37] text-black' : ''}`}>
-            <BsImageFill className="h-8 w-10 pl-3"/> Upload Gallery
+          <NavLink
+            to="/uploadimg"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <BsImageFill className="h-8 w-10 pl-3" /> Upload Gallery
           </NavLink>
         </li>
-       
 
-          <li>
-      <NavLink
-        to="/r"
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-3 rounded-md font-medium transition-all duration-200
+        <li>
+          <NavLink
+            to="/r"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-md font-medium transition-all duration-200
            cursor-pointer ${
              isActive
                ? "bg-[#930101] text-white"
                : "text-gray-700 hover:bg-[#ef1212] hover:text-white"
            }`
-        }
-      >
-        <FiLogOut className="h-6 w-6" />
-        Logout
-      </NavLink>
-    </li>
+            }
+          >
+            <FiLogOut className="h-6 w-6" />
+            Logout
+          </NavLink>
+        </li>
       </ul>
     </div>
   );
