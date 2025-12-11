@@ -129,7 +129,7 @@ function InactiveStylish() {
             No inactive stylists found.
           </p>
         ) : (
-          <table className="w-full text-left">
+          <table className="w-full text-left border">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="py-3 px-4 text-gray-700 font-semibold">

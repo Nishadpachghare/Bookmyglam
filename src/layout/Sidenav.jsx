@@ -17,7 +17,7 @@ function Sidenav() {
   return (
     <div className="w-64 bg-white fixed inset-0 z-50  overflow-auto shadow-2xl top-0 left-0 flex flex-col">
       {/* Logo */}
-      <div className="flex justify-center items-center  border-b">
+      <div className="flex justify-center items-center">
         <img src="./SBMS_LOGO.png" alt="Logo" className="w-32 h-22 pt-2" />
       </div>
 
@@ -49,8 +49,17 @@ function Sidenav() {
           </NavLink>
         </li>
 
-        <li className="flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black">
-          <MdOutlineInventory className="h-8 w-10 pl-3" /> Inventory
+        <li>
+          <NavLink
+            to="/inventory"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black ${
+                isActive ? "bg-[#D3AF37] text-black" : ""
+              }`
+            }
+          >
+            <MdOutlineInventory className="h-8 w-10 pl-3" /> Inventory
+          </NavLink>
         </li>
 
         <li className="flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-[#D3AF37] hover:text-black">

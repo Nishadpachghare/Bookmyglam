@@ -168,7 +168,7 @@ const ManageService = () => {
   };
 
   return (
-    <div className="min-h-screen w-full  bg-gray-50 flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
+    <div className="min-h-screen w-full  flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
       {/* Manage Service */}
       <div className="bg-white p-6 shadow-xl rounded-lg border h-130 w-100 manage-service-form">
         <h2 className="text-center text-3xl font-semibold mb-4">

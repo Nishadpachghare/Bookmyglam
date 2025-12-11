@@ -58,7 +58,7 @@ function ManageStyle() {
         ];
 
   return (
-    <div className="p-10 bg-gray-50 min-h-screen pl-80 shadow-xl">
+    <div className="p-10 min-h-screen pl-80 shadow-xl">
       <h1 className="text-3xl font-semibold text-gray-900 mb-6">
         Manage Stylists
       </h1>
@@ -76,7 +76,7 @@ function ManageStyle() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-10 mt-6 pb-3 text-lg font-medium border-b border-gray-200">
+      <div className="flex gap-10 mt-6 pb-3 text-lg font-medium  border-gray-200">
         <button className="text-[#D3AF37] font-semibold border-b-2 border-[#D3AF37] pb-1">
           All Stylists
         </button>
@@ -101,7 +101,7 @@ function ManageStyle() {
         ) : sortedStylists.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No stylists found.</p>
         ) : (
-          <table className="w-full text-left">
+          <table className="w-full text-left border">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="py-3 px-4">Stylist Name</th>

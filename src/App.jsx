@@ -17,11 +17,12 @@ import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InactiveStylish from "./components/InactiveStylish";
+import Inventory from "./components/Inventory";
 
 function App() {
   const location = useLocation();
-const hideLayoutPaths = ["/", "/r"];
-const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
+  const hideLayoutPaths = ["/", "/r"];
+  const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
 
   return (
     <>
@@ -37,22 +38,113 @@ const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
       <Routes>
         <Route path="/" element={<Loginpage />} />
         <Route path="/r" element={<Register />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
-        <Route path="/managestyle" element={<ProtectedRoute><ManageStyle /></ProtectedRoute>} />
-        <Route path="/managestyle1" element={<ProtectedRoute><ManageStyle1 /></ProtectedRoute>} />
-         <Route path="/Inactivestylist" element={<ProtectedRoute><InactiveStylish /></ProtectedRoute>} />
-        <Route path="/earning" element={<ProtectedRoute><Earning /></ProtectedRoute>} />
-        <Route path="/earningweek" element={<ProtectedRoute><Earningweek /></ProtectedRoute>} />
-        <Route path="/manageservice" element={<ProtectedRoute><ManageService /></ProtectedRoute>} />
-        <Route path="/pending" element={<ProtectedRoute><Pending /></ProtectedRoute>} />
-        <Route path="/addexpense" element={<ProtectedRoute><AddExpense /></ProtectedRoute>} />
-        <Route path="/summary" element={<ProtectedRoute><Summary /></ProtectedRoute>} />
-        <Route path="/uploadimg" element={<ProtectedRoute><Uploadimg /></ProtectedRoute>} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <Booking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute>
+              <Inventory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/managestyle"
+          element={
+            <ProtectedRoute>
+              <ManageStyle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/managestyle1"
+          element={
+            <ProtectedRoute>
+              <ManageStyle1 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Inactivestylist"
+          element={
+            <ProtectedRoute>
+              <InactiveStylish />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/earning"
+          element={
+            <ProtectedRoute>
+              <Earning />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/earningweek"
+          element={
+            <ProtectedRoute>
+              <Earningweek />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manageservice"
+          element={
+            <ProtectedRoute>
+              <ManageService />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pending"
+          element={
+            <ProtectedRoute>
+              <Pending />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/addexpense"
+          element={
+            <ProtectedRoute>
+              <AddExpense />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/summary"
+          element={
+            <ProtectedRoute>
+              <Summary />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/uploadimg"
+          element={
+            <ProtectedRoute>
+              <Uploadimg />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
 }
 
 export default App;
-
