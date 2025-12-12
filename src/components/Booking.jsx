@@ -1,9 +1,10 @@
+// src/pages/Booking.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
 function Booking() {
-  // State for form validation
+  // form + errors
   const [formErrors, setFormErrors] = useState({});
   const [services, setServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -16,19 +17,31 @@ function Booking() {
     time: "",
   });
 
-  // Add error state for more detailed error messages
+  // OTP (email only)
+  const [otpCode, setOtpCode] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  // UI messages
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Calculate total price of selected services
   const totalPrice = selectedServices.reduce((total, service) => {
-    return total + service.price;
+    return total + (Number(service.price) || 0);
   }, 0);
 
-  const [message, setMessage] = useState("");
-
+  // fetch services on mount
   useEffect(() => {
     fetchServices();
   }, []);
+
+  // OTP cooldown timer
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const t = setTimeout(() => setOtpCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [otpCooldown]);
 
   const fetchServices = async () => {
     try {
@@ -52,18 +65,20 @@ function Booking() {
         serviceName: s.serviceName ?? s.service ?? "",
         duration: s.duration ?? s.time ?? "",
         price: Number(s.price ?? 0),
-        // keep original for any other fields
         ...s,
       }));
 
       setServices(normalized);
-    } catch (error) {
-      console.error("Error fetching services:", error);
+    } catch (err) {
+      console.error("Error fetching services:", err);
+      toast.error("Unable to load services");
     }
   };
 
+  // handle inputs: strict rules for name & phone remain
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     if (name === "service") {
       const selectedService = services.find(
         (s) => (s._id ?? "").toString() === value.toString()
@@ -72,62 +87,169 @@ function Booking() {
         selectedService &&
         !selectedServices.some((s) => s._id === selectedService._id)
       ) {
-        const updatedSelectedServices = [...selectedServices, selectedService];
-        setSelectedServices(updatedSelectedServices);
-        setFormData({
-          ...formData,
-          service: updatedSelectedServices.map(
-            (s) => s.serviceName ?? s.service
-          ),
-        });
+        const updated = [...selectedServices, selectedService];
+        setSelectedServices(updated);
+        setFormData((fd) => ({
+          ...fd,
+          service: updated.map((s) => s.serviceName ?? s.service),
+        }));
       }
-    } else {
-      setFormData({ ...formData, [name]: value });
+      return;
     }
+
+    // Customer name: letters + spaces only
+    if (name === "customerName") {
+      const sanitized = value.replace(/[^A-Za-z\s]/g, "");
+      setFormData((prev) => ({ ...prev, customerName: sanitized }));
+      setFormErrors((prev) => ({ ...prev, customerName: undefined }));
+      return;
+    }
+
+    // Phone: digits only, max 10 (no phone OTP)
+    if (name === "phone") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: digitsOnly }));
+      setFormErrors((prev) => ({ ...prev, phone: undefined }));
+      return;
+    }
+
+    // Email / date / time
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "email") {
+      // changing email should unverify previous verification
+      if (emailVerified) setEmailVerified(false);
+    }
+    setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   const removeService = (serviceId) => {
-    const updatedServices = selectedServices.filter((s) => s._id !== serviceId);
-    setSelectedServices(updatedServices);
-    setFormData({
-      ...formData,
-      service: updatedServices.map((s) => s.serviceName),
-    });
+    const updated = selectedServices.filter((s) => s._id !== serviceId);
+    setSelectedServices(updated);
+    setFormData((fd) => ({
+      ...fd,
+      service: updated.map((s) => s.serviceName),
+    }));
   };
+
+  // Validation helpers
+  const nameIsValid = (name) => /^[A-Za-z\s]+$/.test(name.trim());
+  const phoneIsValid = (phone) => /^\d{10}$/.test(phone.trim());
+  const emailIsValid = (email) => /^\S+@\S+\.\S+$/.test(email.trim());
+
   const validateForm = () => {
     const errors = {};
-
-    if (selectedServices.length === 0) {
+    if (selectedServices.length === 0)
       errors.services = "Please select at least one service";
-    }
-    if (!formData.customerName.trim()) {
+
+    if (!formData.customerName || !formData.customerName.trim()) {
       errors.customerName = "Customer name is required";
+    } else if (!nameIsValid(formData.customerName)) {
+      errors.customerName = "Name must contain only letters and spaces";
     }
-    if (!formData.phone.trim()) {
+
+    if (!formData.phone || !formData.phone.trim()) {
       errors.phone = "Phone number is required";
+    } else if (!phoneIsValid(formData.phone)) {
+      errors.phone = "Phone must be exactly 10 digits";
     }
-    if (!formData.email.trim()) {
+
+    if (!formData.email || !formData.email.trim()) {
       errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Please enter a valid email";
+    } else if (!emailIsValid(formData.email)) {
+      errors.email = "Please enter a valid email address";
     }
-    if (!formData.date) {
-      errors.date = "Date is required";
-    }
-    if (!formData.time) {
-      errors.time = "Time is required";
-    }
+
+    if (!formData.date) errors.date = "Date is required";
+    if (!formData.time) errors.time = "Time is required";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // ------------------ EMAIL OTP functions ------------------
+  // send OTP -> backend expects { to, channel } with channel: 'email'
+  const sendOtpEmail = async () => {
+    setError("");
+    if (otpCooldown > 0) {
+      toast.error(`Please wait ${otpCooldown}s before resending`);
+      return;
+    }
+    if (!emailIsValid(formData.email)) {
+      setFormErrors((p) => ({ ...p, email: "Enter a valid email first" }));
+      return;
+    }
+
+    try {
+      setOtpLoading(true);
+      const to = formData.email.trim();
+      const resp = await axios.post("http://localhost:5000/api/auth/send-otp", {
+        to,
+        channel: "email",
+      });
+      if (resp.data?.ok) {
+        setOtpCooldown(60); // 60s cooldown
+        toast.success(`OTP sent to ${to}`);
+      } else {
+        throw new Error(resp.data?.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      console.error("sendOtpEmail error:", err);
+      toast.error(err.response?.data?.message || "Unable to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // verify OTP -> backend expects { to, code, channel }
+  const verifyOtpEmail = async () => {
+    setError("");
+    if (!otpCode || !otpCode.trim()) {
+      toast.error("Enter the OTP first");
+      return;
+    }
+    const to = formData.email.trim();
+    try {
+      setOtpLoading(true);
+      const resp = await axios.post(
+        "http://localhost:5000/api/auth/verify-otp",
+        {
+          to,
+          code: otpCode.trim(),
+          channel: "email",
+        }
+      );
+      if (resp.data?.ok) {
+        toast.success("Email verified");
+        setEmailVerified(true);
+        setOtpCode("");
+      } else {
+        throw new Error(resp.data?.message || "Invalid OTP");
+      }
+    } catch (err) {
+      console.error("verifyOtpEmail error:", err);
+      toast.error(err.response?.data?.message || "OTP verification failed");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // ------------------ Submit booking ------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setError("");
 
     if (!validateForm()) {
-      toast.error("Please fill all required fields correctly");
+      toast.error("Please fix validation errors");
+      return;
+    }
+
+    // IMPORTANT: require email verification before booking
+    if (!emailVerified) {
+      toast.error(
+        "Please verify your email with the OTP before adding booking"
+      );
+      setFormErrors((p) => ({ ...p, email: "Email must be verified" }));
       return;
     }
 
@@ -137,13 +259,11 @@ function Booking() {
         ...formData,
       };
 
-      console.log("Sending booking data:", bookingData);
-
       const res = await axios.post(
         "http://localhost:5000/api/bookings",
         bookingData
       );
-      if (res.status === 201) {
+      if (res.status === 201 || res.data?.ok) {
         setMessage("✅ Booking added successfully!");
         setFormData({
           service: [],
@@ -154,23 +274,16 @@ function Booking() {
           time: "",
         });
         setSelectedServices([]);
-        setError(""); // Clear any previous errors
+        setEmailVerified(false);
+        toast.success("Booking created");
+      } else {
+        throw new Error(res.data?.message || "Booking failed");
       }
     } catch (err) {
-      console.error("Error:", err);
-      console.error("Error response:", err.response?.data);
-
-      // Get detailed error message
-      const errorMessage =
-        err.response?.data?.message || "Failed to add booking";
-      const errorDetails = err.response?.data?.details
-        ? Array.isArray(err.response.data.details)
-          ? err.response.data.details.join(", ")
-          : err.response.data.details
-        : "Please try again";
-
-      setError(`${errorMessage}: ${errorDetails}`);
-      setMessage(`❌ ${errorMessage}: ${errorDetails}`);
+      console.error("Submit error:", err);
+      const em = err.response?.data?.message || "Failed to add booking";
+      setError(em);
+      toast.error(em);
     }
   };
 
@@ -182,72 +295,68 @@ function Booking() {
         </h2>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Service Selection */}
-            <div>
-              <select
-                name="service"
-                value=""
-                onChange={handleChange}
-                className={`w-full border ${
-                  formErrors.services ? "border-red-500" : "border-gray-300"
-                } rounded-md px-4 py-3 bg-[#fdfaf6]`}
-              >
-                <option value="">Select Service</option>
-                {services.map((service) => (
-                  <option key={service._id} value={service._id}>
-                    {service.serviceName} ({service.duration}) - ₹
-                    {service.price}
-                  </option>
-                ))}
-              </select>
-              {formErrors.services && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formErrors.services}
-                </p>
-              )}
-            </div>
-
-            {/* Selected Services List */}
-            {selectedServices.length > 0 && (
-              <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-300">
-                <h3 className="font-medium mb-2">Selected Services:</h3>
-                {selectedServices.map((service) => (
-                  <div
-                    key={service._id}
-                    className="flex justify-between items-center py-2 "
-                  >
-                    <div>
-                      <span className="font-medium">{service.serviceName}</span>
-                      <span className="text-sm text-gray-600 ml-2">
-                        ({service.duration})
-                      </span>
-                      <span className="text-sm text-gray-600 ml-2">
-                        ₹{service.price}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeService(service._id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                  <span className="font-semibold">Total Amount:</span>
-                  <span className="font-semibold">₹{totalPrice}</span>
-                </div>
-              </div>
+          {/* Service */}
+          <div>
+            <select
+              name="service"
+              value=""
+              onChange={handleChange}
+              className={`w-full border ${
+                formErrors.services ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+            >
+              <option value="">Select Service</option>
+              {services.map((service) => (
+                <option key={service._id} value={service._id}>
+                  {service.serviceName} ({service.duration}) - ₹{service.price}
+                </option>
+              ))}
+            </select>
+            {formErrors.services && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.services}</p>
             )}
           </div>
 
+          {/* Selected services list */}
+          {selectedServices.length > 0 && (
+            <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-300">
+              <h3 className="font-medium mb-2">Selected Services:</h3>
+              {selectedServices.map((service) => (
+                <div
+                  key={service._id}
+                  className="flex justify-between items-center py-2 "
+                >
+                  <div>
+                    <span className="font-medium">{service.serviceName}</span>
+                    <span className="text-sm text-gray-600 ml-2">
+                      ({service.duration})
+                    </span>
+                    <span className="text-sm text-gray-600 ml-2">
+                      ₹{service.price}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeService(service._id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                <span className="font-semibold">Total Amount:</span>
+                <span className="font-semibold">₹{totalPrice}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Customer name */}
           <div>
             <input
               type="text"
               name="customerName"
-              placeholder="Customer Name"
+              placeholder="Customer Name (letters only)"
               value={formData.customerName}
               onChange={handleChange}
               className={`w-full border ${
@@ -261,13 +370,17 @@ function Booking() {
             )}
           </div>
 
+          {/* Phone (no OTP) */}
           <div>
             <input
-              type="text"
+              type="tel"
               name="phone"
-              placeholder="Phone"
+              placeholder="Phone (10 digits)"
               value={formData.phone}
               onChange={handleChange}
+              inputMode="numeric"
+              maxLength={10}
+              pattern="\d*"
               className={`w-full border ${
                 formErrors.phone ? "border-red-500" : "border-gray-300"
               } rounded-md px-4 py-3 bg-[#fdfaf6]`}
@@ -277,22 +390,54 @@ function Booking() {
             )}
           </div>
 
-          <div>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full border ${
-                formErrors.email ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
-            />
+          {/* Email + OTP (email only) */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`flex-1 border ${
+                  formErrors.email ? "border-red-500" : "border-gray-300"
+                } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              />
+              <button
+                type="button"
+                onClick={sendOtpEmail}
+                disabled={otpLoading || otpCooldown > 0}
+                className="px-3 py-2 bg-[#d6b740] rounded text-black font-semibold"
+              >
+                {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Send OTP"}
+              </button>
+            </div>
             {formErrors.email && (
               <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
             )}
+
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-md px-4 py-2 bg-white"
+              />
+              <button
+                type="button"
+                onClick={verifyOtpEmail}
+                disabled={otpLoading}
+                className={`px-3 py-2 rounded text-white ${
+                  emailVerified ? "bg-green-600" : "bg-blue-600"
+                }`}
+              >
+                {emailVerified ? "Verified" : "Verify"}
+              </button>
+            </div>
           </div>
 
+          {/* Date & Time */}
           <div>
             <input
               type="date"
@@ -333,6 +478,9 @@ function Booking() {
 
         {message && (
           <p className="text-center mt-4 text-sm text-gray-700">{message}</p>
+        )}
+        {error && (
+          <p className="text-center mt-2 text-sm text-red-600">{error}</p>
         )}
       </div>
     </div>

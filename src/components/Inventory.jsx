@@ -545,7 +545,6 @@ export default function Inventory() {
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
-
                       <td className="px-3 py-2 text-center">
                         <div
                           className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] ${

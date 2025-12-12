@@ -5,7 +5,7 @@ import { FiSearch } from "react-icons/fi";
 function Dashboard() {
   const [bookings, setBookings] = useState([]);
   const [stylists, setStylists] = useState([]);
-  const [allServices, setAllServices] = useState([]); // ✅ master service list
+  const [allServices, setAllServices] = useState([]); // master service list
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -13,93 +13,134 @@ function Dashboard() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [editingBooking, setEditingBooking] = useState(null);
 
-  // ✅ Fetch bookings
+  // Helper to normalize API response when backend may return either
+  // - an array directly: res.data -> [...]
+  // - an object: res.data.bookings -> [...]
+  const extractArray = (res, keyFallback) => {
+    if (!res) return [];
+    if (Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res.data?.[keyFallback])) return res.data[keyFallback];
+    if (Array.isArray(res.data?.bookings)) return res.data.bookings;
+    // sometimes backend returns the array in res.data.data or res.data.items
+    if (Array.isArray(res.data?.data)) return res.data.data;
+    if (Array.isArray(res.data?.items)) return res.data.items;
+    // if nothing matched, return empty array
+    return [];
+  };
+
+  // Fetch bookings
   const fetchBookings = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/bookings");
-      setBookings(res.data);
+      const arr = extractArray(res, "bookings");
+      setBookings(arr);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      setBookings([]);
     }
   };
 
-  // ✅ Fetch active stylists only
+  // Fetch active stylists only
   const fetchStylists = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/stylists");
-      const activeStylists = res.data.filter(
-        (stylist) => stylist.status?.toLowerCase() === "active"
+      // normalize - backend may return array or object
+      const maybeArray = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.stylists)
+        ? res.data.stylists
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
+      const activeStylists = maybeArray.filter(
+        (stylist) =>
+          (stylist.status || "").toString().toLowerCase() === "active"
       );
       setStylists(activeStylists);
     } catch (error) {
       console.error("Error fetching stylists:", error);
+      setStylists([]);
     }
   };
 
-  // ✅ Fetch all services (service master for dropdown)
+  // Fetch all services (service master for dropdown)
   const fetchAllServices = async () => {
     try {
-      // 👉 Yahan apna correct services endpoint daalna:
-      // e.g. /api/Manageservices ya /api/services
       const res = await axios.get("http://localhost:5000/api/Manageservices");
-      setAllServices(res.data);
+      // normalize
+      const arr = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.services)
+        ? res.data.services
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.items)
+        ? res.data.items
+        : [];
+      setAllServices(arr);
     } catch (error) {
       console.error("Error fetching services:", error);
+      setAllServices([]);
     }
   };
 
-  // ✅ Fetch bookings, stylists, services on mount
+  // Fetch bookings, stylists, services on mount
   useEffect(() => {
+    let mounted = true;
     const fetchData = async () => {
+      setLoading(true);
       await Promise.all([fetchBookings(), fetchStylists(), fetchAllServices()]);
-      setLoading(false);
+      if (mounted) setLoading(false);
     };
     fetchData();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // ✅ Calculate totals
-  const totalBookings = bookings.length;
-  const totalStylists = stylists.length;
-  const totalEarnings = bookings.reduce((sum, booking) => {
-    const totalServicePrice = booking.services?.reduce(
-      (a, s) => a + (s.price || 0),
-      0
-    );
-    return sum + totalServicePrice;
+  // Calculate totals safely
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
+  const totalBookings = safeBookings.length;
+  const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
+
+  const totalEarnings = safeBookings.reduce((sum, booking) => {
+    const serviceSum = Array.isArray(booking.services)
+      ? booking.services.reduce((a, s) => a + Number(s.price || 0), 0)
+      : 0;
+    return sum + serviceSum;
   }, 0);
 
-  // ✅ Filter by search
-  const filteredBookings = bookings.filter((b) => {
-    const name = b.customerName?.toLowerCase() || "";
-    const phone = b.phone?.toLowerCase() || "";
-    return (
-      name.includes(searchTerm.toLowerCase()) ||
-      phone.includes(searchTerm.toLowerCase())
-    );
+  // Filter by search
+  const filteredBookings = safeBookings.filter((b) => {
+    const name = (b.customerName || "").toString().toLowerCase();
+    const phone = (b.phone || "").toString().toLowerCase();
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return true;
+    return name.includes(q) || phone.includes(q);
   });
 
-  // ✅ Sort by name (A-Z / Z-A)
+  // Sort by name (A-Z / Z-A)
   const handleSort = (order) => {
     setSortOrder(order);
     setShowSortOptions(false);
 
-    const sorted = [...bookings].sort((a, b) => {
-      const nameA = a.customerName?.toLowerCase() || "";
-      const nameB = b.customerName?.toLowerCase() || "";
+    const sorted = [...safeBookings].sort((a, b) => {
+      const nameA = (a.customerName || "").toLowerCase();
+      const nameB = (b.customerName || "").toLowerCase();
       if (order === "asc") return nameA.localeCompare(nameB);
       return nameB.localeCompare(nameA);
     });
     setBookings(sorted);
   };
 
-  // ✅ Handle booking selection (for delete)
+  // Handle booking selection (for delete)
   const handleSelectBooking = (id) => {
     setSelectedBookings((prev) =>
       prev.includes(id) ? prev.filter((bId) => bId !== id) : [...prev, id]
     );
   };
 
-  // ✅ Delete selected bookings
+  // Delete selected bookings
   const handleDelete = async () => {
     if (selectedBookings.length === 0) return;
 
@@ -114,14 +155,14 @@ function Dashboard() {
     }
   };
 
-  // ✅ When user clicks Edit button in table
+  // When user clicks Edit button in table
   const handleEditClick = (booking) => {
     setEditingBooking({
       ...booking,
       paymentStatus: booking.paymentStatus || "Pending",
-      services: booking.services
+      services: Array.isArray(booking.services)
         ? booking.services.map((s) => ({
-            serviceName: s.serviceName || "",
+            serviceName: s.serviceName || s.service || "",
             price: s.price || 0,
             duration: s.duration || "",
           }))
@@ -129,7 +170,7 @@ function Dashboard() {
     });
   };
 
-  // ✅ Update simple fields in edit form
+  // Update simple fields in edit form
   const handleEditChange = (field, value) => {
     setEditingBooking((prev) => ({
       ...prev,
@@ -137,10 +178,10 @@ function Dashboard() {
     }));
   };
 
-  // ✅ Update a service (name / price / duration)
+  // Update a service (name / price / duration)
   const handleServiceChange = (index, field, value) => {
     setEditingBooking((prev) => {
-      const services = [...(prev.services || [])];
+      const services = [...(prev?.services || [])];
       const updatedService = { ...services[index] };
 
       if (field === "price") {
@@ -156,12 +197,12 @@ function Dashboard() {
     });
   };
 
-  // ✅ Add new empty service row manually
+  // Add new empty service row manually
   const handleAddService = () => {
     setEditingBooking((prev) => ({
       ...prev,
       services: [
-        ...(prev.services || []),
+        ...(prev?.services || []),
         {
           serviceName: "",
           price: 0,
@@ -171,11 +212,11 @@ function Dashboard() {
     }));
   };
 
-  // ✅ Add service from dropdown (master service list)
+  // Add service from dropdown (master service list)
   const handleAddServiceFromDropdown = (serviceId) => {
     if (!serviceId || !editingBooking) return;
 
-    const selected = allServices.find(
+    const selected = (allServices || []).find(
       (s) => (s._id ?? "").toString() === serviceId.toString()
     );
     if (!selected) return;
@@ -187,7 +228,7 @@ function Dashboard() {
       const already = currentServices.some(
         (s) =>
           (s.serviceName || "").toLowerCase() ===
-          (selected.serviceName || selected.service).toLowerCase()
+          (selected.serviceName || selected.service || "").toLowerCase()
       );
       if (already) return prev;
 
@@ -204,7 +245,7 @@ function Dashboard() {
     });
   };
 
-  // ✅ Remove service row
+  // Remove service row
   const handleRemoveService = (index) => {
     setEditingBooking((prev) => {
       const services = [...(prev.services || [])];
@@ -217,7 +258,7 @@ function Dashboard() {
     setEditingBooking(null);
   };
 
-  // ✅ Save edited booking (including services)
+  // Save edited booking (including services)
   const handleEditSave = async () => {
     if (!editingBooking) return;
 
@@ -250,7 +291,9 @@ function Dashboard() {
       const updated = res.data.booking || res.data;
 
       setBookings((prev) =>
-        prev.map((b) => (b._id === updated._id ? updated : b))
+        (Array.isArray(prev) ? prev : []).map((b) =>
+          b._id === updated._id ? updated : b
+        )
       );
 
       setEditingBooking(null);
@@ -269,9 +312,9 @@ function Dashboard() {
     }
   };
 
-  // 💰 Total for currently editing booking
+  // Total for currently editing booking
   const editingTotal =
-    editingBooking?.services?.reduce(
+    (editingBooking?.services || []).reduce(
       (sum, s) => sum + (Number(s.price) || 0),
       0
     ) || 0;
@@ -283,7 +326,7 @@ function Dashboard() {
         <h1>Dashboard</h1>
       </div>
 
-      {/* ✅ Search Bar */}
+      {/* Search Bar */}
       <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-6xl border rounded-md mb-6">
         <FiSearch className="text-gray-500 text-xl" />
         <input
@@ -295,7 +338,7 @@ function Dashboard() {
         />
       </div>
 
-      {/* ✅ Controls */}
+      {/* Controls */}
       <div className="flex gap-4 text-sm my-5 pl-233">
         <button
           onClick={handleDelete}
@@ -334,7 +377,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 🔹 Stats Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-md p-6 text-center">
           <p className="text-gray-500 text-sm">Total Bookings</p>
@@ -352,7 +395,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 🔧 Edit Box (Inline, includes services + dropdown) */}
+      {/* Edit Box */}
       {editingBooking && (
         <div className="bg-white border rounded-xl shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">
@@ -418,9 +461,8 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Services Editor – with dropdown */}
+          {/* Services Editor */}
           <div className="space-y-4">
-            {/* Service Dropdown */}
             <div>
               <label className="block text-sm text-gray-700 mb-1">
                 Add Service
@@ -436,7 +478,7 @@ function Dashboard() {
                 <option value="" disabled>
                   Select Service
                 </option>
-                {allServices.map((service) => (
+                {(allServices || []).map((service) => (
                   <option key={service._id} value={service._id}>
                     {service.serviceName ?? service.service}{" "}
                     {service.duration ? `(${service.duration})` : ""} - ₹
@@ -446,7 +488,6 @@ function Dashboard() {
               </select>
             </div>
 
-            {/* Manual Add button (if needed) */}
             <div className="flex justify-end">
               <button
                 type="button"
@@ -457,12 +498,11 @@ function Dashboard() {
               </button>
             </div>
 
-            {/* Selected Services List (editable) */}
             {(!editingBooking.services ||
               editingBooking.services.length === 0) && (
               <p className="text-xs text-gray-500">
-                No services selected. Choose from dropdown above or click
-                &quot;Add Empty Service&quot;.
+                No services selected. Choose from dropdown above or click "Add
+                Empty Service".
               </p>
             )}
 
@@ -522,7 +562,6 @@ function Dashboard() {
                   </div>
                 ))}
 
-                {/* Total inside edit box */}
                 <div className="mt-3 pt-3 border-t flex justify-between items-center text-sm">
                   <span className="font-semibold">Total Amount:</span>
                   <span className="font-semibold">₹{editingTotal}</span>
@@ -548,11 +587,11 @@ function Dashboard() {
         </div>
       )}
 
-      {/* 🔹 Table Section */}
+      {/* Table Section */}
       <div className="bg-white border rounded-xl shadow-md overflow-hidden">
         {loading ? (
           <p className="p-4 text-gray-500 text-center">Loading data...</p>
-        ) : bookings.length === 0 ? (
+        ) : safeBookings.length === 0 ? (
           <p className="p-4 text-gray-500 text-center">No bookings found.</p>
         ) : (
           <table className="min-w-full text-left text-sm">
@@ -579,13 +618,15 @@ function Dashboard() {
 
             <tbody>
               {filteredBookings.map((b) => {
-                const totalAmount = b.services?.reduce(
-                  (sum, s) => sum + (s.price || 0),
-                  0
-                );
-                const serviceNames = b.services
-                  ?.map((s) => s.serviceName)
-                  .join(", ");
+                const totalAmount = Array.isArray(b.services)
+                  ? b.services.reduce(
+                      (sum, s) => sum + (Number(s.price) || 0),
+                      0
+                    )
+                  : 0;
+                const serviceNames = Array.isArray(b.services)
+                  ? b.services.map((s) => s.serviceName).join(", ")
+                  : "";
 
                 const paymentStatus = b.paymentStatus || "Pending";
                 const isPaid = paymentStatus === "Paid";

@@ -1,6 +1,7 @@
+// src/pages/ManageService.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const ManageService = () => {
   const [formData, setFormData] = useState({
@@ -13,78 +14,8 @@ const ManageService = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
   const [showSortOptions, setShowSortOptions] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleEdit = (id) => {
-    const serviceToEdit = services.find((s) => s._id === id);
-    if (serviceToEdit) {
-      setEditingId(id);
-      setFormData({
-        service: serviceToEdit.service,
-        description: serviceToEdit.description,
-        duration: serviceToEdit.duration,
-        price: serviceToEdit.price.toString(),
-      });
-      // Scroll to form
-      document.querySelector(".manage-service-form").scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
-
-  const handleCheckbox = (id) => {
-    setSelectedServices((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((serviceId) => serviceId !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-  };
-
-  const handleDelete = async () => {
-    if (selectedServices.length === 0) return;
-
-    try {
-      for (const id of selectedServices) {
-        await axios.delete(`http://localhost:5000/api/Manageservices/${id}`);
-      }
-      // Refresh services list after deletion
-      fetchServices();
-      // Clear selection
-      setSelectedServices([]);
-    } catch (error) {
-      console.error("Error deleting services:", error);
-    }
-  };
-
-  const handleSort = (order) => {
-    setSortOrder(order);
-    const sortedServices = [...services].sort((a, b) => {
-      if (order === "asc") {
-        return a.service.localeCompare(b.service);
-      } else {
-        return b.service.localeCompare(a.service);
-      }
-    });
-    setServices(sortedServices);
-    setShowSortOptions(false);
-  };
   const [services, setServices] = useState([]);
-  // Track which descriptions are expanded (by service id)
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
-
-  const toggleExpand = (id) => {
-    setExpandedDescriptions((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   useEffect(() => {
     fetchServices();
@@ -95,22 +26,93 @@ const ManageService = () => {
       const response = await axios.get(
         "http://localhost:5000/api/Manageservices"
       );
-      setServices(response.data);
+      // server might return array directly or an object — handle both
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.services || response.data;
+      setServices(data || []);
     } catch (error) {
       console.error("Error fetching services:", error);
+      toast.error("Failed to fetch services");
     }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({ ...prevState, [name]: value }));
+  };
+
+  const handleEdit = (id) => {
+    const serviceToEdit = services.find((s) => s._id === id);
+    if (serviceToEdit) {
+      setEditingId(id);
+      setFormData({
+        service: serviceToEdit.service || "",
+        description: serviceToEdit.description || "",
+        duration: serviceToEdit.duration || "",
+        price: serviceToEdit.price?.toString() || "",
+      });
+      // Scroll to form (guarded)
+      document.querySelector(".manage-service-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const handleCheckbox = (id) => {
+    setSelectedServices((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleDelete = async () => {
+    if (selectedServices.length === 0) return;
+    if (
+      !window.confirm(`Delete ${selectedServices.length} selected service(s)?`)
+    )
+      return;
+
+    const toastId = toast.loading("Deleting services...");
+    try {
+      // parallel deletes for speed
+      await Promise.all(
+        selectedServices.map((id) =>
+          axios.delete(`http://localhost:5000/api/Manageservices/${id}`)
+        )
+      );
+      toast.success("Deleted selected services", { id: toastId });
+      setSelectedServices([]);
+      await fetchServices();
+    } catch (error) {
+      console.error("Error deleting services:", error);
+      toast.error("Failed to delete some services", { id: toastId });
+    }
+  };
+
+  const handleSort = (order) => {
+    setSortOrder(order);
+    const sortedServices = [...services].sort((a, b) =>
+      order === "asc"
+        ? a.service.localeCompare(b.service)
+        : b.service.localeCompare(a.service)
+    );
+    setServices(sortedServices);
+    setShowSortOptions(false);
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedDescriptions((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleSubmit = async () => {
     const { service, description, duration, price } = formData;
     if (!service || !description || !duration || !price) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
-
     try {
       if (editingId) {
-        // Update existing service
         const response = await axios.put(
           `http://localhost:5000/api/Manageservices/${editingId}`,
           {
@@ -120,12 +122,10 @@ const ManageService = () => {
             price: Number(price),
           }
         );
-
-        if (response.data.message) {
-          toast.success("✅ Service updated successfully!");
-        }
+        toast.success(
+          response.data?.message || "✅ Service updated successfully!"
+        );
       } else {
-        // Add new service
         const response = await axios.post(
           "http://localhost:5000/api/Manageservices",
           {
@@ -135,16 +135,13 @@ const ManageService = () => {
             price: Number(price),
           }
         );
-
-        if (response.data.message) {
-          toast.success(" ✅ Service added successfully!");
-        }
+        toast.success(
+          response.data?.message || "✅ Service added successfully!"
+        );
       }
 
-      // Refresh services list
       await fetchServices();
 
-      // Reset form and editing state
       setFormData({
         service: "",
         description: "",
@@ -152,12 +149,9 @@ const ManageService = () => {
         price: "",
       });
       setEditingId(null);
-
-      // Scroll to the services list
-      document.querySelector(".services-list").scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      document
+        .querySelector(".services-list")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       console.error("Error saving service:", error);
       toast.error(
@@ -168,50 +162,58 @@ const ManageService = () => {
   };
 
   return (
-    <div className="min-h-screen w-full  flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
-      {/* Manage Service */}
+    <div className="min-h-screen w-full flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
+      {/* Toaster: mount once (can move to App.jsx for global usage) */}
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+
+      {/* Manage Service Form */}
       <div className="bg-white p-6 shadow-xl rounded-lg border h-130 w-100 manage-service-form">
         <h2 className="text-center text-3xl font-semibold mb-4">
           {editingId ? "Edit Service" : "Add New Service"}
         </h2>
+
         <input
           type="text"
           name="service"
-          placeholder="Select Service"
+          placeholder="Service name"
           value={formData.service}
           onChange={handleChange}
-          className="w-full border p-5 mb-3 rounded"
+          className="w-full border p-3 mb-3 rounded"
         />
+
         <textarea
           name="description"
           placeholder="Description"
           value={formData.description}
           onChange={handleChange}
-          className="w-full border p-5 mb-3 rounded h-20"
+          className="w-full border p-3 mb-3 rounded h-24"
         />
+
         <select
           name="duration"
           value={formData.duration}
           onChange={handleChange}
-          className="w-full border p-5 mb-2 rounded h-20"
+          className="w-full border p-3 mb-2 rounded"
         >
           <option value="">Select Duration</option>
           <option value="10 Minutes">10 Minutes</option>
-          <option value="30 Minuts">30 Minutes</option>
-          <option value="1 hour ">1 Hour</option>
+          <option value="30 Minutes">30 Minutes</option>
+          <option value="1 Hour">1 Hour</option>
           <option value="1 Hour 30 Minutes">1 Hour 30 Minutes</option>
           <option value="2 Hours">2 Hours</option>
-          <option value="2 Hours 30 Minute">2 Hours 30 Minutes</option>
+          <option value="2 Hours 30 Minutes">2 Hours 30 Minutes</option>
           <option value="3 Hours">3 Hours</option>
         </select>
+
         <input
           type="number"
           name="price"
           placeholder="Price (₹)"
           value={formData.price}
           onChange={handleChange}
-          className="w-full border p-5 mb-4 rounded"
+          className="w-full border p-3 mb-4 rounded"
         />
+
         <div className="flex gap-2">
           <button
             onClick={handleSubmit}
@@ -219,6 +221,7 @@ const ManageService = () => {
           >
             {editingId ? "Update Service" : "Add Service"}
           </button>
+
           {editingId && (
             <button
               onClick={() => {
@@ -239,10 +242,9 @@ const ManageService = () => {
       </div>
 
       {/* All Services */}
-
-      <div className="bg-white w-260 mt-10 p-6 rounded-lg shadow-xl border ">
+      <div className="bg-white w-260 mt-10 p-6 rounded-lg shadow-xl border services-list">
         <h2 className="text-center text-3xl font-semibold mb-4">All Service</h2>
-        {/* Action Buttons */}
+
         <div className="flex gap-4 w-280 text-sm my-5 pl-190 m-2">
           <button
             onClick={handleDelete}
@@ -252,6 +254,7 @@ const ManageService = () => {
             🗑 Delete{" "}
             {selectedServices.length > 0 && `(${selectedServices.length})`}
           </button>
+
           <div className="relative">
             <button
               onClick={() => setShowSortOptions(!showSortOptions)}
@@ -279,7 +282,8 @@ const ManageService = () => {
             )}
           </div>
         </div>
-        <table className="w-full border text-sm ">
+
+        <table className="w-full border text-sm">
           <thead className="bg-gray-100">
             <tr>
               <th className="border p-2 text-left w-1/5">Service</th>
@@ -287,7 +291,7 @@ const ManageService = () => {
               <th className="border p-2 text-left w-1/6">Duration</th>
               <th className="border p-2 text-left w-1/6">Amount</th>
               <th className="border p-2 w-16">Edit</th>
-              <th className="border p-2 w-16">checkbox</th>
+              <th className="border p-2 w-16">Select</th>
             </tr>
           </thead>
           <tbody>
