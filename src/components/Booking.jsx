@@ -288,7 +288,7 @@ function Booking() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-[#fffdfa] pl-55 pt-15">
+    <div className="flex items-center justify-center bg-[#fffdfa] pl-55 pt-6 ">
       <div className="bg-white border rounded-xl shadow-xl p-6 w-full max-w-md ">
         <h2 className="text-3xl font-semibold text-center mb-6 text-black">
           New Booking

@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
+import { ExportContext } from "../layout/ExportContext";
+import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
 import { FiSearch } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -24,6 +26,38 @@ function ManageStyle() {
   useEffect(() => {
     fetchStylists();
   }, []);
+
+  // Export & filtering: stylists list
+  const { setExportData, filterType, filterValue, setAvailableYears } =
+    useContext(ExportContext);
+
+  const displayedStylists = filterByDate(
+    stylists || [],
+    "createdAt",
+    filterType,
+    filterValue
+  );
+
+  useEffect(() => {
+    const years = getAvailableYears(stylists || [], "createdAt");
+    setAvailableYears(years);
+  }, [stylists]);
+
+  const exportRowsStylists = useMemo(() => {
+    return (displayedStylists || []).map((s) => ({
+      Name: s.name || "",
+      Phone: s.phone || "",
+      Status: s.status || "",
+    }));
+  }, [displayedStylists]);
+
+  const exportRowsStylistsKey = useMemo(() => {
+    return exportRowsStylists.map((r) => `${r.Name}|${r.Phone}`).join("||");
+  }, [exportRowsStylists]);
+
+  useEffect(() => {
+    setExportData(exportRowsStylists);
+  }, [exportRowsStylistsKey, setExportData]);
 
   const setInactive = async (id) => {
     try {
@@ -98,7 +132,7 @@ function ManageStyle() {
       <div className="mt-8 bg-white rounded-lg border shadow-xl w-full max-w-5xl p-6">
         {loading ? (
           <p>Loading stylists...</p>
-        ) : sortedStylists.length === 0 ? (
+        ) : displayedStylists.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No stylists found.</p>
         ) : (
           <table className="w-full text-left border">
@@ -111,7 +145,7 @@ function ManageStyle() {
               </tr>
             </thead>
             <tbody>
-              {sortedStylists.map((stylist) => (
+              {displayedStylists.map((stylist) => (
                 <tr key={stylist._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">{stylist.name}</td>
                   <td className="py-3 px-4">{stylist.phone}</td>

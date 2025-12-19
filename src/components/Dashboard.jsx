@@ -1,34 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import toast from "react-hot-toast";
+import { ExportContext } from "../layout/ExportContext";
+import {
+  filterByDate,
+  getAvailableYears,
+  formatDisplayDate,
+} from "../layout/dateFilterUtils";
 import axios from "axios";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiCheck, FiEdit3, FiX } from "react-icons/fi";
 
 function Dashboard() {
   const [bookings, setBookings] = useState([]);
   const [stylists, setStylists] = useState([]);
-  const [allServices, setAllServices] = useState([]); // master service list
+  const [allServices, setAllServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
   const [editingBooking, setEditingBooking] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const editFormRef = useRef(null);
+  const editRowRef = useRef(null);
 
-  // Helper to normalize API response when backend may return either
-  // - an array directly: res.data -> [...]
-  // - an object: res.data.bookings -> [...]
+  // ✅ Helper to handle different backend response structures safely
   const extractArray = (res, keyFallback) => {
     if (!res) return [];
     if (Array.isArray(res.data)) return res.data;
     if (Array.isArray(res.data?.[keyFallback])) return res.data[keyFallback];
     if (Array.isArray(res.data?.bookings)) return res.data.bookings;
-    // sometimes backend returns the array in res.data.data or res.data.items
     if (Array.isArray(res.data?.data)) return res.data.data;
-    if (Array.isArray(res.data?.items)) return res.data.items;
-    // if nothing matched, return empty array
     return [];
   };
 
-  // Fetch bookings
+  // 1. Fetch Bookings
   const fetchBookings = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/bookings");
@@ -40,18 +46,11 @@ function Dashboard() {
     }
   };
 
-  // Fetch active stylists only
+  // 2. Fetch Stylists
   const fetchStylists = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/stylists");
-      // normalize - backend may return array or object
-      const maybeArray = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.stylists)
-        ? res.data.stylists
-        : Array.isArray(res.data?.data)
-        ? res.data.data
-        : [];
+      const maybeArray = extractArray(res, "stylists");
       const activeStylists = maybeArray.filter(
         (stylist) =>
           (stylist.status || "").toString().toLowerCase() === "active"
@@ -63,20 +62,11 @@ function Dashboard() {
     }
   };
 
-  // Fetch all services (service master for dropdown)
+  // 3. Fetch Services
   const fetchAllServices = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/Manageservices");
-      // normalize
-      const arr = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.services)
-        ? res.data.services
-        : Array.isArray(res.data?.data)
-        ? res.data.data
-        : Array.isArray(res.data?.items)
-        ? res.data.items
-        : [];
+      const arr = extractArray(res, "services");
       setAllServices(arr);
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -84,7 +74,6 @@ function Dashboard() {
     }
   };
 
-  // Fetch bookings, stylists, services on mount
   useEffect(() => {
     let mounted = true;
     const fetchData = async () => {
@@ -98,19 +87,95 @@ function Dashboard() {
     };
   }, []);
 
-  // Calculate totals safely
   const safeBookings = Array.isArray(bookings) ? bookings : [];
   const totalBookings = safeBookings.length;
   const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
 
-  const totalEarnings = safeBookings.reduce((sum, booking) => {
+  const { filterType, filterValue, setAvailableYears } =
+    useContext(ExportContext);
+
+  // apply global filter to bookings for display
+  const filteredBookingsByGlobal = filterByDate(
+    safeBookings,
+    "date",
+    filterType,
+    filterValue
+  );
+
+  useEffect(() => {
+    const years = getAvailableYears(safeBookings, "date");
+    setAvailableYears(years);
+  }, [bookings]);
+
+  // Scroll to edit form when a booking is selected for editing (and focus)
+  useEffect(() => {
+    if (editingBooking && editFormRef.current) {
+      setTimeout(() => {
+        const el = editFormRef.current;
+        if (el && el.scrollIntoView)
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const first = el.querySelector("input, select, textarea");
+        if (first) first.focus();
+      }, 80);
+    }
+  }, [editingBooking]);
+
+  // Prevent body scroll while modal open and add ESC key handler
+  useEffect(() => {
+    if (editingBooking) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    const onKey = (e) => {
+      if (e.key === "Escape" && editingBooking) closeModal();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [editingBooking]);
+
+  // ✅ REAL-LIFE LOGIC: Only calculate Earnings if status is "Paid"
+  const totalEarnings = filteredBookingsByGlobal.reduce((sum, booking) => {
+    // Convert status to lowercase to handle "Paid", "paid", "PAID"
+    const status = (booking.paymentStatus || "Pending")
+      .toString()
+      .toLowerCase();
+
+    // If not paid, do not add to total
+    if (status !== "paid") {
+      return sum;
+    }
+
+    // Calculate total service price for this booking
     const serviceSum = Array.isArray(booking.services)
       ? booking.services.reduce((a, s) => a + Number(s.price || 0), 0)
       : 0;
+
     return sum + serviceSum;
   }, 0);
 
-  // Filter by search
+  // Export: set dashboard data for export
+  const { setExportData } = useContext(ExportContext);
+
+  useEffect(() => {
+    const rows = filteredBookingsByGlobal.map((b) => {
+      const serviceSum = Array.isArray(b.services)
+        ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
+        : 0;
+      return {
+        "Customer Name": b.customerName || "",
+        Phone: b.phone || "",
+        Email: b.email || "",
+        Date: b.date || "",
+        Time: b.time || "",
+        "Payment Status": b.paymentStatus || "",
+        "Total Amount": serviceSum,
+      };
+    });
+    setExportData(rows);
+  }, [filteredBookingsByGlobal]);
+
+  // Search Filter
   const filteredBookings = safeBookings.filter((b) => {
     const name = (b.customerName || "").toString().toLowerCase();
     const phone = (b.phone || "").toString().toLowerCase();
@@ -119,11 +184,10 @@ function Dashboard() {
     return name.includes(q) || phone.includes(q);
   });
 
-  // Sort by name (A-Z / Z-A)
+  // Sort Logic
   const handleSort = (order) => {
     setSortOrder(order);
     setShowSortOptions(false);
-
     const sorted = [...safeBookings].sort((a, b) => {
       const nameA = (a.customerName || "").toLowerCase();
       const nameB = (b.customerName || "").toLowerCase();
@@ -133,29 +197,28 @@ function Dashboard() {
     setBookings(sorted);
   };
 
-  // Handle booking selection (for delete)
+  // Selection Logic
   const handleSelectBooking = (id) => {
     setSelectedBookings((prev) =>
       prev.includes(id) ? prev.filter((bId) => bId !== id) : [...prev, id]
     );
   };
 
-  // Delete selected bookings
+  // Delete Logic
   const handleDelete = async () => {
     if (selectedBookings.length === 0) return;
-
     try {
       for (const id of selectedBookings) {
         await axios.delete(`http://localhost:5000/api/bookings/${id}`);
       }
-      await fetchBookings(); // refresh data
+      await fetchBookings();
       setSelectedBookings([]);
     } catch (error) {
       console.error("Error deleting bookings:", error);
     }
   };
 
-  // When user clicks Edit button in table
+  // --- EDIT HANDLERS ---
   const handleEditClick = (booking) => {
     setEditingBooking({
       ...booking,
@@ -170,52 +233,34 @@ function Dashboard() {
     });
   };
 
-  // Update simple fields in edit form
   const handleEditChange = (field, value) => {
-    setEditingBooking((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setEditingBooking((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Update a service (name / price / duration)
   const handleServiceChange = (index, field, value) => {
     setEditingBooking((prev) => {
       const services = [...(prev?.services || [])];
       const updatedService = { ...services[index] };
-
-      if (field === "price") {
-        updatedService.price = Number(value) || 0;
-      } else if (field === "serviceName") {
-        updatedService.serviceName = value;
-      } else if (field === "duration") {
-        updatedService.duration = value;
-      }
-
+      if (field === "price") updatedService.price = Number(value) || 0;
+      else if (field === "serviceName") updatedService.serviceName = value;
+      else if (field === "duration") updatedService.duration = value;
       services[index] = updatedService;
       return { ...prev, services };
     });
   };
 
-  // Add new empty service row manually
   const handleAddService = () => {
     setEditingBooking((prev) => ({
       ...prev,
       services: [
         ...(prev?.services || []),
-        {
-          serviceName: "",
-          price: 0,
-          duration: "",
-        },
+        { serviceName: "", price: 0, duration: "" },
       ],
     }));
   };
 
-  // Add service from dropdown (master service list)
   const handleAddServiceFromDropdown = (serviceId) => {
     if (!serviceId || !editingBooking) return;
-
     const selected = (allServices || []).find(
       (s) => (s._id ?? "").toString() === serviceId.toString()
     );
@@ -223,8 +268,6 @@ function Dashboard() {
 
     setEditingBooking((prev) => {
       const currentServices = prev.services || [];
-
-      // optional: avoid duplicates by serviceName
       const already = currentServices.some(
         (s) =>
           (s.serviceName || "").toLowerCase() ===
@@ -237,15 +280,10 @@ function Dashboard() {
         price: selected.price || 0,
         duration: selected.duration || "",
       };
-
-      return {
-        ...prev,
-        services: [...currentServices, newService],
-      };
+      return { ...prev, services: [...currentServices, newService] };
     });
   };
 
-  // Remove service row
   const handleRemoveService = (index) => {
     setEditingBooking((prev) => {
       const services = [...(prev.services || [])];
@@ -254,14 +292,19 @@ function Dashboard() {
     });
   };
 
-  const handleEditCancel = () => {
-    setEditingBooking(null);
+  // Close modal with animation
+  const closeModal = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      setEditingBooking(null);
+    }, 220);
   };
 
-  // Save edited booking (including services)
+  // ✅ REAL-LIFE LOGIC: Update Local State Immediately on Save (with toast & animated close)
   const handleEditSave = async () => {
     if (!editingBooking) return;
-
+    setIsSaving(true);
     try {
       const payload = {
         customerName: editingBooking.customerName,
@@ -277,51 +320,38 @@ function Dashboard() {
         })),
       };
 
-      console.log("👉 Save clicked, sending payload:", {
-        id: editingBooking._id,
-        payload,
-      });
-
       const res = await axios.put(
         `http://localhost:5000/api/bookings/${editingBooking._id}`,
         payload
       );
 
-      console.log("✅ Update response:", res.data);
       const updated = res.data.booking || res.data;
 
+      // Update the local bookings array immediately
       setBookings((prev) =>
         (Array.isArray(prev) ? prev : []).map((b) =>
           b._id === updated._id ? updated : b
         )
       );
 
-      setEditingBooking(null);
+      toast.success("Changes saved successfully");
+      // animate close
+      closeModal();
     } catch (error) {
-      console.error("❌ Error updating booking:", error);
-
-      if (error.response) {
-        console.error("Status:", error.response.status);
-        console.error("Data:", error.response.data);
-        alert(
-          `Update failed: ${error.response.data?.message || "Check console"}`
-        );
-      } else {
-        alert("Update failed: Network or server error");
-      }
+      console.error("Error updating booking:", error);
+      toast.error("Update failed. Check console.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Total for currently editing booking
-  const editingTotal =
-    (editingBooking?.services || []).reduce(
-      (sum, s) => sum + (Number(s.price) || 0),
-      0
-    ) || 0;
+  const editingTotal = (editingBooking?.services || []).reduce(
+    (sum, s) => sum + (Number(s.price) || 0),
+    0
+  );
 
   return (
-    <div className="min-h-screen w-full p-8 text-black pl-80 bg-gray-50">
-      {/* Header */}
+    <div className="min-h-screen w-full p-8 text-black pl-80 ">
       <div className="text-3xl font-semibold mb-8">
         <h1>Dashboard</h1>
       </div>
@@ -349,10 +379,10 @@ function Dashboard() {
           {selectedBookings.length > 0 && `(${selectedBookings.length})`}
         </button>
 
-        <div className="relative ">
+        <div className="relative">
           <button
             onClick={() => setShowSortOptions(!showSortOptions)}
-            className=" flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
           >
             🔍 Sort {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
           </button>
@@ -384,9 +414,13 @@ function Dashboard() {
           <h2 className="text-3xl font-bold mt-2">{totalBookings}</h2>
         </div>
 
+        {/* ✅ Total Earnings Card: Shows ONLY Paid Amounts */}
         <div className="bg-[#d6b740] text-black rounded-xl shadow-md p-6 text-center">
           <p className="text-gray-800 font-medium text-sm">Total Earnings</p>
-          <h2 className="text-3xl font-bold mt-2">₹{totalEarnings}</h2>
+          <h2 className="text-3xl font-bold mt-2">
+            ₹{totalEarnings.toLocaleString()}
+          </h2>
+          <p className="text-xs mt-1 opacity-80">(Verified Paid Only)</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6 text-center">
@@ -395,14 +429,13 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Edit Box */}
+      {/* Edit Form */}
       {editingBooking && (
-        <div className="bg-white border rounded-xl shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            Edit Booking – {editingBooking.customerName}
-          </h2>
-
-          {/* Basic fields */}
+        <div
+          ref={editFormRef}
+          className=" border rounded-xl shadow-md p-6 mb-6"
+        >
+          <h2 className="text-xl font-semibold mb-4">Edit Booking</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm text-gray-700 mb-1">
@@ -414,7 +447,7 @@ function Dashboard() {
                 onChange={(e) =>
                   handleEditChange("customerName", e.target.value)
                 }
-                className="w-full border rounded-md p-2 text-sm outline-none focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
               />
             </div>
             <div>
@@ -423,7 +456,7 @@ function Dashboard() {
                 type="text"
                 value={editingBooking.phone || ""}
                 onChange={(e) => handleEditChange("phone", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm outline-none focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
               />
             </div>
             <div>
@@ -432,7 +465,7 @@ function Dashboard() {
                 type="text"
                 value={editingBooking.date || ""}
                 onChange={(e) => handleEditChange("date", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm outline-none focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
               />
             </div>
             <div>
@@ -441,7 +474,7 @@ function Dashboard() {
                 type="text"
                 value={editingBooking.time || ""}
                 onChange={(e) => handleEditChange("time", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm outline-none focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
               />
             </div>
             <div>
@@ -453,7 +486,7 @@ function Dashboard() {
                 onChange={(e) =>
                   handleEditChange("paymentStatus", e.target.value)
                 }
-                className="w-full border rounded-md p-2 text-sm outline-none focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
               >
                 <option value="Pending">Pending</option>
                 <option value="Paid">Paid</option>
@@ -461,7 +494,6 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Services Editor */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-gray-700 mb-1">
@@ -480,9 +512,7 @@ function Dashboard() {
                 </option>
                 {(allServices || []).map((service) => (
                   <option key={service._id} value={service._id}>
-                    {service.serviceName ?? service.service}{" "}
-                    {service.duration ? `(${service.duration})` : ""} - ₹
-                    {service.price}
+                    {service.serviceName ?? service.service} - ₹{service.price}
                   </option>
                 ))}
               </select>
@@ -498,17 +528,9 @@ function Dashboard() {
               </button>
             </div>
 
-            {(!editingBooking.services ||
-              editingBooking.services.length === 0) && (
-              <p className="text-xs text-gray-500">
-                No services selected. Choose from dropdown above or click "Add
-                Empty Service".
-              </p>
-            )}
-
             {editingBooking.services && editingBooking.services.length > 0 && (
               <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-200 space-y-2">
-                {(editingBooking.services || []).map((service, idx) => (
+                {editingBooking.services.map((service, idx) => (
                   <div
                     key={idx}
                     className="grid grid-cols-12 gap-2 items-center"
@@ -516,7 +538,6 @@ function Dashboard() {
                     <div className="col-span-5">
                       <input
                         type="text"
-                        placeholder="Service name"
                         value={service.serviceName || ""}
                         onChange={(e) =>
                           handleServiceChange(
@@ -525,46 +546,43 @@ function Dashboard() {
                             e.target.value
                           )
                         }
-                        className="w-full border rounded-md p-2 text-xs outline-none focus:ring-1 focus:ring-[#d6b740]"
+                        className="w-full border rounded-md p-2 text-xs"
                       />
                     </div>
                     <div className="col-span-3">
                       <input
                         type="text"
-                        placeholder="Duration"
                         value={service.duration || ""}
                         onChange={(e) =>
                           handleServiceChange(idx, "duration", e.target.value)
                         }
-                        className="w-full border rounded-md p-2 text-xs outline-none focus:ring-1 focus:ring-[#d6b740]"
+                        className="w-full border rounded-md p-2 text-xs"
                       />
                     </div>
                     <div className="col-span-3">
                       <input
                         type="number"
-                        placeholder="Amount"
                         value={service.price ?? 0}
                         onChange={(e) =>
                           handleServiceChange(idx, "price", e.target.value)
                         }
-                        className="w-full border rounded-md p-2 text-xs outline-none focus:ring-1 focus:ring-[#d6b740]"
+                        className="w-full border rounded-md p-2 text-xs"
                       />
                     </div>
                     <div className="col-span-1 flex justify-end">
                       <button
                         type="button"
                         onClick={() => handleRemoveService(idx)}
-                        className="text-xs text-red-600 hover:text-red-800"
+                        className="text-xs text-red-600"
                       >
                         ✕
                       </button>
                     </div>
                   </div>
                 ))}
-
-                <div className="mt-3 pt-3 border-t flex justify-between items-center text-sm">
-                  <span className="font-semibold">Total Amount:</span>
-                  <span className="font-semibold">₹{editingTotal}</span>
+                <div className="mt-3 pt-3 border-t flex justify-between font-semibold text-sm">
+                  <span>Total Amount:</span>
+                  <span>₹{editingTotal}</span>
                 </div>
               </div>
             )}
@@ -572,8 +590,8 @@ function Dashboard() {
 
           <div className="flex gap-3 justify-end mt-4">
             <button
-              onClick={handleEditCancel}
-              className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-200"
+              onClick={() => setEditingBooking(null)}
+              className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-200"
             >
               Cancel
             </button>
@@ -590,32 +608,31 @@ function Dashboard() {
       {/* Table Section */}
       <div className="bg-white border rounded-xl shadow-md overflow-hidden">
         {loading ? (
-          <p className="p-4 text-gray-500 text-center">Loading data...</p>
+          <p className="p-4 text-center text-gray-500">Loading data...</p>
         ) : safeBookings.length === 0 ? (
-          <p className="p-4 text-gray-500 text-center">No bookings found.</p>
+          <p className="p-4 text-center text-gray-500">No bookings found.</p>
         ) : (
           <table className="min-w-full text-left text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="py-3 px-6 font-medium text-gray-700">Select</th>
-                <th className="py-3 px-6 font-medium text-gray-700">
+                <th className="py-3 px-6 text-gray-700 font-medium">Select</th>
+                <th className="py-3 px-6 text-gray-700 font-medium">
                   Customer
                 </th>
-                <th className="py-3 px-6 font-medium text-gray-700">Phone</th>
-                <th className="py-3 px-6 font-medium text-gray-700">
+                <th className="py-3 px-6 text-gray-700 font-medium">Phone</th>
+                <th className="py-3 px-6 text-gray-700 font-medium">
                   Date & Time
                 </th>
-                <th className="py-3 px-6 font-medium text-gray-700">Service</th>
-                <th className="py-3 px-6 font-medium text-gray-700">Amount</th>
-                <th className="py-3 px-6 font-medium text-gray-700 text-center">
+                <th className="py-3 px-6 text-gray-700 font-medium">Service</th>
+                <th className="py-3 px-6 text-gray-700 font-medium">Amount</th>
+                <th className="py-3 px-6 text-gray-700 font-medium text-center">
                   Payment
                 </th>
-                <th className="py-3 px-6 font-medium text-gray-700 text-center">
+                <th className="py-3 px-6 text-gray-700 font-medium text-center">
                   Edit
                 </th>
               </tr>
             </thead>
-
             <tbody>
               {filteredBookings.map((b) => {
                 const totalAmount = Array.isArray(b.services)
@@ -628,8 +645,9 @@ function Dashboard() {
                   ? b.services.map((s) => s.serviceName).join(", ")
                   : "";
 
-                const paymentStatus = b.paymentStatus || "Pending";
-                const isPaid = paymentStatus === "Paid";
+                // Case insensitive badge check
+                const isPaid =
+                  (b.paymentStatus || "").toString().toLowerCase() === "paid";
 
                 return (
                   <tr
@@ -641,7 +659,7 @@ function Dashboard() {
                         type="checkbox"
                         checked={selectedBookings.includes(b._id)}
                         onChange={() => handleSelectBooking(b._id)}
-                        className="w-4 h-4 accent-[#d6b740] cursor-pointer"
+                        className="w-4 h-4 accent-[#d6b740]"
                       />
                     </td>
                     <td className="py-4 px-6">{b.customerName}</td>

@@ -1,44 +1,199 @@
-import React from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import axios from "axios";
+import { FiSearch } from "react-icons/fi";
+import { ExportContext } from "../layout/ExportContext";
+import { formatDisplayDate } from "../layout/dateFilterUtils";
 
 const Pending = () => {
-  const pendingData = [
-    {
-      customer: "Clara Bennett",
-      phone: "555-123-4567",
-      stylist: "Emily",
-      date: "10:00 AM, July 26",
-      service: "Haircut & Style",
-      amount: "$100",
-      status: "pending",
-    },
-    {
-      customer: "Owen Harper",
-      phone: "555-987-6543",
-      stylist: "Olivia",
-      date: "11:30 AM, July 26",
-      service: "Manicure",
-      amount: "$50",
-      status: "pending",
-    },
-    {
-      customer: "Ava Mitchell",
-      phone: "555-246-8013",
-      stylist: "Ethan",
-      date: "1:00 PM, July 26",
-      service: "Facial",
-      amount: "$80",
-      status: "pending",
-    },
-    {
-      customer: "Lucas Foster",
-      phone: "555-135-7911",
-      stylist: "Ava",
-      date: "2:30 PM, July 26",
-      service: "Massage",
-      amount: "$70",
-      status: "pending",
-    },
-  ];
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pendingData, setPendingData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const { setExportData, filterType, filterValue } = useContext(ExportContext);
+
+  // Fetch pending bookings from API
+  const fetchPendingBookings = async () => {
+    try {
+      setLoading(true);
+      const bookingsRes = await axios.get("http://localhost:5000/api/bookings");
+      const raw = bookingsRes.data;
+      const allBookings = Array.isArray(raw)
+        ? raw
+        : raw?.bookings || raw?.data || [];
+
+      // Filter only pending bookings (case-insensitive)
+      const pendingBookings = allBookings.filter(
+        (booking) =>
+          (booking.paymentStatus || "").toString().toLowerCase() === "pending"
+      );
+
+      // Transform data to match component structure
+      const transformedData = pendingBookings.map((booking) => {
+        const totalAmount =
+          booking.services?.reduce(
+            (sum, service) => sum + (Number(service.price) || 0),
+            0
+          ) || 0;
+        const serviceNames =
+          booking.services?.map((s) => s.serviceName || s.service).join(", ") ||
+          "No services";
+        return {
+          _id: booking._id,
+          customer: booking.customerName || booking.customer || "",
+          phone: booking.phone || "",
+          date: booking.date ? booking.date.slice(0, 16) : "",
+          time: booking.time || "",
+          service: serviceNames,
+          amount: `₹${totalAmount}`,
+          totalAmount,
+          status: "pending",
+          originalBooking: booking,
+        };
+      });
+
+      setPendingData(transformedData);
+    } catch (error) {
+      console.error("Error fetching pending bookings:", error);
+      setPendingData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchPendingBookings();
+  }, []);
+
+  const filteredData = useMemo(() => {
+    return pendingData
+      .filter(
+        (item) =>
+          (item.customer || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (item.phone || "").toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .filter((item) => {
+        if (filterType === "month" && filterValue) {
+          const bookingMonthYear = item.date ? item.date.slice(0, 7) : ""; // "YYYY-MM"
+          return bookingMonthYear === filterValue;
+        } else if (filterType === "year" && filterValue) {
+          const bookingYear = item.date ? item.date.slice(0, 4) : ""; // "YYYY"
+          return bookingYear === filterValue;
+        }
+        return true; // "all" filter
+      });
+  }, [pendingData, searchTerm, filterType, filterValue]);
+
+  // Send filtered data to export (safe: memoized + key)
+  const exportRows = useMemo(() => {
+    return (filteredData || []).map((d) => ({
+      Customer: d.customer,
+      Phone: d.phone,
+      Date: formatDisplayDate(d.date),
+      Time: d.time,
+      Service: d.service,
+      Amount: d.amount,
+      Status: d.status,
+    }));
+  }, [filteredData]);
+
+  const exportKey = useMemo(
+    () =>
+      exportRows.map((r) => `${r.Customer}|${r.Date}|${r.Amount}`).join("||"),
+    [exportRows]
+  );
+
+  useEffect(() => {
+    setExportData(exportRows);
+  }, [exportKey, setExportData]);
+
+  const handleCheckboxChange = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (
+      selectedRows.length === filteredData.length &&
+      filteredData.length > 0
+    ) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredData.map((item) => item._id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRows.length === 0) {
+      alert("Please select at least one entry to delete.");
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${selectedRows.length} selected entr${
+        selectedRows.length > 1 ? "ies" : "y"
+      }?`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      for (const bookingId of selectedRows) {
+        await axios.delete(`http://localhost:5000/api/bookings/${bookingId}`);
+      }
+
+      await fetchPendingBookings();
+      setSelectedRows([]);
+      alert("Selected entries deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting bookings:", error);
+      alert("Failed to delete some entries. Please try again.");
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (selectedRows.length === 0) {
+      alert("Please select at least one entry to mark as paid.");
+      return;
+    }
+
+    const confirmMarkPaid = window.confirm(
+      `Are you sure you want to mark ${selectedRows.length} selected booking${
+        selectedRows.length > 1 ? "s" : ""
+      } as paid?`
+    );
+
+    if (!confirmMarkPaid) return;
+
+    try {
+      for (const bookingId of selectedRows) {
+        const booking = pendingData.find((item) => item._id === bookingId);
+        if (booking && booking.originalBooking) {
+          const payload = { ...booking.originalBooking, paymentStatus: "Paid" };
+          await axios.put(
+            `http://localhost:5000/api/bookings/${bookingId}`,
+            payload
+          );
+        }
+      }
+
+      await fetchPendingBookings();
+      setSelectedRows([]);
+      alert("Selected bookings marked as paid successfully!");
+    } catch (error) {
+      console.error("Error marking bookings as paid:", error);
+      alert("Failed to update some bookings. Please try again.");
+    }
+  };
+
+  const totalPendingAmount = useMemo(
+    () => filteredData.reduce((sum, item) => sum + (item.totalAmount || 0), 0),
+    [filteredData]
+  );
 
   return (
     <div className="min-h-screen pl-55 bg-gray-50 flex flex-col items-center py-10 px-4  shadow-xl">
@@ -46,51 +201,129 @@ const Pending = () => {
       <div className="w-full max-w-5xl mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Pending amount</h2>
         <p className="text-[#D3AF37] text-sm mt-1">
-          View your Pending amount summary
+          View your Pending amount summary • Total Pending: ₹
+          {totalPendingAmount.toLocaleString()}
         </p>
       </div>
+
+      {/* ✅ Search Bar (now functional) */}
+      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-6xl border rounded-md">
+        <FiSearch className="text-gray-500 text-xl" />
+        <input
+          type="text"
+          placeholder="Search pending bookings by customer name or phone"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="bg-transparent outline-none ml-3 w-full text-gray-700"
+        />
+      </div>
+
       {/* Action Buttons */}
-      <div className="flex gap-4 w-285 text-sm my-5 pl-236 m-2">
-        <button className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50">
-          🗑 Delete
+      <div className="flex gap-4 justify-end text-sm my-5 m-2 w-full max-w-6xl">
+        <button
+          onClick={handleMarkAsPaid}
+          className="flex items-center gap-1 text-green-600 border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={selectedRows.length === 0}
+        >
+          ✅ Mark as Paid{" "}
+          {selectedRows.length > 0 && `(${selectedRows.length})`}
         </button>
-        <button className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50">
-          🔍 Filters
+        <button
+          onClick={handleBulkDelete}
+          className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={selectedRows.length === 0}
+        >
+          🗑 Delete {selectedRows.length > 0 && `(${selectedRows.length})`}
+        </button>
+        <button
+          onClick={fetchPendingBookings}
+          className="flex items-center gap-1 text-blue-600 border border-blue-600 px-3 py-1 rounded-md hover:bg-blue-50"
+        >
+          🔄 Refresh
         </button>
       </div>
+
       {/* Table */}
       <div className="bg-white w-full max-w-6xl rounded-lg shadow border overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[#D3AF37] text-black">
+              <th className="p-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={
+                    filteredData.length > 0 &&
+                    selectedRows.length === filteredData.length
+                  }
+                  onChange={handleSelectAll}
+                />
+              </th>
               <th className="p-3 text-left">Customer</th>
               <th className="p-3 text-left">Phone No</th>
-              <th className="p-3 text-left">Stylist</th>
               <th className="p-3 text-left">Date and Time</th>
               <th className="p-3 text-left">Service</th>
               <th className="p-3 text-left">Amount</th>
               <th className="p-3 text-left">Payment Status</th>
             </tr>
           </thead>
+
           <tbody>
-            {pendingData.map((item, index) => (
-              <tr
-                key={index}
-                className="border-b hover:bg-gray-50 transition-colors"
-              >
-                <td className="p-3 py-5">{item.customer}</td>
-                <td className="p-3 py-5">{item.phone}</td>
-                <td className="p-3 py-5">{item.stylist}</td>
-                <td className="p-3 py-5">{item.date}</td>
-                <td className="p-3 py-5 ">{item.service}</td>
-                <td className="p-3 py-5">{item.amount}</td>
-                <td className="p-3">
-                  <span className="bg-yellow-50 text-yellow-700 text-xs font-medium px-3 py-1 rounded-full border border-yellow-200">
-                    {item.status}
-                  </span>
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center text-gray-600 py-6 text-md"
+                >
+                  Loading pending bookings...
                 </td>
               </tr>
-            ))}
+            ) : filteredData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center text-gray-600 py-6 text-md"
+                >
+                  {pendingData.length === 0
+                    ? "No pending bookings found."
+                    : "No entries found for the selected filter."}
+                </td>
+              </tr>
+            ) : (
+              filteredData.map((item) => (
+                <tr
+                  key={item._id}
+                  className="border-b hover:bg-gray-50 transition-colors"
+                >
+                  <td className="p-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(item._id)}
+                      onChange={() => handleCheckboxChange(item._id)}
+                    />
+                  </td>
+                  <td className="p-3 py-5">{item.customer}</td>
+                  <td className="p-3 py-5">{item.phone}</td>
+                  <td className="p-3 py-5">
+                    {formatDisplayDate(item.date)}{" "}
+                    {item.time && `at ${item.time}`}
+                  </td>
+                  <td
+                    className="p-3 py-5 max-w-xs truncate"
+                    title={item.service}
+                  >
+                    {item.service}
+                  </td>
+                  <td className="p-3 py-5 font-semibold text-orange-600">
+                    {item.amount}
+                  </td>
+                  <td className="p-3">
+                    <span className="bg-yellow-50 text-yellow-700 text-xs font-medium px-3 py-1 rounded-full border border-yellow-200">
+                      Pending
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

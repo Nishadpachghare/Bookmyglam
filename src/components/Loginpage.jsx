@@ -30,7 +30,10 @@ function Loginpage() {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        }),
       });
 
       const data = await response.json();
@@ -40,14 +43,14 @@ function Loginpage() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-         toast.success("✅ Login successful!");
+        toast.success("✅ Login successful!");
         navigate("/dashboard");
       } else {
-         toast.error(`❌ ${data.message || "Invalid credentials!"}`);
+        toast.error(`❌ ${data.message || "Invalid credentials!"}`);
       }
     } catch (error) {
       console.error("Login error:", error);
-       toast.error("🚨 Server error! Please try again later.");
+      toast.error("🚨 Server error! Please try again later.");
     }
   };
 
@@ -56,10 +59,15 @@ function Loginpage() {
       <div className="flex flex-col md:flex-row w-260 h-130 bg-white rounded-lg overflow-hidden shadow-md">
         {/* Left Section */}
         <div className="relative md:w-1/2 w-full h-64 md:h-auto">
-          <img src="/Login-page.png" alt="Salon" className="absolute inset-0 w-full h-full object-cover" />
+          <img
+            src="/Login-page.png"
+            alt="Salon"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center p-6">
             <p className="text-white text-xl md:text-2xl font-semibold leading-snug text-center">
-              Give your salon the care it deserves — manage services, staff, and clients effortlessly.
+              Give your salon the care it deserves — manage services, staff, and
+              clients effortlessly.
             </p>
           </div>
         </div>
@@ -68,7 +76,8 @@ function Loginpage() {
         <div className="md:w-1/2 w-full bg-black text-white p-8 flex flex-col justify-center">
           <h2 className="text-2xl font-bold mb-2">Login</h2>
           <p className="text-gray-300 mb-6 text-sm">
-            Welcome to Serene Beauty Salon, we hope your stay feels bright as the morning sun.
+            Welcome to Serene Beauty Salon, we hope your stay feels bright as
+            the morning sun.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

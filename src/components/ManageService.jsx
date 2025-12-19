@@ -1,7 +1,9 @@
 // src/pages/ManageService.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import { ExportContext } from "../layout/ExportContext";
+import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 const ManageService = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +22,41 @@ const ManageService = () => {
   useEffect(() => {
     fetchServices();
   }, []);
+
+  // Export & filtering: services list
+  const { setExportData, filterType, filterValue, setAvailableYears } =
+    useContext(ExportContext);
+
+  const displayedServices = filterByDate(
+    services || [],
+    "createdAt",
+    filterType,
+    filterValue
+  );
+
+  useEffect(() => {
+    const years = getAvailableYears(services || [], "createdAt");
+    setAvailableYears(years);
+  }, [services]);
+
+  const exportRowsServices = useMemo(() => {
+    return (displayedServices || []).map((s) => ({
+      Service: s.service || "",
+      Description: s.description || "",
+      Duration: s.duration || "",
+      Price: s.price ?? "",
+    }));
+  }, [displayedServices]);
+
+  const exportRowsServicesKey = useMemo(() => {
+    return exportRowsServices
+      .map((r) => `${r.Service}|${r.Duration}|${r.Price}`)
+      .join("||");
+  }, [exportRowsServices]);
+
+  useEffect(() => {
+    setExportData(exportRowsServices);
+  }, [exportRowsServicesKey, setExportData]);
 
   const fetchServices = async () => {
     try {
@@ -295,7 +332,7 @@ const ManageService = () => {
             </tr>
           </thead>
           <tbody>
-            {services.map((s) => (
+            {displayedServices.map((s) => (
               <tr key={s._id}>
                 <td className="border py-5 p-2">{s.service}</td>
                 <td className="border py-5 p-2 align-top">

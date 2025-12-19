@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 function Register() {
   const navigate = useNavigate();
@@ -53,7 +53,6 @@ function Register() {
   return (
     <div className="min-h-screen  flex items-center justify-center bg-[#fffdfa] ">
       <div className="flex flex-col md:flex-row  w-260 h-135 bg-white rounded-lg overflow-hidden shadow-md">
-
         {/* Left Section */}
         <div className="relative md:w-1/2 w-full h-64 md:h-auto">
           <img
@@ -63,7 +62,8 @@ function Register() {
           />
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center p-6">
             <p className="text-white text-xl md:text-2xl font-semibold leading-snug text-center">
-              Empower your salon journey — manage clients, services, and staff seamlessly.
+              Empower your salon journey — manage clients, services, and staff
+              seamlessly.
             </p>
           </div>
         </div>
@@ -72,7 +72,8 @@ function Register() {
         <div className="md:w-1/2 bg-black text-white p-8  flex flex-col justify-center">
           <h2 className="text-2xl font-bold mb-2">Register</h2>
           <p className="text-gray-300 mb-6 text-sm">
-            Create your account and take your salon management to the next level.
+            Create your account and take your salon management to the next
+            level.
           </p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>

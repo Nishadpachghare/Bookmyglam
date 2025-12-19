@@ -1,7 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
+import { ExportContext } from "../layout/ExportContext";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+  filterByDate,
+  getAvailableYears,
+  formatDisplayDate,
+} from "../layout/dateFilterUtils";
 
 const AddExpense = () => {
   const [amount, setAmount] = useState("");
@@ -139,6 +145,47 @@ const AddExpense = () => {
     });
     return copy;
   }, [expenses, sortOrder]);
+
+  // Export & filtering: expenses
+  const { setExportData, filterType, filterValue, setAvailableYears } =
+    useContext(ExportContext);
+
+  const displayedExpenses = filterByDate(
+    sortedExpenses || [],
+    "date",
+    filterType,
+    filterValue
+  );
+
+  // totals for the currently displayed (date-filtered) expenses
+  const totalExpensesCount = displayedExpenses.length;
+  const totalExpensesAmount = displayedExpenses.reduce(
+    (sum, e) => sum + (Number(e.amount) || 0),
+    0
+  );
+
+  useEffect(() => {
+    const years = getAvailableYears(sortedExpenses || [], "date");
+    setAvailableYears(years);
+  }, [sortedExpenses]);
+
+  const exportRowsExpenses = useMemo(() => {
+    return (displayedExpenses || []).map((e) => ({
+      Amount: e.amount ?? "",
+      Date: formatDisplayDate(e.date) || "",
+      Expiry: formatDisplayDate(e.expiryDate) || "",
+      Notes: e.notes || "",
+      Receipt: e.fileName || "",
+    }));
+  }, [displayedExpenses]);
+
+  const exportRowsExpensesKey = useMemo(() => {
+    return exportRowsExpenses.map((r) => `${r.Amount}|${r.Date}`).join("||");
+  }, [exportRowsExpenses]);
+
+  useEffect(() => {
+    setExportData(exportRowsExpenses);
+  }, [exportRowsExpensesKey, setExportData]);
 
   // ✅ Edit: load data into form
   const handleEdit = (id) => {
@@ -340,7 +387,7 @@ const AddExpense = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedExpenses.map((exp) => (
+            {displayedExpenses.map((exp) => (
               <tr
                 key={exp._id}
                 className="even:bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -354,7 +401,9 @@ const AddExpense = () => {
                   />
                 </td>
                 <td className="border p-2">₹{exp.amount}</td>
-                <td className="border p-2">{exp.date || "-"}</td>
+                <td className="border p-2">
+                  {formatDisplayDate(exp.date) || "-"}
+                </td>
                 <td className="border p-2">{exp.expiryDate || "-"}</td>
                 <td className="border p-2 max-w-xs truncate">{exp.notes}</td>
                 <td className="border p-2">{exp.fileName || "No file"}</td>
@@ -369,7 +418,7 @@ const AddExpense = () => {
               </tr>
             ))}
 
-            {sortedExpenses.length === 0 && (
+            {displayedExpenses.length === 0 && (
               <tr>
                 <td
                   colSpan={7}
@@ -380,6 +429,21 @@ const AddExpense = () => {
               </tr>
             )}
           </tbody>
+          <tfoot className="bg-gray-50">
+            <tr>
+              <td className="border p-2 text-center font-semibold">Totals</td>
+              <td className="border p-2 font-semibold">
+                ₹{totalExpensesAmount.toLocaleString()}
+              </td>
+              <td className="border p-2 font-semibold" />
+              <td className="border p-2 font-semibold" />
+              <td className="border p-2 font-semibold" />
+              <td className="border p-2 font-semibold" />
+              <td className="border p-2 text-center font-semibold">
+                {totalExpensesCount} items
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>

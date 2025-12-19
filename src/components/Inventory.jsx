@@ -1,5 +1,11 @@
 // src/pages/Inventory.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
+import { ExportContext } from "../layout/ExportContext";
+import {
+  filterByDate,
+  getAvailableYears,
+  formatDisplayDate,
+} from "../layout/dateFilterUtils";
 import axios from "axios";
 
 const API_BASE = "http://localhost:5000";
@@ -49,6 +55,52 @@ export default function Inventory() {
   useEffect(() => {
     fetchInventory();
   }, [showLowStockOnly]);
+
+  // Export & filtering: provide inventory rows for export, and set available years
+  const { setExportData, filterType, filterValue, setAvailableYears } =
+    useContext(ExportContext);
+
+  const displayedItems = filterByDate(
+    items || [],
+    "date",
+    filterType,
+    filterValue
+  );
+
+  // totals for the currently displayed (date-filtered) items
+  const totalItems = displayedItems.length;
+  const totalStockValue = displayedItems.reduce(
+    (sum, it) => sum + Number(it.costPrice || 0) * Number(it.stockQty || 0),
+    0
+  );
+
+  useEffect(() => {
+    const years = getAvailableYears(items || [], "date");
+    setAvailableYears(years);
+  }, [items]);
+
+  const exportRowsInventory = useMemo(() => {
+    return (displayedItems || []).map((it) => ({
+      Item: it.name || "",
+      Category: it.category || "",
+      Brand: it.brand || "",
+      Date: formatDisplayDate(it.date),
+      Stock: `${it.stockQty ?? 0} ${it.unit || ""}`,
+      Reorder: it.reorderLevel ?? "",
+      Cost: it.costPrice ?? "",
+      Supplier: it.supplierName || "",
+    }));
+  }, [displayedItems]);
+
+  const exportRowsInventoryKey = useMemo(() => {
+    return exportRowsInventory
+      .map((r) => `${r.Item}|${r.Date}|${r.Stock}`)
+      .join("||");
+  }, [exportRowsInventory]);
+
+  useEffect(() => {
+    setExportData(exportRowsInventory);
+  }, [exportRowsInventoryKey, setExportData]);
 
   const handleChange = (field, value) => {
     // clear field-specific error on change
@@ -487,9 +539,14 @@ export default function Inventory() {
         {/* List */}
         <div className="bg-white border rounded-lg p-5 shadow-sm w-286">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-base font-semibold">
-              Inventory Items ({items.length})
-            </h2>
+            <div>
+              <h2 className="text-base font-semibold">
+                Inventory Items ({totalItems})
+              </h2>
+              <div className="text-sm text-gray-600">
+                Total stock value: ₹{totalStockValue.toLocaleString()}
+              </div>
+            </div>
             {loading && (
               <span className="text-xs text-gray-400">Loading...</span>
             )}
@@ -516,7 +573,7 @@ export default function Inventory() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {displayedItems.map((item) => (
                     <tr
                       key={item._id}
                       className="border-b hover:bg-gray-50 transition"
@@ -540,7 +597,7 @@ export default function Inventory() {
 
                       <td className="px-3 py-2 text-center">
                         {item.date ? (
-                          new Date(item.date).toLocaleDateString("en-IN")
+                          formatDisplayDate(item.date)
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
@@ -590,6 +647,23 @@ export default function Inventory() {
                     </tr>
                   ))}
                 </tbody>
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td className="px-3 py-2 font-semibold">Totals</td>
+                    <td className="px-3 py-2" />
+                    <td className="px-3 py-2" />
+                    <td className="px-3 py-2 text-center font-semibold">
+                      {totalItems} items
+                    </td>
+                    <td className="px-3 py-2 text-center" />
+                    <td className="px-3 py-2 text-center" />
+                    <td className="px-3 py-2 text-center font-semibold">
+                      ₹{totalStockValue.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 text-center" />
+                    <td className="px-3 py-2" />
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}
