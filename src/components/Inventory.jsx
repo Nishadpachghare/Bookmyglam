@@ -7,6 +7,7 @@ import {
   formatDisplayDate,
 } from "../layout/dateFilterUtils";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const API_BASE = "http://localhost:5000";
 
@@ -259,7 +260,7 @@ export default function Inventory() {
       resetForm();
     } catch (err) {
       console.error("Error saving item:", err);
-      alert("Error saving item. Please try again.");
+      toast.error("Error saving item. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -272,7 +273,7 @@ export default function Inventory() {
       await fetchInventory();
     } catch (err) {
       console.error("Error deleting item:", err);
-      alert("Unable to delete item.");
+      toast.error("Unable to delete item.");
     }
   };
 
@@ -280,7 +281,7 @@ export default function Inventory() {
     item.reorderLevel > 0 && item.stockQty <= item.reorderLevel;
 
   return (
-    <div className="p-6  w-377 pl-85  text-gray-800">
+    <div className="p-6  w-377 pl-85 text-sm text-gray-800">
       <div className="max-w-7xl mx-auto flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Inventory Management</h1>
@@ -304,25 +305,25 @@ export default function Inventory() {
 
       <div className="max-w-8xl mx-auto grid grid-cols-1  gap-6">
         {/* Form */}
-        <div className="bg-white border rounded-lg p-5 shadow-sm lg:col-span-1">
-          <h2 className="text-base font-semibold mb-4">
+        <div className="bg-white border rounded-lg p-5 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">
             {editingId ? "Edit Item" : "Add New Item"}
           </h2>
           <form className="space-y-3" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-medium mb-1">
+              <label className="block text-sm font-medium mb-1">
                 Item Name *
               </label>
               <input
                 name="name"
                 type="text"
-                className="w-full p-2 border rounded text-xs"
+                className="w-full p-2 border rounded text-sm"
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="L'Oréal Shampoo 500ml"
               />
               {formErrors.name && (
-                <div className="text-red-500 text-xs mt-1">
+                <div className="text-red-500 text-sm mt-1">
                   {formErrors.name}
                 </div>
               )}
@@ -330,37 +331,37 @@ export default function Inventory() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Category *
                 </label>
                 <input
                   name="category"
                   type="text"
-                  className="w-full p-2 border rounded text-xs"
+                  className="w-full p-2 border rounded text-sm"
                   value={form.category}
                   onChange={(e) => handleChange("category", e.target.value)}
                   placeholder="Shampoo / Color / Tools"
                 />
                 {formErrors.category && (
-                  <div className="text-red-500 text-xs mt-1">
+                  <div className="text-red-500 text-sm mt-1">
                     {formErrors.category}
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Brand *
                 </label>
                 <input
                   name="brand"
                   type="text"
-                  className="w-full p-2 border rounded text-xs"
+                  className="w-full p-2 border rounded text-sm"
                   value={form.brand}
                   onChange={(e) => handleChange("brand", e.target.value)}
                   placeholder="L'Oréal, Matrix, etc."
                 />
                 {formErrors.brand && (
-                  <div className="text-red-500 text-xs mt-1">
+                  <div className="text-red-500 text-sm mt-1">
                     {formErrors.brand}
                   </div>
                 )}
@@ -369,21 +370,21 @@ export default function Inventory() {
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1">SKU</label>
+                <label className="block text-sm font-medium mb-1">SKU</label>
                 <input
                   name="sku"
                   type="text"
-                  className="w-full p-2 border rounded text-xs"
+                  className="w-full p-2 border rounded text-sm"
                   value={form.sku}
                   onChange={(e) => handleChange("sku", e.target.value)}
                   placeholder="Internal code"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">Unit *</label>
+                <label className="block text-sm font-medium mb-1">Unit *</label>
                 <select
                   name="unit"
-                  className="w-full p-2 border rounded text-xs"
+                  className="w-full p-2 border rounded text-sm"
                   value={form.unit}
                   onChange={(e) => handleChange("unit", e.target.value)}
                 >
@@ -393,7 +394,7 @@ export default function Inventory() {
                   <option value="box">box</option>
                 </select>
                 {formErrors.unit && (
-                  <div className="text-red-500 text-xs mt-1">
+                  <div className="text-red-500 text-sm mt-1">
                     {formErrors.unit}
                   </div>
                 )}
@@ -433,7 +434,7 @@ export default function Inventory() {
                   placeholder="per unit"
                 />
                 {formErrors.costPrice && (
-                  <div className="text-red-500 text-xs mt-1">
+                  <div className="text-red-500 text-sm mt-1">
                     {formErrors.costPrice}
                   </div>
                 )}
@@ -473,11 +474,11 @@ export default function Inventory() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1">Date *</label>
+                <label className="block text-sm font-medium mb-1">Date *</label>
                 <input
                   name="date"
                   type="date"
-                  className="w-full p-2 border rounded text-xs"
+                  className="w-full p-2 border rounded text-sm"
                   value={form.date}
                   onChange={(e) => handleChange("date", e.target.value)}
                 />
@@ -528,7 +529,7 @@ export default function Inventory() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-[#D3AF37] hover:bg-yellow-500 text-xs font-semibold rounded text-black"
+                className="px-4 py-2 bg-[#D3AF37] hover:bg-yellow-500 text-sm font-semibold rounded text-black"
               >
                 {saving ? "Saving..." : editingId ? "Update Item" : "Add Item"}
               </button>
@@ -548,7 +549,7 @@ export default function Inventory() {
               </div>
             </div>
             {loading && (
-              <span className="text-xs text-gray-400">Loading...</span>
+              <span className="text-sm text-gray-400">Loading...</span>
             )}
           </div>
 
@@ -558,7 +559,7 @@ export default function Inventory() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-xs border">
+              <table className="min-w-full text-sm border">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700 border">
                     <th className="px-3 py-2 text-left">Item</th>

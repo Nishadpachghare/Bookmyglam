@@ -201,11 +201,11 @@ const ManageService = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
       {/* Toaster: mount once (can move to App.jsx for global usage) */}
-      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Manage Service Form */}
       <div className="bg-white p-6 shadow-xl rounded-lg border h-130 w-100 manage-service-form">
-        <h2 className="text-center text-3xl font-semibold mb-4">
+        <h2 className="text-center text-3xl font-semibold mb-4 pt-2">
           {editingId ? "Edit Service" : "Add New Service"}
         </h2>
 
@@ -215,7 +215,7 @@ const ManageService = () => {
           placeholder="Service name"
           value={formData.service}
           onChange={handleChange}
-          className="w-full border p-3 mb-3 rounded"
+          className="w-full border p-3 mb-3 rounded pt-5"
         />
 
         <textarea
@@ -230,7 +230,7 @@ const ManageService = () => {
           name="duration"
           value={formData.duration}
           onChange={handleChange}
-          className="w-full border p-3 mb-2 rounded"
+          className="w-full border p-3 mb-2 rounded pt-5"
         >
           <option value="">Select Duration</option>
           <option value="10 Minutes">10 Minutes</option>
@@ -248,10 +248,10 @@ const ManageService = () => {
           placeholder="Price (₹)"
           value={formData.price}
           onChange={handleChange}
-          className="w-full border p-3 mb-4 rounded"
+          className="w-full border p-3 mb-4 rounded "
         />
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-15">
           <button
             onClick={handleSubmit}
             className="w-full bg-[#D3AF37] py-3 rounded text-black font-medium hover:bg-[#D3AF37]"

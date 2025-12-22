@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import { ExportContext } from "../layout/ExportContext";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-hot-toast";
 import {
   filterByDate,
   getAvailableYears,
@@ -15,6 +14,10 @@ const AddExpense = () => {
   const [expiryDate, setExpiryDate] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [currentFileUrl, setCurrentFileUrl] = useState(null); // holds existing uploaded URL for edit-mode
+  const [uploading, setUploading] = useState(false);
 
   const [expenses, setExpenses] = useState([]); // list from backend
   const [selectedExpenses, setSelectedExpenses] = useState([]);
@@ -38,8 +41,64 @@ const AddExpense = () => {
   }, []);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    setPreviewUrl(URL.createObjectURL(f));
+    setCurrentFileUrl(null); // user replaced existing URL with a new file
   };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    const f = e.dataTransfer?.files && e.dataTransfer.files[0];
+    if (!f) return;
+    setFile(f);
+    setPreviewUrl(URL.createObjectURL(f));
+    setCurrentFileUrl(null);
+  };
+
+  // Upload file buffer to backend -> Cloudinary via /api/uploads/media
+  const uploadFileToServer = async (fileToUpload) => {
+    if (!fileToUpload) return null;
+    try {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append("file", fileToUpload);
+      const res = await axios.post(
+        "http://localhost:5000/api/uploads/media",
+        fd,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      setUploading(false);
+      return res.data?.media?.url || null;
+    } catch (err) {
+      setUploading(false);
+      console.error("Upload failed:", err);
+      throw err;
+    }
+  };
+
+  // Revoke object URL when preview changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // ✅ Submit → add OR update (depending on editingId)
   const handleSubmit = async (e) => {
@@ -49,12 +108,25 @@ const AddExpense = () => {
       return;
     }
 
+    // If a new file was selected upload it first, else keep existing URL (if editing)
+    let fileUrl = null;
+    try {
+      if (file && file instanceof File) {
+        fileUrl = await uploadFileToServer(file);
+      } else if (currentFileUrl) {
+        fileUrl = currentFileUrl;
+      }
+    } catch (err) {
+      toast.error("File upload failed. Please try again.");
+      return; // stop submission
+    }
+
     const payload = {
       amount: Number(amount),
       date,
       expiryDate,
       notes,
-      fileName: file ? file.name : null,
+      fileName: fileUrl,
     };
 
     try {
@@ -93,9 +165,14 @@ const AddExpense = () => {
       setExpiryDate("");
       setNotes("");
       setFile(null);
+      setPreviewUrl(null);
+      setCurrentFileUrl(null);
+      setUploading(false);
       setEditingId(null);
     } catch (error) {
       console.error("Error saving expense:", error);
+      // Ensure uploading flag reset on error
+      setUploading(false);
       toast.error("Failed to save expense. Check console.");
     }
   };
@@ -147,8 +224,14 @@ const AddExpense = () => {
   }, [expenses, sortOrder]);
 
   // Export & filtering: expenses
-  const { setExportData, filterType, filterValue, setAvailableYears } =
-    useContext(ExportContext);
+  const {
+    setExportData,
+    filterType,
+    filterValue,
+    setAvailableYears,
+    setFilterType,
+    setFilterValue,
+  } = useContext(ExportContext);
 
   const displayedExpenses = filterByDate(
     sortedExpenses || [],
@@ -156,6 +239,17 @@ const AddExpense = () => {
     filterType,
     filterValue
   );
+
+  useEffect(() => {
+    // helpful debug to trace when global filter changes and how many items remain
+    console.log(
+      "[AddExpense] filter",
+      filterType,
+      filterValue,
+      "displayed count:",
+      displayedExpenses.length
+    );
+  }, [filterType, filterValue, displayedExpenses.length]);
 
   // totals for the currently displayed (date-filtered) expenses
   const totalExpensesCount = displayedExpenses.length;
@@ -198,9 +292,19 @@ const AddExpense = () => {
     setExpiryDate(exp.expiryDate || "");
     setNotes(exp.notes || "");
 
-    // Sirf naam store kar rahe hain, purana file object nahi milta,
-    // isliye yaha virtual file object bana rahe hain just for UI.
-    setFile(exp.fileName ? { name: exp.fileName } : null);
+    // If there is an existing uploaded URL, keep it as currentFileUrl and preview it
+    if (
+      exp.fileName &&
+      (exp.fileName.startsWith("http") || exp.fileName.startsWith("/"))
+    ) {
+      setCurrentFileUrl(exp.fileName);
+      setPreviewUrl(exp.fileName);
+      setFile(null);
+    } else {
+      setCurrentFileUrl(null);
+      setPreviewUrl(null);
+      setFile(null);
+    }
 
     // Optionally scroll to form
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -214,12 +318,12 @@ const AddExpense = () => {
     setExpiryDate("");
     setNotes("");
     setFile(null);
+    setCurrentFileUrl(null);
+    setPreviewUrl(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 pl-55">
-      <ToastContainer />
-
       <div className="w-full max-w-xl bg-white p-6 rounded-lg shadow border">
         <h2 className="text-2xl font-bold text-gray-800 mb-1">
           {editingId ? "Edit expense" : "Add expenses"}
@@ -284,29 +388,68 @@ const AddExpense = () => {
             />
           </div>
 
-          {/* Receipt Upload */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+          {/* Receipt Upload (drag & drop) */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-6 text-center bg-gray-50 ${
+              dragActive ? "border-green-500 bg-green-50" : "border-gray-300"
+            }`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <p className="font-medium text-gray-700 mb-1">
               Upload Receipt{" "}
               <span className="text-gray-500 text-sm">(Optional)</span>
             </p>
 
-            {/* Upload Button */}
-            <label className="inline-block mt-3 bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-[#c1a235] transition">
-              Browse File
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
+            <div className="mt-3 flex flex-col items-center gap-2">
+              <label className="inline-block bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-[#c1a235] transition">
+                Browse File
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
 
-            {/* File Name */}
-            {file && (
-              <p className="text-xs text-gray-600 mt-3 bg-white p-2 rounded-md inline-block border">
-                Selected: <span className="font-medium">{file.name}</span>
-              </p>
-            )}
+              <div className="text-sm text-gray-600">
+                Or drag & drop your file here
+              </div>
+
+              {uploading && (
+                <div className="text-sm text-gray-600 mt-2">Uploading...</div>
+              )}
+
+              {/* Preview or existing link */}
+              {previewUrl ? (
+                <div className="mt-3">
+                  <img
+                    src={previewUrl}
+                    alt="preview"
+                    className="max-h-40 mx-auto rounded"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Selected: <span className="font-medium">{file?.name}</span>
+                  </p>
+                </div>
+              ) : currentFileUrl ? (
+                <div className="mt-3">
+                  <a
+                    href={currentFileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    View uploaded receipt
+                  </a>
+                </div>
+              ) : file ? (
+                <p className="text-xs text-gray-600 mt-3 bg-white p-2 rounded-md inline-block border">
+                  Selected: <span className="font-medium">{file.name}</span>
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {/* Save / Update Buttons */}
@@ -371,6 +514,25 @@ const AddExpense = () => {
               </div>
             )}
           </div>
+
+          {/* Current Global Filter Indicator */}
+          {filterType && filterType !== "all" && (
+            <div className="ml-4 flex items-center gap-2 text-sm text-gray-600">
+              <span className="font-medium">Filter:</span>
+              <span className="truncate">
+                {filterType} {filterValue ? `- ${filterValue}` : ""}
+              </span>
+              <button
+                onClick={() => {
+                  setFilterType("all");
+                  setFilterValue(null);
+                }}
+                className="ml-2 text-xs text-red-600 hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Table */}
@@ -400,13 +562,37 @@ const AddExpense = () => {
                     className="w-4 h-4 accent-[#d6b740] cursor-pointer"
                   />
                 </td>
-                <td className="border p-2">₹{exp.amount}</td>
+                <td className="border p-2">
+                  ₹{Number(exp.amount).toLocaleString("en-IN")}
+                </td>
                 <td className="border p-2">
                   {formatDisplayDate(exp.date) || "-"}
                 </td>
-                <td className="border p-2">{exp.expiryDate || "-"}</td>
-                <td className="border p-2 max-w-xs truncate">{exp.notes}</td>
-                <td className="border p-2">{exp.fileName || "No file"}</td>
+                <td className="border p-2">
+                  {formatDisplayDate(exp.expiryDate) || "-"}
+                </td>
+                <td className="border p-2 max-w-lg break-words whitespace-pre-wrap">
+                  {exp.notes}
+                </td>
+                <td className="border p-2">
+                  {exp.fileName ? (
+                    exp.fileName.startsWith("http") ||
+                    exp.fileName.startsWith("/") ? (
+                      <a
+                        href={exp.fileName}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      <span className="italic">{exp.fileName}</span>
+                    )
+                  ) : (
+                    <span className="text-gray-500">No file</span>
+                  )}
+                </td>
                 <td className="border text-center p-2">
                   <button
                     onClick={() => handleEdit(exp._id)}

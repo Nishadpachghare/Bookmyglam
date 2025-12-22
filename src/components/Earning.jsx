@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 import { ExportContext } from "../layout/ExportContext";
 import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
 
@@ -252,7 +253,7 @@ function Earning() {
 
   const handleDelete = () => {
     if (selectedEarning.length === 0) return;
-    alert(
+    toast.info(
       `Delete action clicked for months: ${selectedEarning.join(
         ", "
       )} (frontend only)`

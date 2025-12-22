@@ -1,6 +1,7 @@
 // src/pages/Uploadimg.jsx
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const API_BASE = "http://localhost:5000";
 
@@ -109,21 +110,93 @@ export default function Uploadimg() {
     e.target.value = null;
   };
 
+  // Handle files dropped into the drop areas
+  const handleFileDrop = (e, type) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Try files first, then items (some browsers expose items instead)
+    let f = e.dataTransfer?.files?.[0];
+    if (!f && e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+      const item = e.dataTransfer.items[0];
+      if (item && item.kind === "file") {
+        f = item.getAsFile();
+      }
+    }
+
+    if (!f) return;
+
+    // Loose validation and helpful feedback
+    if (type === "image" && !f.type.startsWith("image")) {
+      toast.error("Please drop an image file");
+      return;
+    }
+    if (type === "video" && !f.type.startsWith("video")) {
+      toast.error("Please drop a video file");
+      return;
+    }
+
+    const preview = URL.createObjectURL(f);
+    setForm((prev) => ({
+      ...prev,
+      [type]: { ...prev[type], file: f, preview },
+    }));
+  };
+
+  const handleDragEnter = (type, e) => {
+    e.preventDefault();
+    setHighlightSection(type);
+  };
+  const handleDragLeave = () => setHighlightSection("");
+
+  // Clear the selected file/preview for a given type (image/video/link)
+  const clearSelected = (type) => {
+    setForm((prev) => {
+      const prevPreview = prev[type]?.preview;
+      if (
+        prevPreview &&
+        prevPreview.startsWith &&
+        prevPreview.startsWith("blob:")
+      ) {
+        try {
+          URL.revokeObjectURL(prevPreview);
+        } catch (e) {}
+      }
+
+      if (type === "link") {
+        if (linkFileInputRef.current) linkFileInputRef.current.value = null;
+        return {
+          ...prev,
+          link: { ...prev.link, file: null, preview: null, url: "" },
+        };
+      }
+
+      if (type === "image") {
+        if (imageInputRef.current) imageInputRef.current.value = null;
+      }
+      if (type === "video") {
+        if (videoInputRef.current) videoInputRef.current.value = null;
+      }
+
+      return { ...prev, [type]: { ...prev[type], file: null, preview: null } };
+    });
+  };
+
   const updateFormField = (type, field, value) =>
     setForm((prev) => ({ ...prev, [type]: { ...prev[type], [field]: value } }));
   const addToReview = async (type) => {
     const src = form[type];
 
     if (type === "image" && !src.file) {
-      alert("Please select an image first.");
+      toast.error("Please select an image first.");
       return;
     }
     if (type === "video" && !src.file) {
-      alert("Please select a video first.");
+      toast.error("Please select a video first.");
       return;
     }
     if (type === "link" && !src.file && !src.url) {
-      alert("Please add a link or photo first.");
+      toast.error("Please add a link or photo first.");
       return;
     }
 
@@ -163,7 +236,8 @@ export default function Uploadimg() {
     if (type === "link") {
       combo.link = {
         file: src.file,
-        preview: src.preview,
+        // if user provided a URL but no file, use the URL as preview so the review shows something
+        preview: src.preview || (src.url ? src.url : null),
         url: src.url,
         caption: src.caption,
         platform: src.platform,
@@ -370,7 +444,7 @@ export default function Uploadimg() {
         }
       }
     }
-    alert("Upload complete");
+    toast.success("Upload complete");
   };
 
   const handlePublish = async (comboId, type) => {
@@ -378,7 +452,7 @@ export default function Uploadimg() {
     if (!combo) return;
     const item = combo[type];
     if (!item?.backendId) {
-      alert("Upload first");
+      toast.error("Upload first");
       return;
     }
     try {
@@ -434,7 +508,7 @@ export default function Uploadimg() {
         );
         console.log("[handleDelete] delete response:", resp.data);
         if (!resp.data?.ok) {
-          alert(
+          toast.error(
             "Could not delete on server: " + (resp.data?.error || "unknown")
           );
           return;
@@ -443,7 +517,7 @@ export default function Uploadimg() {
         return;
       } catch (e) {
         console.error("Error deleting on server:", e);
-        alert("Error deleting item on server. See console for details.");
+        toast.error("Error deleting item on server. See console for details.");
         return;
       }
     }
@@ -541,21 +615,59 @@ export default function Uploadimg() {
           >
             <h2 className="text-base font-semibold mb-3">Upload Photo</h2>
             <div
-              className="h-40 border-2 border-dashed border-black rounded-lg flex flex-col items-center justify-center mb-4"
+              className={`h-56 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
+                highlightSection === "image"
+                  ? "border-yellow-400 bg-yellow-50"
+                  : "border-black"
+              }`}
               onDragOver={onDragOver}
+              onDrop={(e) => handleFileDrop(e, "image")}
+              onDragEnter={(e) => handleDragEnter("image", e)}
+              onDragLeave={handleDragLeave}
+              onClick={() => imageInputRef.current?.click()}
+              role="button"
+              aria-label="Upload photo drop area"
             >
-              <div className="text-sm font-medium">
-                Drag and drop photos here
-              </div>
-              <div className="text-xs text-gray-500">
-                Or click to browse your files
-              </div>
-              <button
-                onClick={() => imageInputRef.current?.click()}
-                className="mt-3 px-4 py-2 bg-[#D3AF37]  text-black rounded shadow-sm text-xs"
-              >
-                Select Photo
-              </button>
+              {form.image.preview ? (
+                <>
+                  <img
+                    src={form.image.preview}
+                    alt="preview"
+                    className="w-full h-full object-contain"
+                  />
+
+                  {/* Cancel button overlay */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearSelected("image");
+                    }}
+                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    aria-label="Remove selected photo"
+                  >
+                    ✕
+                  </button>
+
+                  {/* filename overlay */}
+                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                    {form.image.file?.name || "Selected"}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center px-4">
+                  <div className="text-sm font-medium">
+                    Drag and drop photos here
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Or click to browse your files
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Accepted: jpg, png, webp
+                  </div>
+                </div>
+              )}
+
               <input
                 ref={imageInputRef}
                 type="file"
@@ -619,21 +731,58 @@ export default function Uploadimg() {
           >
             <h2 className="text-base font-semibold mb-3">Upload Video</h2>
             <div
-              className="h-40 border-2 border-dashed border-black rounded-lg flex flex-col items-center justify-center mb-4"
+              className={`h-56 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
+                highlightSection === "video"
+                  ? "border-yellow-400 bg-yellow-50"
+                  : "border-black"
+              }`}
               onDragOver={onDragOver}
+              onDrop={(e) => handleFileDrop(e, "video")}
+              onDragEnter={(e) => handleDragEnter("video", e)}
+              onDragLeave={handleDragLeave}
+              onClick={() => videoInputRef.current?.click()}
+              role="button"
+              aria-label="Upload video drop area"
             >
-              <div className="text-sm font-medium">
-                Drag and drop video here
-              </div>
-              <div className="text-xs text-gray-500">
-                Or click to browse your files
-              </div>
-              <button
-                onClick={() => videoInputRef.current?.click()}
-                className="mt-3 px-4 py-2 bg-[#D3AF37]  text-black rounded shadow-sm text-xs"
-              >
-                Select Video
-              </button>
+              {form.video.preview ? (
+                <>
+                  <video
+                    src={form.video.preview}
+                    className="w-full h-full object-contain"
+                    controls
+                    playsInline
+                  />
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearSelected("video");
+                    }}
+                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    aria-label="Remove selected video"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                    {form.video.file?.name || "Selected"}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center px-4">
+                  <div className="text-sm font-medium">
+                    Drag and drop video here
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Or click to browse your files
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Accepted: mp4, mov, webm
+                  </div>
+                </div>
+              )}
+
               <input
                 ref={videoInputRef}
                 type="file"
@@ -722,21 +871,55 @@ export default function Uploadimg() {
 
             {/* Optional photo for link */}
             <div
-              className="h-32 border-2 border-dashed border-black rounded-lg flex flex-col items-center justify-center mb-4"
+              className={`h-40 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
+                highlightSection === "link"
+                  ? "border-yellow-400 bg-yellow-50"
+                  : "border-black"
+              }`}
               onDragOver={onDragOver}
+              onDrop={(e) => handleFileDrop(e, "link")}
+              onDragEnter={(e) => handleDragEnter("link", e)}
+              onDragLeave={handleDragLeave}
+              onClick={() => linkFileInputRef.current?.click()}
+              role="button"
+              aria-label="Upload link/photo drop area"
             >
-              <div className="text-sm font-medium">
-                Drag and drop photo here (optional)
-              </div>
-              <div className="text-xs text-gray-500">
-                Or click to browse your files
-              </div>
-              <button
-                onClick={() => linkFileInputRef.current?.click()}
-                className="mt-3 px-4 py-2 bg-[#D3AF37]  text-black rounded shadow-sm text-xs"
-              >
-                Select Photo
-              </button>
+              {form.link.preview ? (
+                <>
+                  <img
+                    src={form.link.preview}
+                    alt="preview"
+                    className="w-full h-full object-contain"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearSelected("link");
+                    }}
+                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    aria-label="Remove selected link photo"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                    {form.link.file?.name ||
+                      (form.link.url ? "Link" : "Selected")}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center px-4">
+                  <div className="text-sm font-medium">
+                    Drag and drop photo here (optional)
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Or click to browse your files
+                  </div>
+                </div>
+              )}
+
               <input
                 ref={linkFileInputRef}
                 type="file"
@@ -939,6 +1122,8 @@ export default function Uploadimg() {
                             <video
                               src={combo.video.preview}
                               className="w-full h-full object-cover"
+                              controls
+                              playsInline
                             />
                           ) : (
                             "🎥"

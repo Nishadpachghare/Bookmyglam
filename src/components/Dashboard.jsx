@@ -40,9 +40,11 @@ function Dashboard() {
       const res = await axios.get("http://localhost:5000/api/bookings");
       const arr = extractArray(res, "bookings");
       setBookings(arr);
+      if (typeof setGlobalBookings === "function") setGlobalBookings(arr);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
+      if (typeof setGlobalBookings === "function") setGlobalBookings([]);
     }
   };
 
@@ -91,8 +93,12 @@ function Dashboard() {
   const totalBookings = safeBookings.length;
   const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
 
-  const { filterType, filterValue, setAvailableYears } =
-    useContext(ExportContext);
+  const {
+    filterType,
+    filterValue,
+    setAvailableYears,
+    setBookings: setGlobalBookings,
+  } = useContext(ExportContext);
 
   // apply global filter to bookings for display
   const filteredBookingsByGlobal = filterByDate(
@@ -333,6 +339,15 @@ function Dashboard() {
           b._id === updated._id ? updated : b
         )
       );
+
+      // Also sync with global bookings for other pages
+      if (typeof setGlobalBookings === "function") {
+        setGlobalBookings((prev) =>
+          (Array.isArray(prev) ? prev : []).map((b) =>
+            b._id === updated._id ? updated : b
+          )
+        );
+      }
 
       toast.success("Changes saved successfully");
       // animate close

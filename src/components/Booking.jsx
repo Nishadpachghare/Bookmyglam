@@ -31,6 +31,9 @@ function Booking() {
     return total + (Number(service.price) || 0);
   }, 0);
 
+  // Today's date in YYYY-MM-DD format (used to restrict past dates)
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   // fetch services on mount
   useEffect(() => {
     fetchServices();
@@ -116,8 +119,10 @@ function Booking() {
     // Email / date / time
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "email") {
-      // changing email should unverify previous verification
+      // changing email should unverify previous verification and stop any active OTP process
       if (emailVerified) setEmailVerified(false);
+      setOtpCooldown(0);
+      setOtpCode("");
     }
     setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
@@ -160,6 +165,19 @@ function Booking() {
     }
 
     if (!formData.date) errors.date = "Date is required";
+    else {
+      const d = new Date(formData.date);
+      if (isNaN(d.getTime())) {
+        errors.date = "Please enter a valid date";
+      } else {
+        const min = new Date(todayStr);
+        min.setHours(0, 0, 0, 0);
+        d.setHours(0, 0, 0, 0);
+        if (d < min) {
+          errors.date = "Cannot book past dates";
+        }
+      }
+    }
     if (!formData.time) errors.time = "Time is required";
 
     setFormErrors(errors);
@@ -188,7 +206,7 @@ function Booking() {
       });
       if (resp.data?.ok) {
         setOtpCooldown(60); // 60s cooldown
-        toast.success(`OTP sent to ${to}`);
+        toast.success(`OTP sent to ${to} — check your inbox (expires in 60s)`);
       } else {
         throw new Error(resp.data?.message || "Failed to send OTP");
       }
@@ -222,6 +240,7 @@ function Booking() {
         toast.success("Email verified");
         setEmailVerified(true);
         setOtpCode("");
+        setOtpCooldown(0); // stop countdown on successful verification
       } else {
         throw new Error(resp.data?.message || "Invalid OTP");
       }
@@ -403,14 +422,30 @@ function Booking() {
                   formErrors.email ? "border-red-500" : "border-gray-300"
                 } rounded-md px-4 py-3 bg-[#fdfaf6]`}
               />
-              <button
-                type="button"
-                onClick={sendOtpEmail}
-                disabled={otpLoading || otpCooldown > 0}
-                className="px-3 py-2 bg-[#d6b740] rounded text-black font-semibold"
-              >
-                {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Send OTP"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={sendOtpEmail}
+                  disabled={otpLoading || otpCooldown > 0}
+                  className="px-3 py-2 bg-[#d6b740] rounded text-black font-semibold"
+                >
+                  {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Send OTP"}
+                </button>
+                {otpCooldown > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpCooldown(0);
+                      setOtpCode("");
+                      setEmailVerified(false);
+                      toast("OTP cancelled", { icon: "⚠️" });
+                    }}
+                    className="px-2 py-2 border rounded text-sm text-slate-600 hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
             {formErrors.email && (
               <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
@@ -427,7 +462,7 @@ function Booking() {
               <button
                 type="button"
                 onClick={verifyOtpEmail}
-                disabled={otpLoading}
+                disabled={otpLoading || !otpCode}
                 className={`px-3 py-2 rounded text-white ${
                   emailVerified ? "bg-green-600" : "bg-blue-600"
                 }`}
@@ -435,6 +470,11 @@ function Booking() {
                 {emailVerified ? "Verified" : "Verify"}
               </button>
             </div>
+            {otpCooldown > 0 && !emailVerified && (
+              <p className="text-sm text-slate-500 mt-2">
+                OTP sent — please check your inbox. Expires in {otpCooldown}s.
+              </p>
+            )}
           </div>
 
           {/* Date & Time */}
@@ -442,6 +482,7 @@ function Booking() {
             <input
               type="date"
               name="date"
+              min={todayStr}
               value={formData.date}
               onChange={handleChange}
               className={`w-full border ${

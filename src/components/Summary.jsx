@@ -5,9 +5,18 @@ import { ExportContext } from "../layout/ExportContext";
 import { filterByDate, formatDisplayDate } from "../layout/dateFilterUtils";
 
 function SummaryContent() {
-  const { filterType, filterValue, setExportData } = useContext(ExportContext);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    filterType,
+    filterValue,
+    setExportData,
+    bookings: globalBookings,
+  } = useContext(ExportContext);
+  const [bookings, setBookings] = useState(
+    Array.isArray(globalBookings) ? globalBookings : []
+  );
+  const [loading, setLoading] = useState(
+    !Array.isArray(globalBookings) || globalBookings.length === 0
+  );
   const [selected, setSelected] = useState("This Year");
 
   const MONTH_LABELS = [
@@ -35,30 +44,54 @@ function SummaryContent() {
   };
 
   // ===============================
-  // FETCH BOOKINGS (SAME AS DASHBOARD)
+  // FETCH BOOKINGS (SAME AS DASHBOARD) — prefer shared bookings from ExportContext
+  // If no global bookings are present, fall back to fetching locally
   // ===============================
   useEffect(() => {
+    let mounted = true;
+
     const fetchBookings = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/bookings");
-        setBookings(extractArray(res));
+        const arr = extractArray(res);
+        if (!mounted) return;
+        setBookings(arr);
       } catch (err) {
         console.error("Summary fetch error:", err);
+        if (!mounted) return;
         setBookings([]);
       } finally {
+        if (!mounted) return;
         setLoading(false);
       }
     };
-    fetchBookings();
-  }, []);
 
+    if (Array.isArray(globalBookings) && globalBookings.length > 0) {
+      // Use the shared bookings and avoid an extra network call
+      setBookings(globalBookings);
+      setLoading(false);
+    } else {
+      fetchBookings();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [globalBookings]);
   // ===============================
   // TIME FILTER (UNCHANGED UI) + GLOBAL FILTER SUPPORT
   // If a global filter (set via Uppernav) is active, it overrides the local 'selected' timeframe
   // ===============================
 
+  // Use shared/global bookings when available so Summary shows the same totals as Dashboard
+  const effectiveBookings =
+    Array.isArray(globalBookings) && globalBookings.length > 0
+      ? globalBookings
+      : bookings;
+
   const filteredBookingsByLocal = useMemo(() => {
-    if (!Array.isArray(bookings) || bookings.length === 0) return [];
+    if (!Array.isArray(effectiveBookings) || effectiveBookings.length === 0)
+      return [];
 
     const now = new Date();
     const start = new Date();
@@ -87,19 +120,24 @@ function SummaryContent() {
         break;
     }
 
-    return bookings.filter((b) => {
+    return effectiveBookings.filter((b) => {
       if (!b.date) return false;
       const d = new Date(b.date);
       return !isNaN(d) && d >= start && d <= end;
     });
-  }, [bookings, selected]);
+  }, [effectiveBookings, selected]);
 
   const filteredBookings = useMemo(() => {
     if (filterType && filterType !== "all") {
-      return filterByDate(bookings || [], "date", filterType, filterValue);
+      return filterByDate(
+        effectiveBookings || [],
+        "date",
+        filterType,
+        filterValue
+      );
     }
     return filteredBookingsByLocal;
-  }, [bookings, filterType, filterValue, filteredBookingsByLocal]);
+  }, [effectiveBookings, filterType, filterValue, filteredBookingsByLocal]);
 
   // export summary data for export button (based on currently displayed bookings)
   const exportRowsSummary = useMemo(() => {
@@ -183,11 +221,30 @@ function SummaryContent() {
 
   // ===============================
   // TOTALS (MATCH DASHBOARD)
-  // - compute ALL-TIME totals from bookings to match Dashboard
+  // - For appointments, show the same count Dashboard shows (all fetched bookings)
+  // - For earnings, compute from the same filtered set used by the chart (paid-only)
   // ===============================
-  const totalAppointments = filteredBookings.length;
+  const totalAppointments = Array.isArray(effectiveBookings)
+    ? effectiveBookings.length
+    : 0;
 
-  const totalEarnings = monthlyAgg.reduce((sum, m) => sum + m.totalAmount, 0);
+  // Compute total earnings the same way as Dashboard: sum only 'Paid' bookings after applying the current date filter
+  const totalEarnings = useMemo(() => {
+    const list = filterByDate(
+      Array.isArray(effectiveBookings) ? effectiveBookings : [],
+      "date",
+      filterType,
+      filterValue
+    );
+    return list.reduce((sum, b) => {
+      const status = (b.paymentStatus || "Pending").toString().toLowerCase();
+      if (status !== "paid") return sum;
+      const serviceSum = Array.isArray(b.services)
+        ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
+        : 0;
+      return sum + serviceSum;
+    }, 0);
+  }, [effectiveBookings, filterType, filterValue]);
 
   const {
     totalCustomers,
@@ -237,17 +294,6 @@ function SummaryContent() {
         <h1 className="text-2xl font-semibold text-gray-800">
           Summary (Master Report)
         </h1>
-
-        <select
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="custom-dropdown px-3 py-1 text-sm text-gray-800 border rounded-md bg-[#d4af37]"
-        >
-          <option value="Today">Today</option>
-          <option value="This Week">This Week</option>
-          <option value="This Month">This Month</option>
-          <option value="This Year">This Year</option>
-        </select>
       </div>
 
       {/* <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-4">

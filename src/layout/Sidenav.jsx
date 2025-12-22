@@ -15,7 +15,34 @@ import { FiLogOut } from "react-icons/fi";
 
 function Sidenav() {
   return (
-    <div className="w-64 bg-white fixed inset-0 z-50  overflow-auto shadow-2xl top-0 left-0 flex flex-col">
+    <div className="w-64 bg-white fixed inset-0 z-50 overflow-y-auto custom-scrollbar shadow-2xl top-0 left-0 flex flex-col pr-2">
+      {/* Custom scrollbar styles (WebKit + Firefox) */}
+      <style>{`
+        /* Firefox */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0,0,0,0.18) transparent;
+        }
+
+        /* WebKit */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 8px 0;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #D3AF37 0%, #B88F2A 100%);
+          border-radius: 9999px;
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          filter: brightness(.95) saturate(1.05);
+        }
+        /* small visual padding so the thumb doesn't touch edges */
+        .custom-scrollbar > * { padding-right: 6px; }
+      `}</style>
       {/* Logo */}
       <div className="flex justify-center items-center">
         <img src="./SBMS_LOGO.png" alt="Logo" className="w-32 h-22 pt-2" />

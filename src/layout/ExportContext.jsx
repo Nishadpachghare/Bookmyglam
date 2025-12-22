@@ -11,6 +11,9 @@ export function ExportProvider({ children }) {
   const [filterValue, setFilterValue] = useState(null);
   const [availableYears, setAvailableYears] = useState([]);
 
+  // Shared bookings so Summary can reflect the same data as Dashboard
+  const [bookings, setBookings] = useState([]);
+
   // Use current location to include page name in exported filename
   const location = useLocation();
   const pathToName = (path) => {
@@ -154,6 +157,9 @@ export function ExportProvider({ children }) {
         setFilterValue,
         availableYears,
         setAvailableYears,
+        // shared bookings
+        bookings,
+        setBookings,
         handleExport,
       }}
     >

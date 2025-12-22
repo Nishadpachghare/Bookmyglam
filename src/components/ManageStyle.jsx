@@ -3,7 +3,7 @@ import { ExportContext } from "../layout/ExportContext";
 import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
 import { FiSearch } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 function ManageStyle() {
   const navigate = useNavigate();
@@ -47,6 +47,7 @@ function ManageStyle() {
     return (displayedStylists || []).map((s) => ({
       Name: s.name || "",
       Phone: s.phone || "",
+      Photo: s.photoUrl || "",
       Status: s.status || "",
     }));
   }, [displayedStylists]);
@@ -75,20 +76,24 @@ function ManageStyle() {
     }
   };
 
-  // ✅ Filter stylists based on search input
-  const filteredStylists = stylists.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.phone.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Apply search on the already date-filtered stylists so both filters combine
+  const searchedStylists = (displayedStylists || []).filter((s) => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return false;
+    return (
+      (s.name || "").toString().toLowerCase().includes(q) ||
+      (s.phone || "").toString().toLowerCase().includes(q)
+    );
+  });
 
-  // ✅ If searching, show results first (sorted to top)
-  const sortedStylists =
+  const visibleStylists =
     searchTerm.trim() === ""
-      ? stylists
+      ? displayedStylists
       : [
-          ...filteredStylists, // matching stylists first
-          ...stylists.filter((s) => !filteredStylists.includes(s)), // rest below
+          // matches first
+          ...searchedStylists,
+          // then the rest that didn't match (to keep full list visible)
+          ...displayedStylists.filter((s) => !searchedStylists.includes(s)),
         ];
 
   return (
@@ -140,15 +145,35 @@ function ManageStyle() {
               <tr>
                 <th className="py-3 px-4">Stylist Name</th>
                 <th className="py-3 px-4">Phone</th>
+                <th className="py-3 px-4">Photo</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {displayedStylists.map((stylist) => (
+              {visibleStylists.map((stylist) => (
                 <tr key={stylist._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">{stylist.name}</td>
                   <td className="py-3 px-4">{stylist.phone}</td>
+                  <td className="py-3 px-4">
+                    {stylist.photoUrl ? (
+                      <div className="flex flex-col">
+                        <a
+                          href={stylist.photoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          View photo
+                        </a>
+                        <span className="text-xs text-gray-500 break-all mt-1">
+                          {stylist.photoUrl.split("/").pop()}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">No Photo</div>
+                    )}
+                  </td>
                   <td className="py-3 px-4">
                     <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
                       Active

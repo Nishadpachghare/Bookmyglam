@@ -14,7 +14,18 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ExportProvider>
         <App />
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "#111827",
+              color: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+            },
+          }}
+        />
       </ExportProvider>
     </BrowserRouter>
   </StrictMode>

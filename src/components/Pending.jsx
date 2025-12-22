@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 import { FiSearch } from "react-icons/fi";
 import { ExportContext } from "../layout/ExportContext";
 import { formatDisplayDate } from "../layout/dateFilterUtils";
@@ -129,7 +130,7 @@ const Pending = () => {
 
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) {
-      alert("Please select at least one entry to delete.");
+      toast.error("Please select at least one entry to delete.");
       return;
     }
 
@@ -148,16 +149,16 @@ const Pending = () => {
 
       await fetchPendingBookings();
       setSelectedRows([]);
-      alert("Selected entries deleted successfully!");
+      toast.success("Selected entries deleted successfully!");
     } catch (error) {
       console.error("Error deleting bookings:", error);
-      alert("Failed to delete some entries. Please try again.");
+      toast.error("Failed to delete some entries. Please try again.");
     }
   };
 
   const handleMarkAsPaid = async () => {
     if (selectedRows.length === 0) {
-      alert("Please select at least one entry to mark as paid.");
+      toast.error("Please select at least one entry to mark as paid.");
       return;
     }
 
@@ -183,10 +184,10 @@ const Pending = () => {
 
       await fetchPendingBookings();
       setSelectedRows([]);
-      alert("Selected bookings marked as paid successfully!");
+      toast.success("Selected bookings marked as paid successfully!");
     } catch (error) {
       console.error("Error marking bookings as paid:", error);
-      alert("Failed to update some bookings. Please try again.");
+      toast.error("Failed to update some bookings. Please try again.");
     }
   };
 
@@ -196,7 +197,7 @@ const Pending = () => {
   );
 
   return (
-    <div className="min-h-screen pl-55 bg-gray-50 flex flex-col items-center py-10 px-4  shadow-xl">
+    <div className="min-h-screen pl-55  flex flex-col items-center py-10 px-4  shadow-xl">
       {/* Header */}
       <div className="w-full max-w-5xl mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Pending amount</h2>
