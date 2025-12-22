@@ -644,6 +644,9 @@ function Dashboard() {
                   Payment
                 </th>
                 <th className="py-3 px-6 text-gray-700 font-medium text-center">
+                  Mode
+                </th>
+                <th className="py-3 px-6 text-gray-700 font-medium text-center">
                   Edit
                 </th>
               </tr>
@@ -694,6 +697,22 @@ function Dashboard() {
                       >
                         {isPaid ? "Paid" : "Pending"}
                       </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      {(b.mode || "").toString().toLowerCase() === "online" && (
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="h-3 w-3 bg-green-500 rounded-full animate-pulse shadow-lg"></span>
+                          <span className="text-xs text-green-700 font-medium">
+                            Online
+                          </span>
+                        </div>
+                      )}
+                      {(b.mode || "").toString().toLowerCase() ===
+                        "offline" && (
+                        <span className="text-xs text-gray-500 font-medium">
+                          Offline
+                        </span>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-center text-blue-600 font-medium cursor-pointer hover:underline">
                       <button onClick={() => handleEditClick(b)}>Edit</button>

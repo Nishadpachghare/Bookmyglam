@@ -15,6 +15,7 @@ function Booking() {
     email: "",
     date: "",
     time: "",
+    mode: "offline",
   });
 
   // OTP (email only)
