@@ -37,7 +37,7 @@ const ManageService = () => {
   useEffect(() => {
     const years = getAvailableYears(services || [], "createdAt");
     setAvailableYears(years);
-  }, [services]);
+  }, [services, setAvailableYears]);
 
   const exportRowsServices = useMemo(() => {
     return (displayedServices || []).map((s) => ({
@@ -48,15 +48,9 @@ const ManageService = () => {
     }));
   }, [displayedServices]);
 
-  const exportRowsServicesKey = useMemo(() => {
-    return exportRowsServices
-      .map((r) => `${r.Service}|${r.Duration}|${r.Price}`)
-      .join("||");
-  }, [exportRowsServices]);
-
   useEffect(() => {
     setExportData(exportRowsServices);
-  }, [exportRowsServicesKey, setExportData]);
+  }, [exportRowsServices, setExportData]);
 
   const fetchServices = async () => {
     try {

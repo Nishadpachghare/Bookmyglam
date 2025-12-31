@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { useLocation } from "react-router-dom";
+
 import { MdUpload } from "react-icons/md";
 import { ExportContext } from "../layout/ExportContext";
 
@@ -15,8 +15,6 @@ function Uppernav() {
 
   const { handleExport, setFilterType, setFilterValue, availableYears } =
     useContext(ExportContext);
-
-  const location = useLocation();
 
   const months = [
     { value: "01", label: "January" },

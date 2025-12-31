@@ -1,4 +1,5 @@
 import React, { createContext, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
 import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { toast } from "react-hot-toast";

@@ -17,6 +17,7 @@ function InactiveStylish() {
       const data = await res.json();
       setInactiveStylists(data.filter((s) => s.status === "inactive"));
     } catch (err) {
+      console.error(err);
       toast.error("Failed to load stylists");
     } finally {
       setLoading(false);

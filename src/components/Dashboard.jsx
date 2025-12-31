@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import toast from "react-hot-toast";
 import { ExportContext } from "../layout/ExportContext";
-import {
-  filterByDate,
-  getAvailableYears,
-  formatDisplayDate,
-} from "../layout/dateFilterUtils";
+import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
 import axios from "axios";
 import { FiSearch, FiCheck, FiEdit3, FiX } from "react-icons/fi";
 
@@ -19,10 +15,9 @@ function Dashboard() {
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
   const [editingBooking, setEditingBooking] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
+  const [, setIsSaving] = useState(false);
+  const [, setIsClosing] = useState(false);
   const editFormRef = useRef(null);
-  const editRowRef = useRef(null);
 
   // ✅ Helper to handle different backend response structures safely
   const extractArray = (res, keyFallback) => {
@@ -76,6 +71,7 @@ function Dashboard() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let mounted = true;
     const fetchData = async () => {
@@ -111,7 +107,7 @@ function Dashboard() {
   useEffect(() => {
     const years = getAvailableYears(safeBookings, "date");
     setAvailableYears(years);
-  }, [bookings]);
+  }, [bookings, setAvailableYears]);
 
   // Scroll to edit form when a booking is selected for editing (and focus)
   useEffect(() => {
@@ -179,7 +175,7 @@ function Dashboard() {
       };
     });
     setExportData(rows);
-  }, [filteredBookingsByGlobal]);
+  }, [filteredBookingsByGlobal, setExportData]);
 
   // Search Filter
   const filteredBookings = safeBookings.filter((b) => {

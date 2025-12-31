@@ -1,8 +1,23 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { ExportContext } from "../layout/ExportContext";
-import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
+import { filterByDate } from "../layout/dateFilterUtils";
 
 function Earning() {
   const [bookings, setBookings] = useState([]);
@@ -16,21 +31,6 @@ function Earning() {
 
   const { setExportData, filterType, filterValue, setAvailableYears } =
     useContext(ExportContext);
-
-  const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
 
   /* ================= FETCH BOOKINGS ================= */
   useEffect(() => {
@@ -76,7 +76,7 @@ function Earning() {
 
   useEffect(() => {
     setAvailableYears(years);
-  }, [years]);
+  }, [years, setAvailableYears]);
 
   // Determine the bookings to display after applying global filter
   const displayedBookings = useMemo(() => {
@@ -119,7 +119,7 @@ function Earning() {
     });
 
     return result;
-  }, [bookings, years]);
+  }, [displayedBookings, years]);
 
   /* ================= SORT + FLATTEN ================= */
   const sortedMonthly = useMemo(() => {
@@ -221,14 +221,6 @@ function Earning() {
     }));
   }, [filteredMonthly]);
 
-  const exportRowsEarningKey = useMemo(
-    () =>
-      exportRowsEarning
-        .map((r) => `${r.Year}|${r.Month}|${r.Total}`)
-        .join("||"),
-    [exportRowsEarning]
-  );
-
   useEffect(() => {
     setExportData(exportRowsEarning);
     // debug: ensure export data is set as expected
@@ -236,19 +228,13 @@ function Earning() {
       length: exportRowsEarning?.length,
       sample: exportRowsEarning?.[0],
     });
-  }, [exportRowsEarningKey, setExportData]);
+  }, [exportRowsEarning, setExportData]);
 
   const format = (v) => (v ?? 0).toLocaleString("en-IN");
 
   /* ================= UI (use provided layout, no logic changes) ================= */
   const toggleYear = (year) => {
     setOpenYears((prev) => ({ ...prev, [year]: !prev[year] }));
-  };
-
-  const handleCheckbox = (key) => {
-    setSelectedEarning((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
   };
 
   const handleDelete = () => {
@@ -357,7 +343,7 @@ function Earning() {
                   {openYears[year] &&
                     filteredMonthly
                       .filter((m) => m.year === year)
-                      .map((item, idx) => (
+                      .map((item) => (
                         <tr
                           key={`${item.year}-${item.month}`}
                           className="bg-white hover:bg-gray-100"

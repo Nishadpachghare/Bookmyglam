@@ -117,6 +117,7 @@ const AddExpense = () => {
         fileUrl = currentFileUrl;
       }
     } catch (err) {
+      console.error(err);
       toast.error("File upload failed. Please try again.");
       return; // stop submission
     }
@@ -261,7 +262,7 @@ const AddExpense = () => {
   useEffect(() => {
     const years = getAvailableYears(sortedExpenses || [], "date");
     setAvailableYears(years);
-  }, [sortedExpenses]);
+  }, [sortedExpenses, setAvailableYears]);
 
   const exportRowsExpenses = useMemo(() => {
     return (displayedExpenses || []).map((e) => ({
@@ -273,13 +274,9 @@ const AddExpense = () => {
     }));
   }, [displayedExpenses]);
 
-  const exportRowsExpensesKey = useMemo(() => {
-    return exportRowsExpenses.map((r) => `${r.Amount}|${r.Date}`).join("||");
-  }, [exportRowsExpenses]);
-
   useEffect(() => {
     setExportData(exportRowsExpenses);
-  }, [exportRowsExpensesKey, setExportData]);
+  }, [exportRowsExpenses, setExportData]);
 
   // ✅ Edit: load data into form
   const handleEdit = (id) => {

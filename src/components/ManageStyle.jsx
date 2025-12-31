@@ -41,7 +41,7 @@ function ManageStyle() {
   useEffect(() => {
     const years = getAvailableYears(stylists || [], "createdAt");
     setAvailableYears(years);
-  }, [stylists]);
+  }, [stylists, setAvailableYears]);
 
   const exportRowsStylists = useMemo(() => {
     return (displayedStylists || []).map((s) => ({
@@ -52,13 +52,9 @@ function ManageStyle() {
     }));
   }, [displayedStylists]);
 
-  const exportRowsStylistsKey = useMemo(() => {
-    return exportRowsStylists.map((r) => `${r.Name}|${r.Phone}`).join("||");
-  }, [exportRowsStylists]);
-
   useEffect(() => {
     setExportData(exportRowsStylists);
-  }, [exportRowsStylistsKey, setExportData]);
+  }, [exportRowsStylists, setExportData]);
 
   const setInactive = async (id) => {
     try {

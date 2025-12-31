@@ -35,6 +35,33 @@ export default function Uploadimg() {
   const [reviewItems, setReviewItems] = useState([]);
   const [uploadingState, setUploadingState] = useState({});
 
+  // Persist draft metadata edits to backend
+  const updateDraft = async (id, updates) => {
+    if (!id) return null;
+    try {
+      const r = await axios.put(`${API_BASE}/api/uploads/${id}`, updates);
+      if (r.data?.media) {
+        setReviewItems((prev) =>
+          prev.map((c) =>
+            c.image?.backendId === id || c.video?.backendId === id || c.link?.backendId === id
+              ? {
+                  ...c,
+                  image: c.image?.backendId === id ? { ...c.image, ...r.data.media } : c.image,
+                  video: c.video?.backendId === id ? { ...c.video, ...r.data.media } : c.video,
+                  link: c.link?.backendId === id ? { ...c.link, ...r.data.media } : c.link,
+                }
+              : c
+          )
+        );
+        return r.data.media;
+      }
+      return null;
+    } catch (err) {
+      console.error("updateDraft error:", err);
+      return null;
+    }
+  };
+
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const linkFileInputRef = useRef(null);
@@ -160,7 +187,9 @@ export default function Uploadimg() {
       ) {
         try {
           URL.revokeObjectURL(prevPreview);
-        } catch (e) {}
+        } catch (err) {
+          console.error(err);
+        }
       }
 
       if (type === "link") {
@@ -336,128 +365,61 @@ export default function Uploadimg() {
     return r.data;
   };
 
-  const handleUploadAll = async () => {
-    for (const combo of reviewItems) {
-      // image
-      if (combo.image && !combo.image.uploaded && combo.image.file) {
-        setUploadingState((s) => ({ ...s, [combo.id]: true }));
-        try {
-          const d = await uploadSingleToServer(
-            { ...combo.image, stylist: combo.stylist, date: combo.date },
-            "image"
-          );
-          if (d?.ok && d.media) {
-            setReviewItems((p) =>
-              p.map((c) =>
-                c.id === combo.id
-                  ? {
-                      ...c,
-                      image: {
-                        ...c.image,
-                        preview: d.media.url || d.media.secure_url,
-                        file: null,
-                        uploaded: true,
-                        backendId: d.media._id,
-                      },
-                      uploadedCount: c.uploadedCount + 1,
-                    }
-                  : c
-              )
-            );
-          }
-        } catch (e) {
-          console.error("Error uploading image:", e);
-        } finally {
-          setUploadingState((s) => ({ ...s, [combo.id]: false }));
-        }
-      }
-
-      // video
-      if (combo.video && !combo.video.uploaded && combo.video.file) {
-        setUploadingState((s) => ({ ...s, [combo.id]: true }));
-        try {
-          const d = await uploadSingleToServer(
-            { ...combo.video, stylist: combo.stylist, date: combo.date },
-            "video"
-          );
-          if (d?.ok && d.media) {
-            setReviewItems((p) =>
-              p.map((c) =>
-                c.id === combo.id
-                  ? {
-                      ...c,
-                      video: {
-                        ...c.video,
-                        preview: d.media.url || d.media.secure_url,
-                        file: null,
-                        uploaded: true,
-                        backendId: d.media._id,
-                      },
-                      uploadedCount: c.uploadedCount + 1,
-                    }
-                  : c
-              )
-            );
-          }
-        } catch (e) {
-          console.error("Error uploading video:", e);
-        } finally {
-          setUploadingState((s) => ({ ...s, [combo.id]: false }));
-        }
-      }
-
-      // link (URL or URL+image)
-      if (
-        combo.link &&
-        !combo.link.uploaded &&
-        (combo.link.file || combo.link.url)
-      ) {
-        setUploadingState((s) => ({ ...s, [combo.id]: true }));
-        try {
-          const d = await uploadSingleToServer(
-            { ...combo.link, stylist: combo.stylist, date: combo.date },
-            "link"
-          );
-          if (d?.ok && d.media) {
-            setReviewItems((p) =>
-              p.map((c) =>
-                c.id === combo.id
-                  ? {
-                      ...c,
-                      link: {
-                        ...c.link,
-                        preview: d.media.url || d.media.secure_url,
-                        file: null,
-                        uploaded: true,
-                        backendId: d.media._id,
-                      },
-                      uploadedCount: c.uploadedCount + 1,
-                    }
-                  : c
-              )
-            );
-          }
-        } catch (e) {
-          console.error("Error uploading link:", e);
-        } finally {
-          setUploadingState((s) => ({ ...s, [combo.id]: false }));
-        }
-      }
-    }
-    toast.success("Upload complete");
-  };
+  // NOTE: Bulk "Upload All" behavior removed. The staging/review area now only holds local previews and metadata.
+  // Actual upload to Cloudinary is performed when a user clicks "Publish" on an individual item.
 
   const handlePublish = async (comboId, type) => {
     const combo = reviewItems.find((c) => c.id === comboId);
     if (!combo) return;
-    const item = combo[type];
-    if (!item?.backendId) {
-      toast.error("Upload first");
-      return;
-    }
+    let item = combo[type];
+    if (!item) return;
+
+    setUploadingState((s) => ({ ...s, [comboId]: true }));
     try {
+      // If not uploaded yet, upload now (this will call backend/media endpoint)
+      let uploadResp = null;
+      if (!item.uploaded) {
+        uploadResp = await uploadSingleToServer(
+          { ...item, stylist: combo.stylist, date: combo.date },
+          type
+        );
+        if (uploadResp?.ok && uploadResp.media) {
+          const media = uploadResp.media;
+          setReviewItems((p) =>
+            p.map((c) =>
+              c.id === comboId
+                ? {
+                    ...c,
+                    [type]: {
+                      ...c[type],
+                      preview: media.url || media.secure_url,
+                      file: null,
+                      uploaded: true,
+                      backendId: media._id,
+                    },
+                    uploadedCount: c.uploadedCount + 1,
+                  }
+                : c
+            )
+          );
+          // reflect new item for next step
+          item = { ...item, uploaded: true, backendId: media._id };
+        } else {
+          toast.error("Upload failed");
+          return;
+        }
+      }
+
+      // Ensure we have backendId before publishing
+      const backendId = item.backendId;
+      if (!backendId) {
+        toast.error("Missing backend id; cannot publish");
+        return;
+      }
+
+      // Call publish endpoint which should publish to web
       const r = await axios.put(
-        `${API_BASE}/api/uploads/${item.backendId}/publish`,
+        `${API_BASE}/api/uploads/${backendId}/publish`,
         { publish: true }
       );
       if (r.data?.ok) {
@@ -468,9 +430,13 @@ export default function Uploadimg() {
               : c
           )
         );
+        toast.success("Published to web");
       }
     } catch (e) {
       console.error("Error publishing:", e);
+      toast.error("Error publishing item");
+    } finally {
+      setUploadingState((s) => ({ ...s, [comboId]: false }));
     }
   };
 
@@ -479,11 +445,13 @@ export default function Uploadimg() {
     const item = combo?.[type];
     if (!item?.backendId) return;
     try {
+      // Ask backend to remove the asset from Cloudinary (if supported)
       const r = await axios.put(
         `${API_BASE}/api/uploads/${item.backendId}/publish`,
-        { publish: false }
+        { publish: false, removeCloud: true }
       );
       if (r.data?.ok) {
+        // Keep the draft entry but mark it as not published
         setReviewItems((p) =>
           p.map((c) =>
             c.id === comboId
@@ -491,9 +459,11 @@ export default function Uploadimg() {
               : c
           )
         );
+        toast.success("Unpublished (removed from web)");
       }
     } catch (e) {
       console.error("Error unpublishing:", e);
+      toast.error("Error unpublishing item");
     }
   };
 
@@ -502,7 +472,13 @@ export default function Uploadimg() {
     const item = combo?.[type];
 
     if (item?.backendId) {
+      const confirmDelete = window.confirm(
+        "This will delete the item from the server (and Cloudinary if published). Are you sure?"
+      );
+      if (!confirmDelete) return;
+
       try {
+        setUploadingState((s) => ({ ...s, [comboId]: true }));
         const resp = await axios.delete(
           `${API_BASE}/api/uploads/${item.backendId}`
         );
@@ -519,6 +495,8 @@ export default function Uploadimg() {
         console.error("Error deleting on server:", e);
         toast.error("Error deleting item on server. See console for details.");
         return;
+      } finally {
+        setUploadingState((s) => ({ ...s, [comboId]: false }));
       }
     }
     if (item?.preview && item.preview.startsWith("blob:")) {
@@ -538,12 +516,20 @@ export default function Uploadimg() {
   const canStageVideo = !!form.video.file;
   const canStageLink = !!(form.link.url || form.link.file);
 
-  const canUploadAny = reviewItems.some(
-    (c) =>
-      (c.image && !c.image.uploaded && c.image.file) ||
-      (c.video && !c.video.uploaded && c.video.file) ||
-      (c.link && !c.link.uploaded && (c.link.file || c.link.url))
-  );
+  // There are staged items in the form that can be added to review
+  const canReviewAny = canStageImage || canStageVideo || canStageLink;
+
+  const handleReviewAll = async () => {
+    try {
+      if (canStageImage) await addToReview("image");
+      if (canStageVideo) await addToReview("video");
+      if (canStageLink) await addToReview("link");
+      toast.success("Added to review");
+    } catch (e) {
+      console.error("Error adding to review:", e);
+      toast.error("Could not add items to review");
+    }
+  };
 
   return (
     <div className="p-6 bg-white text-gray-800 min-h-screen w-355 pl-76">
@@ -589,15 +575,15 @@ export default function Uploadimg() {
           </select>
 
           <button
-            onClick={handleUploadAll}
-            disabled={!canUploadAny}
+            onClick={handleReviewAll}
+            disabled={!canReviewAny}
             className={`px-4 py-2 rounded-md font-semibold transition ${
-              canUploadAny
+              canReviewAny
                 ? "bg-[#D3AF37]  hover:bg-yellow-500 text-black"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
-            Upload All
+            Review All
           </button>
         </div>
       </div>
@@ -1021,92 +1007,59 @@ export default function Uploadimg() {
                             "📷"
                           )}
                         </div>
-                        {combo.image.caption && (
-                          <div
-                            className="text-xs text-gray-600 mb-2 max-w-full truncate"
-                            title={combo.image.caption}
-                          >
-                            {combo.image.caption}
-                          </div>
-                        )}
+                        {/* Caption (editable) */}
+                        <input
+                          type="text"
+                          value={combo.image.caption || ""}
+                          onChange={(e) =>
+                            setReviewItems((prev) =>
+                              prev.map((c) =>
+                                c.id === combo.id
+                                  ? {
+                                      ...c,
+                                      image: { ...c.image, caption: e.target.value },
+                                    }
+                                  : c
+                              )
+                            )
+                          }
+                          onBlur={async (e) => {
+                            const id = combo.image.backendId;
+                            if (id) await updateDraft(id, { caption: e.target.value });
+                          }}
+                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          placeholder="Add caption"
+                        />
                         <div className="text-xs font-semibold mb-2">
                           IMAGE{" "}
                           {combo.image.uploaded && (
                             <span className="text-green-600">✓</span>
                           )}
                         </div>
+
                         <div className="flex gap-2 justify-center">
-                          {!combo.image.uploaded && combo.image.file && (
+                          {/* Always expose Publish when not published; Publish will upload first if needed */}
+                          {combo.image.publishedToWeb ? (
                             <button
-                              onClick={() => {
-                                setUploadingState((s) => ({
-                                  ...s,
-                                  [combo.id]: true,
-                                }));
-                                uploadSingleToServer(
-                                  {
-                                    ...combo.image,
-                                    stylist: combo.stylist,
-                                    date: combo.date,
-                                  },
-                                  "image"
-                                )
-                                  .then((d) => {
-                                    if (d?.ok && d.media)
-                                      setReviewItems((p) =>
-                                        p.map((c) =>
-                                          c.id === combo.id
-                                            ? {
-                                                ...c,
-                                                image: {
-                                                  ...c.image,
-                                                  preview:
-                                                    d.media.url ||
-                                                    d.media.secure_url,
-                                                  file: null,
-                                                  uploaded: true,
-                                                  backendId: d.media._id,
-                                                },
-                                                uploadedCount:
-                                                  c.uploadedCount + 1,
-                                              }
-                                            : c
-                                        )
-                                      );
-                                  })
-                                  .finally(() =>
-                                    setUploadingState((s) => ({
-                                      ...s,
-                                      [combo.id]: false,
-                                    }))
-                                  );
-                              }}
-                              className="px-2 py-1 bg-yellow-400 text-black text-xs rounded-md"
+                              onClick={() => handleUnpublish(combo.id, "image")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
-                              Upload
+                              Unpub
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handlePublish(combo.id, "image")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                            >
+                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
                             </button>
                           )}
-                          {combo.image.uploaded &&
-                            (combo.image.publishedToWeb ? (
-                              <button
-                                onClick={() =>
-                                  handleUnpublish(combo.id, "image")
-                                }
-                                className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md"
-                              >
-                                Unpub
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePublish(combo.id, "image")}
-                                className="px-2 py-1 bg-green-600 text-white text-xs rounded-md"
-                              >
-                                Publish
-                              </button>
-                            ))}
                           <button
                             onClick={() => handleDelete(combo.id, "image")}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md"
+                            disabled={!!uploadingState[combo.id]}
+                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>
@@ -1129,14 +1082,27 @@ export default function Uploadimg() {
                             "🎥"
                           )}
                         </div>
-                        {combo.video.caption && (
-                          <div
-                            className="text-xs text-gray-600 mb-2 max-w-full truncate"
-                            title={combo.video.caption}
-                          >
-                            {combo.video.caption}
-                          </div>
-                        )}
+
+                        <input
+                          type="text"
+                          value={combo.video.caption || ""}
+                          onChange={(e) =>
+                            setReviewItems((prev) =>
+                              prev.map((c) =>
+                                c.id === combo.id
+                                  ? { ...c, video: { ...c.video, caption: e.target.value } }
+                                  : c
+                              )
+                            )
+                          }
+                          onBlur={async (e) => {
+                            const id = combo.video.backendId;
+                            if (id) await updateDraft(id, { caption: e.target.value });
+                          }}
+                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          placeholder="Add caption"
+                        />
+
                         <div className="text-xs font-semibold mb-2">
                           VIDEO{" "}
                           {combo.video.uploaded && (
@@ -1144,77 +1110,27 @@ export default function Uploadimg() {
                           )}
                         </div>
                         <div className="flex gap-2 justify-center">
-                          {!combo.video.uploaded && combo.video.file && (
+                          {combo.video.publishedToWeb ? (
                             <button
-                              onClick={() => {
-                                setUploadingState((s) => ({
-                                  ...s,
-                                  [combo.id]: true,
-                                }));
-                                uploadSingleToServer(
-                                  {
-                                    ...combo.video,
-                                    stylist: combo.stylist,
-                                    date: combo.date,
-                                  },
-                                  "video"
-                                )
-                                  .then((d) => {
-                                    if (d?.ok && d.media)
-                                      setReviewItems((p) =>
-                                        p.map((c) =>
-                                          c.id === combo.id
-                                            ? {
-                                                ...c,
-                                                video: {
-                                                  ...c.video,
-                                                  preview:
-                                                    d.media.url ||
-                                                    d.media.secure_url,
-                                                  file: null,
-                                                  uploaded: true,
-                                                  backendId: d.media._id,
-                                                },
-                                                uploadedCount:
-                                                  c.uploadedCount + 1,
-                                              }
-                                            : c
-                                        )
-                                      );
-                                  })
-                                  .finally(() =>
-                                    setUploadingState((s) => ({
-                                      ...s,
-                                      [combo.id]: false,
-                                    }))
-                                  );
-                              }}
-                              className="px-2 py-1 bg-yellow-400 text-black text-xs rounded-md"
+                              onClick={() => handleUnpublish(combo.id, "video")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
-                              Upload
+                              Unpub
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handlePublish(combo.id, "video")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                            >
+                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
                             </button>
                           )}
-                          {combo.video.uploaded &&
-                            (combo.video.publishedToWeb ? (
-                              <button
-                                onClick={() =>
-                                  handleUnpublish(combo.id, "video")
-                                }
-                                className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md"
-                              >
-                                Unpub
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePublish(combo.id, "video")}
-                                className="px-2 py-1 bg-green-600 text-white text-xs rounded-md"
-                              >
-                                Publish
-                              </button>
-                            ))}
                           <button
                             onClick={() => handleDelete(combo.id, "video")}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md"
+                            disabled={!!uploadingState[combo.id]}
+                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>
@@ -1245,14 +1161,27 @@ export default function Uploadimg() {
                             "🔗"
                           )}
                         </div>
-                        {combo.link.caption && (
-                          <div
-                            className="text-xs text-gray-600 mb-2 max-w-full truncate"
-                            title={combo.link.caption}
-                          >
-                            {combo.link.caption}
-                          </div>
-                        )}
+
+                        <input
+                          type="text"
+                          value={combo.link.caption || ""}
+                          onChange={(e) =>
+                            setReviewItems((prev) =>
+                              prev.map((c) =>
+                                c.id === combo.id
+                                  ? { ...c, link: { ...c.link, caption: e.target.value } }
+                                  : c
+                              )
+                            )
+                          }
+                          onBlur={async (e) => {
+                            const id = combo.link.backendId;
+                            if (id) await updateDraft(id, { caption: e.target.value });
+                          }}
+                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          placeholder="Add caption"
+                        />
+
                         <div className="text-xs font-semibold mb-2">
                           LINK{" "}
                           {combo.link.uploaded && (
@@ -1260,78 +1189,27 @@ export default function Uploadimg() {
                           )}
                         </div>
                         <div className="flex gap-2 justify-center">
-                          {!combo.link.uploaded &&
-                            (combo.link.file || combo.link.url) && (
-                              <button
-                                onClick={() => {
-                                  setUploadingState((s) => ({
-                                    ...s,
-                                    [combo.id]: true,
-                                  }));
-                                  uploadSingleToServer(
-                                    {
-                                      ...combo.link,
-                                      stylist: combo.stylist,
-                                      date: combo.date,
-                                    },
-                                    "link"
-                                  )
-                                    .then((d) => {
-                                      if (d?.ok && d.media)
-                                        setReviewItems((p) =>
-                                          p.map((c) =>
-                                            c.id === combo.id
-                                              ? {
-                                                  ...c,
-                                                  link: {
-                                                    ...c.link,
-                                                    preview:
-                                                      d.media.url ||
-                                                      d.media.secure_url,
-                                                    file: null,
-                                                    uploaded: true,
-                                                    backendId: d.media._id,
-                                                  },
-                                                  uploadedCount:
-                                                    c.uploadedCount + 1,
-                                                }
-                                              : c
-                                          )
-                                        );
-                                    })
-                                    .finally(() =>
-                                      setUploadingState((s) => ({
-                                        ...s,
-                                        [combo.id]: false,
-                                      }))
-                                    );
-                                }}
-                                className="px-2 py-1 bg-yellow-400 text-black text-xs rounded-md"
-                              >
-                                Upload
-                              </button>
-                            )}
-                          {combo.link.uploaded &&
-                            (combo.link.publishedToWeb ? (
-                              <button
-                                onClick={() =>
-                                  handleUnpublish(combo.id, "link")
-                                }
-                                className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md"
-                              >
-                                Unpub
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePublish(combo.id, "link")}
-                                className="px-2 py-1 bg-green-600 text-white text-xs rounded-md"
-                              >
-                                Publish
-                              </button>
-                            ))}
+                          {combo.link.publishedToWeb ? (
+                            <button
+                              onClick={() => handleUnpublish(combo.id, "link")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
+                            >
+                              Unpub
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handlePublish(combo.id, "link")}
+                              disabled={!!uploadingState[combo.id]}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                            >
+                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(combo.id, "link")}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md"
+                            disabled={!!uploadingState[combo.id]}
+                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>

@@ -1,4 +1,19 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
+
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 import axios from "axios";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ExportContext } from "../layout/ExportContext";
@@ -17,22 +32,7 @@ function SummaryContent() {
   const [loading, setLoading] = useState(
     !Array.isArray(globalBookings) || globalBookings.length === 0
   );
-  const [selected, setSelected] = useState("This Year");
-
-  const MONTH_LABELS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const [selected] = useState("This Year");
 
   // 🔒 SAME helper as Dashboard
   const extractArray = (res) => {
@@ -58,11 +58,9 @@ function SummaryContent() {
         setBookings(arr);
       } catch (err) {
         console.error("Summary fetch error:", err);
-        if (!mounted) return;
-        setBookings([]);
+        if (mounted) setBookings([]);
       } finally {
-        if (!mounted) return;
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -158,17 +156,9 @@ function SummaryContent() {
     }
   }, [filteredBookings]);
 
-  const exportRowsSummaryKey = useMemo(
-    () =>
-      exportRowsSummary
-        .map((r) => `${r["Customer Name"]}|${r.Date}|${r["Total Amount"]}`)
-        .join("||"),
-    [exportRowsSummary]
-  );
-
   useEffect(() => {
     setExportData(exportRowsSummary);
-  }, [exportRowsSummaryKey, setExportData]);
+  }, [exportRowsSummary, setExportData]);
 
   // ===============================
   // MONTHLY AGGREGATION
@@ -246,12 +236,7 @@ function SummaryContent() {
     }, 0);
   }, [effectiveBookings, filterType, filterValue]);
 
-  const {
-    totalCustomers,
-    returningCustomers,
-    retentionRate,
-    returningCustomerPercentage,
-  } = useMemo(() => {
+  const { retentionRate, returningCustomerPercentage } = useMemo(() => {
     const map = new Map();
 
     filteredBookings.forEach((b) => {

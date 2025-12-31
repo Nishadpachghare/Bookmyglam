@@ -101,15 +101,9 @@ const Pending = () => {
     }));
   }, [filteredData]);
 
-  const exportKey = useMemo(
-    () =>
-      exportRows.map((r) => `${r.Customer}|${r.Date}|${r.Amount}`).join("||"),
-    [exportRows]
-  );
-
   useEffect(() => {
     setExportData(exportRows);
-  }, [exportKey, setExportData]);
+  }, [exportRows, setExportData]);
 
   const handleCheckboxChange = (id) => {
     setSelectedRows((prev) =>

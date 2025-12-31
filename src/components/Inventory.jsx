@@ -53,6 +53,8 @@ export default function Inventory() {
     }
   };
 
+  // fetchInventory is intentionally excluded from deps to avoid re-creating the function each render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchInventory();
   }, [showLowStockOnly]);
@@ -78,7 +80,7 @@ export default function Inventory() {
   useEffect(() => {
     const years = getAvailableYears(items || [], "date");
     setAvailableYears(years);
-  }, [items]);
+  }, [items, setAvailableYears]);
 
   const exportRowsInventory = useMemo(() => {
     return (displayedItems || []).map((it) => ({
@@ -93,15 +95,9 @@ export default function Inventory() {
     }));
   }, [displayedItems]);
 
-  const exportRowsInventoryKey = useMemo(() => {
-    return exportRowsInventory
-      .map((r) => `${r.Item}|${r.Date}|${r.Stock}`)
-      .join("||");
-  }, [exportRowsInventory]);
-
   useEffect(() => {
     setExportData(exportRowsInventory);
-  }, [exportRowsInventoryKey, setExportData]);
+  }, [exportRowsInventory, setExportData]);
 
   const handleChange = (field, value) => {
     // clear field-specific error on change
