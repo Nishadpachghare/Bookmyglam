@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { FiEye, FiEyeOff, FiLoader } from "react-icons/fi"; // icons from react-icons
 
 function Loginpage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // 🔄 Redirect to dashboard if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/");
-    }
+    if (token) navigate("/");
   }, [navigate]);
 
   const handleSubmit = async (e) => {
@@ -21,10 +21,11 @@ function Loginpage() {
     const trimmedPassword = password;
 
     if (!trimmedEmail || !trimmedPassword) {
-      toast.error("⚠️ Please enter your email and password.");
+      toast.error("Please enter your credentials.");
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
@@ -38,75 +39,120 @@ function Loginpage() {
       const data = await response.json();
 
       if (response.ok) {
-        // ✅ Save token + user in localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-
-        toast.success("✅ Login successful!");
+        toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
-        toast.error(`❌ ${data.message || "Invalid credentials!"}`);
+        toast.error(data.message || "Invalid email or password.");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("🚨 Server error! Please try again later.");
+      toast.error("Connection failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fffdfa] p-4">
-      <div className="flex flex-col md:flex-row w-260 h-130 bg-white rounded-lg overflow-hidden shadow-md">
-        {/* Left Section */}
-        <div className="relative md:w-1/2 w-full h-64 md:h-auto">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] p-6">
+      {/* Main Container */}
+      <div className="flex flex-col md:flex-row w-255 h-135 max-w-5xl bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-zinc-800">
+        {/* Left Section: Visual/Branding */}
+
+        <div className="relative md:w-1/2 w-full hidden md:block">
           <img
-            src="/Login-page.png"
+            src="/Login-page-2.jpg"
             alt="Salon"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center p-6">
-            <p className="text-white text-xl md:text-2xl font-semibold leading-snug text-center">
-              Give your salon the care it deserves — manage services, staff, and
-              clients effortlessly.
-            </p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex items-end p-12">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Elevate Your Business
+              </h2>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                Manage your services, staff, and clients with the elegance your
+                salon deserves.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Right Section */}
-        <div className="md:w-1/2 w-full bg-black text-white p-8 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold mb-2">Login</h2>
-          <p className="text-gray-300 mb-6 text-sm">
-            Welcome to Serene Beauty Salon, we hope your stay feels bright as
-            the morning sun.
-          </p>
+        {/* Right Section: Form */}
+        <div className="md:w-1/2 w-full p-8 md:p-16 flex flex-col justify-center bg-zinc-900">
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold text-white mb-2">Login</h2>
+            <p className="text-zinc-400">
+              Enter your details to access your dashboard.
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-md bg-transparent border border-gray-600 text-sm focus:outline-none focus:border-yellow-500"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-md bg-transparent border border-gray-600 text-sm focus:outline-none focus:border-yellow-500"
-            />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent placeholder:text-zinc-500"
+                required
+              />
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Password
+              </label>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3.5 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent placeholder:text-zinc-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[38px] text-zinc-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-end text-sm">
+              <Link
+                to="/forgot-password"
+                size="18"
+                className="text-purple-400 hover:text-purple-300 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-3 rounded-md hover:opacity-90 transition"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3.5 rounded-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Login
+              {isLoading ? (
+                <FiLoader className="animate-spin mr-2" size={20} />
+              ) : (
+                "Sign In"
+              )}
             </button>
           </form>
 
-          <p className="text-center text-sm mt-6 text-gray-400">
+          <p className="text-center text-sm mt-10 text-zinc-500">
             Don’t have an account?{" "}
-            <Link to="/r" className="text-yellow-400 hover:underline">
-              Register
+            <Link
+              to="/r"
+              className="text-purple-400 font-medium hover:underline decoration-2 underline-offset-4"
+            >
+              Create an account
             </Link>
           </p>
         </div>
