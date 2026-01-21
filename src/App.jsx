@@ -1,13 +1,17 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+
 import Sidenav from "./layout/Sidenav";
+import Uppernav from "./layout/uppernav";
+
 import Loginpage from "./components/Loginpage";
 import Register from "./components/Register";
 import Dashboard from "./components/dashboard";
 import Booking from "./components/Booking";
-import Uppernav from "./layout/uppernav";
+import Inventory from "./components/Inventory";
 import ManageStyle from "./components/ManageStyle";
 import ManageStyle1 from "./components/ManageStyle1";
+import InactiveStylish from "./components/InactiveStylish";
 import Earning from "./components/Earning";
 import Earningweek from "./components/Earningweek";
 import ManageService from "./components/ManageService";
@@ -16,28 +20,29 @@ import AddExpense from "./components/Addexpenses";
 import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
 import ProtectedRoute from "./components/ProtectedRoute";
-import InactiveStylish from "./components/InactiveStylish";
-import Inventory from "./components/Inventory";
 
 function App() {
   const location = useLocation();
+
+  // Hide sidebar & navbar on login and register pages
   const hideLayoutPaths = ["/", "/r"];
   const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
 
   return (
     <>
-      {/* Show Sidebar + Uppernav only if not on login/register */}
+      {/* Sidebar & Uppernav */}
       {!shouldHideLayout && (
-        <div>
+        <>
           <Sidenav />
           <Uppernav />
-        </div>
+        </>
       )}
 
-      {/* Page Routes */}
+      {/* Routes */}
       <Routes>
         <Route path="/" element={<Loginpage />} />
         <Route path="/r" element={<Register />} />
+
         <Route
           path="/dashboard"
           element={
@@ -46,6 +51,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/booking"
           element={
@@ -54,6 +60,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/inventory"
           element={
@@ -62,6 +69,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/managestyle"
           element={
@@ -70,6 +78,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/managestyle1"
           element={
@@ -78,14 +87,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/Inactivestylist"
+          path="/inactivestylist"
           element={
             <ProtectedRoute>
               <InactiveStylish />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/earning"
           element={
@@ -94,6 +105,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/earningweek"
           element={
@@ -102,6 +114,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/manageservice"
           element={
@@ -110,6 +123,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/pending"
           element={
@@ -118,6 +132,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/addexpense"
           element={
@@ -126,6 +141,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/summary"
           element={
@@ -134,6 +150,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/uploadimg"
           element={

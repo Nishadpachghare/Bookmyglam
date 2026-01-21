@@ -362,20 +362,20 @@ function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen w-full p-8 text-black pl-80 ">
+    <div className="min-h-screen w-full p-8 text-white  bg-black pl-80 ">
       <div className="text-3xl font-semibold mb-8">
         <h1>Dashboard</h1>
       </div>
 
       {/* Search Bar */}
-      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-6xl border rounded-md mb-6">
-        <FiSearch className="text-gray-500 text-xl" />
+      <div className="flex items-center bg-purple-900/30  border-purple-900 px-4 py-3 w-full max-w-6xl border rounded-md mb-6">
+        <FiSearch className="text-black-500 text-xl" />
         <input
           type="text"
           placeholder="Search booking by customer name or phone"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none ml-3 w-full text-gray-700"
+          className="bg-transparent outline-none ml-3 w-full text-purple-500"
         />
       </div>
 
@@ -383,7 +383,7 @@ function Dashboard() {
       <div className="flex gap-4 text-sm my-5 pl-233">
         <button
           onClick={handleDelete}
-          className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 text-purple-600 border border-purple-600 px-3 py-1 rounded-md hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={selectedBookings.length === 0}
         >
           🗑 Delete{" "}
@@ -393,7 +393,7 @@ function Dashboard() {
         <div className="relative">
           <button
             onClick={() => setShowSortOptions(!showSortOptions)}
-            className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-1 text-purple-700 border px-3 py-1 rounded-md hover:bg-gray-50"
           >
             🔍 Sort {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
           </button>
@@ -420,14 +420,14 @@ function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-md p-6 text-center">
-          <p className="text-gray-500 text-sm">Total Bookings</p>
+        <div className="bg-white text-black rounded-xl shadow-md p-6 text-center">
+          <p className="text-black text-sm">Total Bookings</p>
           <h2 className="text-3xl font-bold mt-2">{totalBookings}</h2>
         </div>
 
         {/* ✅ Total Earnings Card: Shows ONLY Paid Amounts */}
-        <div className="bg-[#d6b740] text-black rounded-xl shadow-md p-6 text-center">
-          <p className="text-gray-800 font-medium text-sm">Total Earnings</p>
+        <div className="bg-[#4c0080] text-black rounded-xl shadow-md p-6 text-center">
+          <p className="text-black-800 font-medium text-sm">Total Earnings</p>
           <h2 className="text-3xl font-bold mt-2">
             ₹{totalEarnings.toLocaleString()}
           </h2>
@@ -435,8 +435,8 @@ function Dashboard() {
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6 text-center">
-          <p className="text-gray-500 text-sm">Active Stylists</p>
-          <h2 className="text-3xl font-bold mt-2">{totalStylists}</h2>
+          <p className="text-black text-sm">Active Stylists</p>
+          <h2 className="text-3xl font-bold mt-2 text-black">0</h2>
         </div>
       </div>
 
@@ -444,7 +444,7 @@ function Dashboard() {
       {editingBooking && (
         <div
           ref={editFormRef}
-          className=" border rounded-xl shadow-md p-6 mb-6"
+          className="border rounded-xl shadow-md p-6 mb-6 "
         >
           <h2 className="text-xl font-semibold mb-4">Edit Booking</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

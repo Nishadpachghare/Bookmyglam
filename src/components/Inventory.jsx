@@ -277,11 +277,11 @@ export default function Inventory() {
     item.reorderLevel > 0 && item.stockQty <= item.reorderLevel;
 
   return (
-    <div className="p-6  w-377 pl-85 text-sm text-gray-800">
+    <div className="p-6  w-377 pl-85 text-sm bg-black text-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Inventory Management</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-purple-700">
             Track salon products, tools and supplies. Get alerted when stock is
             low.
           </p>
@@ -292,7 +292,7 @@ export default function Inventory() {
           className={`px-4 py-2 rounded-md text-sm font-semibold border ${
             showLowStockOnly
               ? "bg-red-100 border-red-300 text-red-700"
-              : "bg-[#D3AF37]   text-black border-yellow-700"
+              : "bg-[#4C0099]   text-white border-gray-700"
           }`}
         >
           {showLowStockOnly ? "Show All Items" : "Show Low Stock Only"}
@@ -301,7 +301,7 @@ export default function Inventory() {
 
       <div className="max-w-8xl mx-auto grid grid-cols-1  gap-6">
         {/* Form */}
-        <div className="bg-white border rounded-lg p-5 shadow-sm">
+        <div className="bg-black border rounded-lg p-5 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">
             {editingId ? "Edit Item" : "Add New Item"}
           </h2>
@@ -525,7 +525,7 @@ export default function Inventory() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-[#D3AF37] hover:bg-yellow-500 text-sm font-semibold rounded text-black"
+                className="px-4 py-2 bg-[#4C0099] hover:bg-yellow-500 text-sm font-semibold rounded text-white"
               >
                 {saving ? "Saving..." : editingId ? "Update Item" : "Add Item"}
               </button>
@@ -534,7 +534,7 @@ export default function Inventory() {
         </div>
 
         {/* List */}
-        <div className="bg-white border rounded-lg p-5 shadow-sm w-286">
+        <div className="bg-black border rounded-lg p-5 shadow-sm w-286">
           <div className="flex justify-between items-center mb-3">
             <div>
               <h2 className="text-base font-semibold">

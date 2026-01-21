@@ -308,9 +308,9 @@ function Booking() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-[#fffdfa] pl-55 pt-6 ">
-      <div className="bg-white border rounded-xl shadow-xl p-6 w-full max-w-md ">
-        <h2 className="text-3xl font-semibold text-center mb-6 text-black">
+    <div className="flex items-center justify-center bg-[#000000] pl-55 pt-6 ">
+      <div className="bg-gray text-white rounded-xl shadow-xl p-6 w-full max-w-md ">
+        <h2 className="text-3xl font-semibold text-center mb-6 text-white">
           New Booking
         </h2>
 
@@ -323,7 +323,7 @@ function Booking() {
               onChange={handleChange}
               className={`w-full border ${
                 formErrors.services ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              } rounded-md px-4 py-3 bg-[#000000]`}
             >
               <option value="">Select Service</option>
               {services.map((service) => (
@@ -381,7 +381,7 @@ function Booking() {
               onChange={handleChange}
               className={`w-full border ${
                 formErrors.customerName ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              } rounded-md px-4 py-3 bg-[#000000]`}
             />
             {formErrors.customerName && (
               <p className="text-red-500 text-sm mt-1">
@@ -403,7 +403,7 @@ function Booking() {
               pattern="\d*"
               className={`w-full border ${
                 formErrors.phone ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              } rounded-md px-4 py-3 bg-[#000000]`}
             />
             {formErrors.phone && (
               <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
@@ -421,14 +421,14 @@ function Booking() {
                 onChange={handleChange}
                 className={`flex-1 border ${
                   formErrors.email ? "border-red-500" : "border-gray-300"
-                } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+                } rounded-md px-4 py-3 bg-[#000000]`}
               />
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={sendOtpEmail}
                   disabled={otpLoading || otpCooldown > 0}
-                  className="px-3 py-2 bg-[#d6b740] rounded text-black font-semibold"
+                  className="px-3 py-2 bg-[#4C0099] rounded text-white font-semibold"
                 >
                   {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Send OTP"}
                 </button>
@@ -458,14 +458,14 @@ function Booking() {
                 placeholder="Enter OTP"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-md px-4 py-2 bg-white"
+                className="flex-1 border border-gray-300 rounded-md px-4 py-2 bg-000000"
               />
               <button
                 type="button"
                 onClick={verifyOtpEmail}
                 disabled={otpLoading || !otpCode}
                 className={`px-3 py-2 rounded text-white ${
-                  emailVerified ? "bg-green-600" : "bg-blue-600"
+                  emailVerified ? "bg-purple-900" : "bg-purple-900"
                 }`}
               >
                 {emailVerified ? "Verified" : "Verify"}
@@ -488,7 +488,7 @@ function Booking() {
               onChange={handleChange}
               className={`w-full border ${
                 formErrors.date ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              } rounded-md px-4 py-3 bg-[#000000]`}
             />
             {formErrors.date && (
               <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>
@@ -503,7 +503,7 @@ function Booking() {
               onChange={handleChange}
               className={`w-full border ${
                 formErrors.time ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#fdfaf6]`}
+              } rounded-md px-4 py-3 bg-[#000000]`}
             />
             {formErrors.time && (
               <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
@@ -512,7 +512,7 @@ function Booking() {
 
           <button
             type="submit"
-            className="w-full bg-[#d6b740] text-black font-semibold py-3 rounded-md hover:bg-[#c1a235]"
+            className="w-full bg-[#4C0099] text-white font-semibold py-3 rounded-md hover:bg-[#c1a235]"
           >
             Add Booking
           </button>
