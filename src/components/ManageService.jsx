@@ -193,13 +193,13 @@ const ManageService = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center pl-55 py-10 px-4 shadow-xl">
+    <div className="min-h-screen w-full flex flex-col items-center pl-55 py-10 px-4 bg-black shadow-xl">
       {/* Toaster: mount once (can move to App.jsx for global usage) */}
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Manage Service Form */}
-      <div className="bg-white p-6 shadow-xl rounded-lg border h-130 w-100 manage-service-form">
-        <h2 className="text-center text-3xl font-semibold mb-4 pt-2">
+      <div className="bg-black p-6 shadow-xl rounded-lg border-white h-130 w-100 manage-service-form">
+        <h2 className="text-center text-3xl font-semibold text-white mb-4 pt-2">
           {editingId ? "Edit Service" : "Add New Service"}
         </h2>
 
@@ -209,7 +209,7 @@ const ManageService = () => {
           placeholder="Service name"
           value={formData.service}
           onChange={handleChange}
-          className="w-full border p-3 mb-3 rounded pt-5"
+          className="w-full border text-white p-3 mb-3 rounded pt-5"
         />
 
         <textarea
@@ -217,14 +217,14 @@ const ManageService = () => {
           placeholder="Description"
           value={formData.description}
           onChange={handleChange}
-          className="w-full border p-3 mb-3 rounded h-24"
+          className="w-full border text-white p-3 mb-3 rounded h-24"
         />
 
         <select
           name="duration"
           value={formData.duration}
           onChange={handleChange}
-          className="w-full border p-3 mb-2 rounded pt-5"
+          className="w-full border text-white p-3 mb-2 rounded pt-5"
         >
           <option value="">Select Duration</option>
           <option value="10 Minutes">10 Minutes</option>
@@ -242,13 +242,13 @@ const ManageService = () => {
           placeholder="Price (₹)"
           value={formData.price}
           onChange={handleChange}
-          className="w-full border p-3 mb-4 rounded "
+          className="w-full border text-white p-3 mb-4 rounded "
         />
 
         <div className="flex gap-2 pt-15">
           <button
             onClick={handleSubmit}
-            className="w-full bg-[#D3AF37] py-3 rounded text-black font-medium hover:bg-[#D3AF37]"
+            className="w-full bg-[#4C0099] py-3 rounded text-white font-medium hover:bg-[#D3AF37]"
           >
             {editingId ? "Update Service" : "Add Service"}
           </button>
@@ -273,13 +273,13 @@ const ManageService = () => {
       </div>
 
       {/* All Services */}
-      <div className="bg-white w-260 mt-10 p-6 rounded-lg shadow-xl border services-list">
-        <h2 className="text-center text-3xl font-semibold mb-4">All Service</h2>
+      <div className="bg-black w-260 mt-10 p-6 rounded-lg shadow-xl border services-list">
+        <h2 className="text-center text-3xl text-white font-semibold mb-4">All Service</h2>
 
         <div className="flex gap-4 w-280 text-sm my-5 pl-190 m-2">
           <button
             onClick={handleDelete}
-            className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50"
+            className="flex items-center gap-1 text-purple-600 border border-purple-600 px-3 py-1 rounded-md hover:bg-white-50"
             disabled={selectedServices.length === 0}
           >
             🗑 Delete{" "}
@@ -289,7 +289,7 @@ const ManageService = () => {
           <div className="relative">
             <button
               onClick={() => setShowSortOptions(!showSortOptions)}
-              className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-1 text-purple-700 border px-3 py-1 rounded-md hover:bg-gray-50"
             >
               🔍 Sort {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
             </button>
@@ -315,7 +315,7 @@ const ManageService = () => {
         </div>
 
         <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
+          <thead className="bg-purple-900 text-white ">
             <tr>
               <th className="border p-2 text-left w-1/5">Service</th>
               <th className="border p-2 text-left w-2/5">Description</th>

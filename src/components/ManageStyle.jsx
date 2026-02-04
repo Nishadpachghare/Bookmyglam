@@ -93,8 +93,8 @@ function ManageStyle() {
         ];
 
   return (
-    <div className="p-10 min-h-screen pl-80 shadow-xl">
-      <h1 className="text-3xl font-semibold text-gray-900 mb-6">
+    <div className="p-10 min-h-screen pl-80 bg-black shadow-xl">
+      <h1 className="text-3xl font-semibold text-white mb-6">
         Manage Stylists
       </h1>
 
@@ -112,18 +112,18 @@ function ManageStyle() {
 
       {/* Tabs */}
       <div className="flex gap-10 mt-6 pb-3 text-lg font-medium  border-gray-200">
-        <button className="text-[#D3AF37] font-semibold border-b-2 border-[#D3AF37] pb-1">
+        <button className="text-[#4C0099] font-semibold border-b-2 border-[#4C0099] pb-1">
           All Stylists
         </button>
         <button
           onClick={() => navigate("/managestyle1")}
-          className="text-gray-500 hover:text-[#D3AF37]"
+          className="text-purple-900 hover:text-[#FFFFFF]"
         >
           Add Stylist
         </button>
         <button
           onClick={() => navigate("/Inactivestylist")}
-          className="text-gray-500 hover:text-[#D3AF37]"
+          className="text-purple-900 hover:text-[#ffffff]"
         >
           Inactive Stylists
         </button>
