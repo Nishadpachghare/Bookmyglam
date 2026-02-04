@@ -320,12 +320,15 @@ const AddExpense = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 pl-55">
-      <div className="w-full max-w-xl bg-white p-6 rounded-lg shadow border">
-        <h2 className="text-2xl font-bold text-gray-800 mb-1">
+   <div className="min-h-screen bg-black flex flex-col items-center py-10 px-4 pl-55">
+
+   <div className="w-full max-w-xl bg-purple-900 p-6 rounded-lg shadow border border-purple-600">
+
+
+        <h2 className="text-2xl font-bold text-white mb-1">
           {editingId ? "Edit expense" : "Add expenses"}
         </h2>
-        <p className="text-[#D3AF37] text-sm mb-6">
+        <p className="text-purple-400 text-sm mb-6">
           {editingId
             ? "Update the selected expense"
             : "Add expenses for remind"}
@@ -334,7 +337,8 @@ const AddExpense = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+           <label className="block text-sm font-medium text-white mb-1">
+
               Amount <span className="text-red-500">*</span>
             </label>
             <input
@@ -342,54 +346,58 @@ const AddExpense = () => {
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full border rounded-md p-2"
+            className="w-full border border-gray-700 rounded-md p-2 bg-black text-white placeholder-gray-400"
+
             />
           </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-white mb-1">
+
               Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border rounded-md p-2"
+                className="w-full border border-gray-700 rounded-md p-2 bg-black text-white placeholder-gray-400"
             />
           </div>
 
           {/* Expiry */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
+
               Expiry Date
             </label>
             <input
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full border rounded-md p-2"
+              className="w-full border border-gray-700 rounded-md p-2 bg-black text-white placeholder-gray-400"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
+
               Notes <span className="text-red-500">*</span>
             </label>
             <textarea
               placeholder="Enter notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full border rounded-md p-2 h-24"
+            className="w-full border border-gray-700 rounded-md p-2 bg-black text-white placeholder-gray-400"
             />
           </div>
 
           {/* Receipt Upload (drag & drop) */}
           <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center bg-gray-50 ${
-              dragActive ? "border-green-500 bg-green-50" : "border-gray-300"
-            }`}
+            className={`border-2 border-dashed rounded-lg p-6 text-center bg-black border-gray text-white
+${dragActive ? "border-green-400 bg-purple-600" : ""}`}
+
             onDragOver={handleDragOver}
             onDragEnter={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -401,7 +409,8 @@ const AddExpense = () => {
             </p>
 
             <div className="mt-3 flex flex-col items-center gap-2">
-              <label className="inline-block bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md cursor-pointer hover:bg-[#c1a235] transition">
+             <label className="block text-sm font-medium text-white mb-1">
+
                 Browse File
                 <input
                   type="file"
@@ -455,14 +464,15 @@ const AddExpense = () => {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="border border-gray-400 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100"
+                className="bg-black text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-900"
+
               >
                 Cancel
               </button>
             )}
             <button
               type="submit"
-              className="bg-[#d6b740] text-black font-semibold px-4 py-2 rounded-md"
+              className="bg-black text-white font-semibold px-4 py-2 rounded-md"
             >
               {editingId ? "Update Expense" : "Save Expense"}
             </button>
@@ -533,8 +543,10 @@ const AddExpense = () => {
         </div>
 
         {/* Table */}
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
+        <table className="w-full border text-sm text-gray-200">
+
+          <thead className="bg-gray-800 text-white">
+
             <tr>
               <th className="border p-2 text-center">Select</th>
               <th className="border p-2">Amount</th>
@@ -549,7 +561,7 @@ const AddExpense = () => {
             {displayedExpenses.map((exp) => (
               <tr
                 key={exp._id}
-                className="even:bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="even:bg-gray-900 hover:bg-gray-800 transition-colors"
               >
                 <td className="border text-center p-2">
                   <input

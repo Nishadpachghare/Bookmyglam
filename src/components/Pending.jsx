@@ -191,11 +191,13 @@ const Pending = () => {
   );
 
   return (
-    <div className="min-h-screen pl-55  flex flex-col items-center py-10 px-4  shadow-xl">
+   <div className="min-h-screen pl-55 flex flex-col items-center py-10 px-4 bg-black shadow-xl">
+
       {/* Header */}
       <div className="w-full max-w-5xl mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Pending amount</h2>
-        <p className="text-[#D3AF37] text-sm mt-1">
+        {/* <p className="text-[#D3AF37] text-sm mt-1"> */}
+        <p className="text-purple-500 text-sm mt-1">
           View your Pending amount summary • Total Pending: ₹
           {totalPendingAmount.toLocaleString()}
         </p>
@@ -217,7 +219,11 @@ const Pending = () => {
       <div className="flex gap-4 justify-end text-sm my-5 m-2 w-full max-w-6xl">
         <button
           onClick={handleMarkAsPaid}
-          className="flex items-center gap-1 text-green-600 border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          // className="flex items-center gap-1 text-green-600 border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+         className="flex items-center gap-1 bg-green-600 text-white border border-green-800 px-4 py-2 rounded-md hover:bg-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+
+
+
           disabled={selectedRows.length === 0}
         >
           ✅ Mark as Paid{" "}
@@ -225,14 +231,16 @@ const Pending = () => {
         </button>
         <button
           onClick={handleBulkDelete}
-          className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+       className="flex items-center gap-1 bg-red-600 text-white border border-red-800 px-4 py-2 rounded-md hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+
           disabled={selectedRows.length === 0}
         >
           🗑 Delete {selectedRows.length > 0 && `(${selectedRows.length})`}
         </button>
         <button
           onClick={fetchPendingBookings}
-          className="flex items-center gap-1 text-blue-600 border border-blue-600 px-3 py-1 rounded-md hover:bg-blue-50"
+         className="flex items-center gap-1 bg-blue-900 text-white border border-blue-800 px-4 py-2 rounded-md hover:bg-blue-800 transition"
+
         >
           🔄 Refresh
         </button>
@@ -242,7 +250,8 @@ const Pending = () => {
       <div className="bg-white w-full max-w-6xl rounded-lg shadow border overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-[#D3AF37] text-black">
+            {/* <tr className="bg-[#D3AF37] text-black"> */}
+            <tr className="bg-purple-600 text-white">
               <th className="p-3 text-left">
                 <input
                   type="checkbox"
