@@ -26,7 +26,7 @@ const Pending = () => {
       // Filter only pending bookings (case-insensitive)
       const pendingBookings = allBookings.filter(
         (booking) =>
-          (booking.paymentStatus || "").toString().toLowerCase() === "pending"
+          (booking.paymentStatus || "").toString().toLowerCase() === "pending",
       );
 
       // Transform data to match component structure
@@ -34,7 +34,7 @@ const Pending = () => {
         const totalAmount =
           booking.services?.reduce(
             (sum, service) => sum + (Number(service.price) || 0),
-            0
+            0,
           ) || 0;
         const serviceNames =
           booking.services?.map((s) => s.serviceName || s.service).join(", ") ||
@@ -74,7 +74,7 @@ const Pending = () => {
           (item.customer || "")
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          (item.phone || "").toLowerCase().includes(searchTerm.toLowerCase())
+          (item.phone || "").toLowerCase().includes(searchTerm.toLowerCase()),
       )
       .filter((item) => {
         if (filterType === "month" && filterValue) {
@@ -107,7 +107,7 @@ const Pending = () => {
 
   const handleCheckboxChange = (id) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -131,7 +131,7 @@ const Pending = () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${selectedRows.length} selected entr${
         selectedRows.length > 1 ? "ies" : "y"
-      }?`
+      }?`,
     );
 
     if (!confirmDelete) return;
@@ -159,7 +159,7 @@ const Pending = () => {
     const confirmMarkPaid = window.confirm(
       `Are you sure you want to mark ${selectedRows.length} selected booking${
         selectedRows.length > 1 ? "s" : ""
-      } as paid?`
+      } as paid?`,
     );
 
     if (!confirmMarkPaid) return;
@@ -171,7 +171,7 @@ const Pending = () => {
           const payload = { ...booking.originalBooking, paymentStatus: "Paid" };
           await axios.put(
             `http://localhost:5000/api/bookings/${bookingId}`,
-            payload
+            payload,
           );
         }
       }
@@ -187,29 +187,32 @@ const Pending = () => {
 
   const totalPendingAmount = useMemo(
     () => filteredData.reduce((sum, item) => sum + (item.totalAmount || 0), 0),
-    [filteredData]
+    [filteredData],
   );
 
   return (
-    <div className="min-h-screen pl-55  flex flex-col items-center py-10 px-4  shadow-xl">
+    <div className="min-h-screen pl-55 flex flex-col items-center py-10 px-4 bg-black shadow-xl">
       {/* Header */}
       <div className="w-full max-w-5xl mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Pending amount</h2>
-        <p className="text-[#D3AF37] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-white border-purple-500 pb-2">
+          Pending amount
+        </h2>
+        {/* <p className="text-[#D3AF37] text-sm mt-1"> */}
+        <p className="text-purple-500 text-sm mt-1">
           View your Pending amount summary • Total Pending: ₹
           {totalPendingAmount.toLocaleString()}
         </p>
       </div>
 
-      {/* ✅ Search Bar (now functional) */}
-      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-6xl border rounded-md">
-        <FiSearch className="text-gray-500 text-xl" />
+      {/* ✅ Search Bar (consistent dark style) */}
+      <div className="flex items-center bg-zinc-900 px-4 py-3 w-full max-w-6xl border border-zinc-700 rounded-md">
+        <FiSearch className="text-gray-300 text-xl" />
         <input
           type="text"
           placeholder="Search pending bookings by customer name or phone"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none ml-3 w-full text-gray-700"
+          className="bg-transparent outline-none ml-3 w-full text-white placeholder-gray-400"
         />
       </div>
 
@@ -217,7 +220,8 @@ const Pending = () => {
       <div className="flex gap-4 justify-end text-sm my-5 m-2 w-full max-w-6xl">
         <button
           onClick={handleMarkAsPaid}
-          className="flex items-center gap-1 text-green-600 border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          // className="flex items-center gap-1 text-green-600 border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 bg-green-600 text-white border border-green-800 px-4 py-2 rounded-md hover:bg-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={selectedRows.length === 0}
         >
           ✅ Mark as Paid{" "}
@@ -225,14 +229,14 @@ const Pending = () => {
         </button>
         <button
           onClick={handleBulkDelete}
-          className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 bg-red-600 text-white border border-red-800 px-4 py-2 rounded-md hover:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={selectedRows.length === 0}
         >
           🗑 Delete {selectedRows.length > 0 && `(${selectedRows.length})`}
         </button>
         <button
           onClick={fetchPendingBookings}
-          className="flex items-center gap-1 text-blue-600 border border-blue-600 px-3 py-1 rounded-md hover:bg-blue-50"
+          className="flex items-center gap-1 bg-blue-900 text-white border border-blue-800 px-4 py-2 rounded-md hover:bg-blue-800 transition"
         >
           🔄 Refresh
         </button>
@@ -242,7 +246,8 @@ const Pending = () => {
       <div className="bg-white w-full max-w-6xl rounded-lg shadow border overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-[#D3AF37] text-black">
+            {/* <tr className="bg-[#D3AF37] text-black"> */}
+            <tr className="bg-purple-600 text-white">
               <th className="p-3 text-left">
                 <input
                   type="checkbox"

@@ -7,9 +7,11 @@ function Booking() {
   // form + errors
   const [formErrors, setFormErrors] = useState({});
   const [services, setServices] = useState([]);
+  const [stylists, setStylists] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [formData, setFormData] = useState({
     service: [],
+    stylist: "",
     customerName: "",
     phone: "",
     email: "",
@@ -35,10 +37,31 @@ function Booking() {
   // Today's date in YYYY-MM-DD format (used to restrict past dates)
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  // fetch services on mount
+  // fetch services + stylists on mount
   useEffect(() => {
     fetchServices();
+    fetchStylists();
   }, []);
+
+  const fetchStylists = async () => {
+    try {
+      const resp = await axios.get("http://localhost:5000/api/stylists");
+      const list = Array.isArray(resp.data)
+        ? resp.data
+        : resp.data?.stylists || [];
+      // only active stylists
+      const active = list.filter((s) => (s.status || "active") === "active");
+      setStylists(
+        active.map((s) => ({
+          _id: s._id,
+          name: s.name || s.displayName || s.email,
+        })),
+      );
+    } catch (err) {
+      console.error("Error fetching stylists:", err);
+      // non-fatal
+    }
+  };
 
   // OTP cooldown timer
   useEffect(() => {
@@ -50,16 +73,16 @@ function Booking() {
   const fetchServices = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/Manageservices"
+        "http://localhost:5000/api/Manageservices",
       );
       const raw = response?.data;
       const list = Array.isArray(raw)
         ? raw
         : Array.isArray(raw?.data)
-        ? raw.data
-        : Array.isArray(raw?.services)
-        ? raw.services
-        : [];
+          ? raw.data
+          : Array.isArray(raw?.services)
+            ? raw.services
+            : [];
 
       const normalized = list.map((s) => ({
         _id:
@@ -85,7 +108,7 @@ function Booking() {
 
     if (name === "service") {
       const selectedService = services.find(
-        (s) => (s._id ?? "").toString() === value.toString()
+        (s) => (s._id ?? "").toString() === value.toString(),
       );
       if (
         selectedService &&
@@ -181,6 +204,10 @@ function Booking() {
     }
     if (!formData.time) errors.time = "Time is required";
 
+    if (!formData.stylist || !formData.stylist.trim()) {
+      errors.stylist = "Please select a stylist";
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -235,7 +262,7 @@ function Booking() {
           to,
           code: otpCode.trim(),
           channel: "email",
-        }
+        },
       );
       if (resp.data?.ok) {
         toast.success("Email verified");
@@ -267,7 +294,7 @@ function Booking() {
     // IMPORTANT: require email verification before booking
     if (!emailVerified) {
       toast.error(
-        "Please verify your email with the OTP before adding booking"
+        "Please verify your email with the OTP before adding booking",
       );
       setFormErrors((p) => ({ ...p, email: "Email must be verified" }));
       return;
@@ -276,17 +303,19 @@ function Booking() {
     try {
       const bookingData = {
         selectedServices,
+        stylist: formData.stylist,
         ...formData,
       };
 
       const res = await axios.post(
         "http://localhost:5000/api/bookings",
-        bookingData
+        bookingData,
       );
       if (res.status === 201 || res.data?.ok) {
         setMessage("✅ Booking added successfully!");
         setFormData({
           service: [],
+          stylist: "",
           customerName: "",
           phone: "",
           email: "",
@@ -308,8 +337,8 @@ function Booking() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-[#000000] pl-55 pt-6 ">
-      <div className="bg-gray text-white rounded-xl shadow-xl p-6 w-full max-w-md ">
+    <div className="flex items-center justify-center bg-[#000000] pl-55 pt-10 pb-2 min-h-screen ">
+      <div className="bg-gray text-white rounded-xl shadow-xl  border p-6 w-full max-w-md ">
         <h2 className="text-3xl font-semibold text-center mb-6 text-white">
           New Booking
         </h2>
@@ -341,6 +370,16 @@ function Booking() {
           {selectedServices.length > 0 && (
             <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-300">
               <h3 className="font-medium mb-2">Selected Services:</h3>
+              {formData.stylist ? (
+                <div className="text-sm text-gray-700 mb-2">
+                  Stylist:{" "}
+                  <span className="font-semibold">
+                    {(stylists.find((s) => s._id === formData.stylist) || {})
+                      .name || "—"}
+                  </span>
+                </div>
+              ) : null}
+
               {selectedServices.map((service) => (
                 <div
                   key={service._id}
@@ -370,6 +409,28 @@ function Booking() {
               </div>
             </div>
           )}
+
+          {/* Stylist selection */}
+          <div>
+            <select
+              name="stylist"
+              value={formData.stylist}
+              onChange={handleChange}
+              className={`w-full border ${
+                formErrors.stylist ? "border-red-500" : "border-gray-300"
+              } rounded-md px-4 py-3 bg-[#000000] text-white`}
+            >
+              <option value="">Select Stylist</option>
+              {stylists.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {formErrors.stylist && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.stylist}</p>
+            )}
+          </div>
 
           {/* Customer name */}
           <div>

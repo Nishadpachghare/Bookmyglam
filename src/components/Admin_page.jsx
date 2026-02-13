@@ -1,7 +1,6 @@
 import React from "react";
 import { FiEdit2, FiLogOut, FiSave, FiX } from "react-icons/fi";
-
-export  function Admin_page() {
+export function Admin_page() {
   return (
     <div className="flex justify-center pl-270 pb-10 items-center w-355 bg-gray-50">
       <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-sm relative">
@@ -9,7 +8,6 @@ export  function Admin_page() {
         <button className="absolute top-4 right-4 text-gray-500 hover:text-black">
           <FiX size={20} />
         </button>
-
         {/* Profile Image */}
         <div className="flex flex-col items-center mb-4">
           <div className="relative">
@@ -26,7 +24,6 @@ export  function Admin_page() {
             Hi,<span className="text-gray-700">Shraddha!</span>
           </h2>
         </div>
-
         {/* Form Section */}
         <div className="space-y-3">
           <div>
@@ -37,7 +34,6 @@ export  function Admin_page() {
               className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
             />
           </div>
-
           <div>
             <label className="block text-sm text-gray-500">E-mail</label>
             <input
@@ -46,7 +42,6 @@ export  function Admin_page() {
               className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
             />
           </div>
-
           <div>
             <label className="block text-sm text-gray-500">Phone no.</label>
             <input
@@ -55,7 +50,6 @@ export  function Admin_page() {
               className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
             />
           </div>
-
           <div>
             <label className="block text-sm text-gray-500">Country</label>
             <input
@@ -65,7 +59,6 @@ export  function Admin_page() {
             />
           </div>
         </div>
-
         {/* Buttons */}
         <div className="flex justify-between mt-6">
           <button className="flex items-center gap-2 bg-[#d6b740] text-black px-4 py-2 rounded-md shadow hover:bg-yellow-500">
@@ -75,7 +68,6 @@ export  function Admin_page() {
             <FiEdit2 /> Edit
           </button>
         </div>
-
         {/* Logout */}
         <div className="flex justify-center mt-6">
           <button className="flex items-center gap-2 text-red-500 hover:text-red-600 font-medium">

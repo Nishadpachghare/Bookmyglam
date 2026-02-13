@@ -50,7 +50,7 @@ function Dashboard() {
       const maybeArray = extractArray(res, "stylists");
       const activeStylists = maybeArray.filter(
         (stylist) =>
-          (stylist.status || "").toString().toLowerCase() === "active"
+          (stylist.status || "").toString().toLowerCase() === "active",
       );
       setStylists(activeStylists);
     } catch (error) {
@@ -101,7 +101,7 @@ function Dashboard() {
     safeBookings,
     "date",
     filterType,
-    filterValue
+    filterValue,
   );
 
   useEffect(() => {
@@ -202,7 +202,7 @@ function Dashboard() {
   // Selection Logic
   const handleSelectBooking = (id) => {
     setSelectedBookings((prev) =>
-      prev.includes(id) ? prev.filter((bId) => bId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((bId) => bId !== id) : [...prev, id],
     );
   };
 
@@ -264,7 +264,7 @@ function Dashboard() {
   const handleAddServiceFromDropdown = (serviceId) => {
     if (!serviceId || !editingBooking) return;
     const selected = (allServices || []).find(
-      (s) => (s._id ?? "").toString() === serviceId.toString()
+      (s) => (s._id ?? "").toString() === serviceId.toString(),
     );
     if (!selected) return;
 
@@ -273,7 +273,7 @@ function Dashboard() {
       const already = currentServices.some(
         (s) =>
           (s.serviceName || "").toLowerCase() ===
-          (selected.serviceName || selected.service || "").toLowerCase()
+          (selected.serviceName || selected.service || "").toLowerCase(),
       );
       if (already) return prev;
 
@@ -324,7 +324,7 @@ function Dashboard() {
 
       const res = await axios.put(
         `http://localhost:5000/api/bookings/${editingBooking._id}`,
-        payload
+        payload,
       );
 
       const updated = res.data.booking || res.data;
@@ -332,16 +332,16 @@ function Dashboard() {
       // Update the local bookings array immediately
       setBookings((prev) =>
         (Array.isArray(prev) ? prev : []).map((b) =>
-          b._id === updated._id ? updated : b
-        )
+          b._id === updated._id ? updated : b,
+        ),
       );
 
       // Also sync with global bookings for other pages
       if (typeof setGlobalBookings === "function") {
         setGlobalBookings((prev) =>
           (Array.isArray(prev) ? prev : []).map((b) =>
-            b._id === updated._id ? updated : b
-          )
+            b._id === updated._id ? updated : b,
+          ),
         );
       }
 
@@ -358,7 +358,7 @@ function Dashboard() {
 
   const editingTotal = (editingBooking?.services || []).reduce(
     (sum, s) => sum + (Number(s.price) || 0),
-    0
+    0,
   );
 
   return (
@@ -367,15 +367,15 @@ function Dashboard() {
         <h1>Dashboard</h1>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center bg-purple-900/30  border-purple-900 px-4 py-3 w-full max-w-6xl border rounded-md mb-6">
-        <FiSearch className="text-black-500 text-xl" />
+      {/* Search Bar (consistent dark style) */}
+      <div className="flex items-center bg-zinc-900 px-4 py-3 w-full max-w-6xl border border-zinc-700 rounded-md mb-6">
+        <FiSearch className="text-gray-300 text-xl" />
         <input
           type="text"
           placeholder="Search booking by customer name or phone"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none ml-3 w-full text-purple-500"
+          className="bg-transparent outline-none ml-3 w-full text-white placeholder-gray-400"
         />
       </div>
 
@@ -554,7 +554,7 @@ function Dashboard() {
                           handleServiceChange(
                             idx,
                             "serviceName",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         className="w-full border rounded-md p-2 text-xs"
@@ -652,7 +652,7 @@ function Dashboard() {
                 const totalAmount = Array.isArray(b.services)
                   ? b.services.reduce(
                       (sum, s) => sum + (Number(s.price) || 0),
-                      0
+                      0,
                     )
                   : 0;
                 const serviceNames = Array.isArray(b.services)

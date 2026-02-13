@@ -31,7 +31,7 @@ const ManageService = () => {
     services || [],
     "createdAt",
     filterType,
-    filterValue
+    filterValue,
   );
 
   useEffect(() => {
@@ -55,7 +55,7 @@ const ManageService = () => {
   const fetchServices = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/Manageservices"
+        "http://localhost:5000/api/Manageservices",
       );
       // server might return array directly or an object — handle both
       const data = Array.isArray(response.data)
@@ -93,7 +93,7 @@ const ManageService = () => {
 
   const handleCheckbox = (id) => {
     setSelectedServices((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     );
   };
 
@@ -109,8 +109,8 @@ const ManageService = () => {
       // parallel deletes for speed
       await Promise.all(
         selectedServices.map((id) =>
-          axios.delete(`http://localhost:5000/api/Manageservices/${id}`)
-        )
+          axios.delete(`http://localhost:5000/api/Manageservices/${id}`),
+        ),
       );
       toast.success("Deleted selected services", { id: toastId });
       setSelectedServices([]);
@@ -126,7 +126,7 @@ const ManageService = () => {
     const sortedServices = [...services].sort((a, b) =>
       order === "asc"
         ? a.service.localeCompare(b.service)
-        : b.service.localeCompare(a.service)
+        : b.service.localeCompare(a.service),
     );
     setServices(sortedServices);
     setShowSortOptions(false);
@@ -151,10 +151,10 @@ const ManageService = () => {
             description,
             duration,
             price: Number(price),
-          }
+          },
         );
         toast.success(
-          response.data?.message || "✅ Service updated successfully!"
+          response.data?.message || "✅ Service updated successfully!",
         );
       } else {
         const response = await axios.post(
@@ -164,10 +164,10 @@ const ManageService = () => {
             description,
             duration,
             price: Number(price),
-          }
+          },
         );
         toast.success(
-          response.data?.message || "✅ Service added successfully!"
+          response.data?.message || "✅ Service added successfully!",
         );
       }
 
@@ -187,7 +187,7 @@ const ManageService = () => {
       console.error("Error saving service:", error);
       toast.error(
         error.response?.data?.message ||
-          "Error saving service. Please try again."
+          "Error saving service. Please try again.",
       );
     }
   };
@@ -198,8 +198,8 @@ const ManageService = () => {
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Manage Service Form */}
-      <div className="bg-black p-6 shadow-xl rounded-lg border-white h-130 w-100 manage-service-form">
-        <h2 className="text-center text-3xl font-semibold text-white mb-4 pt-2">
+      <div className="bg-black p-6 shadow-xl rounded-lg border border-white h-130 w-100 manage-service-form">
+        <h2 className="text-center text-3xl font-semibold border-white text-white mb-4 pt-2">
           {editingId ? "Edit Service" : "Add New Service"}
         </h2>
 
@@ -274,7 +274,9 @@ const ManageService = () => {
 
       {/* All Services */}
       <div className="bg-black w-260 mt-10 p-6 rounded-lg shadow-xl border services-list">
-        <h2 className="text-center text-3xl text-white font-semibold mb-4">All Service</h2>
+        <h2 className="text-center text-3xl text-white font-semibold mb-4">
+          All Service
+        </h2>
 
         <div className="flex gap-4 w-280 text-sm my-5 pl-190 m-2">
           <button

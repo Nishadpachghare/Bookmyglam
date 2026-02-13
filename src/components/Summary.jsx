@@ -274,9 +274,11 @@ function SummaryContent() {
   // UI — ❌ UNCHANGED
   // ===============================
   return (
-    <div className="p-6 space-y-6 w-375 pl-80">
+    <div className="p-6 space-y-6 w-375 pl-80 bg-black w-full min-h-screen ">
+
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-semibold text-gray-800">
+      <h1 className="text-2xl font-semibold text-white">
+
           Summary (Master Report)
         </h1>
       </div>
@@ -297,8 +299,8 @@ function SummaryContent() {
         </div>
       </div> */}
 
-      <div className="bg-white p-5 rounded-xl shadow-md">
-        <h2 className="text-sm text-gray-500 mb-2">
+     <div className="bg-transperent p-5 rounded-xl shadow-md">
+       <h2 className="text-sm text-purple-200 mb-2">
           Total Revenue (Paid Only)
         </h2>
 
@@ -306,10 +308,10 @@ function SummaryContent() {
           <div className="h-52 bg-gray-50 rounded animate-pulse" />
         ) : (
           <>
-            <p className="text-3xl font-bold text-gray-800">
+            <p className="text-3xl font-bold text-white">
               ₹{formatAmount(totalEarnings)}
             </p>
-            <p className="text-green-600 text-sm mb-4">
+           <p className="text-purple-200 text-sm mb-4">
               {filterType && filterType !== "all"
                 ? "Filtered Snapshot"
                 : selected}{" "}
@@ -319,14 +321,15 @@ function SummaryContent() {
             <div className="w-full h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <XAxis dataKey="name" />
+                 <XAxis dataKey="name"  />
+
                   <Tooltip
                     formatter={(v) => [`₹${formatAmount(v)}`, "Earnings"]}
                   />
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#d4af37"
+                    stroke="#a855f7"
                     strokeWidth={3}
                     dot={false}
                   />
@@ -338,16 +341,16 @@ function SummaryContent() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-[#D3AF37] text-black rounded-xl p-5 text-center shadow">
+        <div className="bg-purple-900 text-white rounded-xl p-5 text-center shadow">
+
           <p className="text-sm">Total Appointments</p>
           <p className="text-3xl font-bold">
             {loading ? "..." : totalAppointments}
           </p>
         </div>
-
-        <div className="bg-white rounded-xl p-5 text-center shadow">
-          <p className="text-sm text-gray-500">Client Retention Rate</p>
-          <p className="text-3xl font-bold text-gray-800">
+<div className="bg-purple-900 rounded-xl p-5 text-center shadow">
+       <p className="text-sm text-purple-300">Client Retention Rate</p>
+          <p className="text-3xl font-bold text-white">
             {loading ? "..." : `${retentionRate.toFixed(1)}%`}
           </p>
         </div>
@@ -380,7 +383,8 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.error) {
       return (
-        <div className="p-6">
+        <div className="p-6 bg-black min-h-screen text-white">
+
           <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
           <p className="text-sm text-gray-600 mb-4">
             An error occurred while rendering this section. Try refreshing the
@@ -389,7 +393,8 @@ class ErrorBoundary extends React.Component {
           <div className="flex gap-2">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#D3AF37] rounded text-black"
+              className="px-4 py-2 bg-purple-700 rounded text-white hover:bg-purple-800"
+
             >
               Reload
             </button>

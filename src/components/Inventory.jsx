@@ -277,7 +277,7 @@ export default function Inventory() {
     item.reorderLevel > 0 && item.stockQty <= item.reorderLevel;
 
   return (
-    <div className="p-6  w-377 pl-85 text-sm bg-black text-white">
+    <div className="p-6  w-full pl-85 text-sm bg-black text-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Inventory Management</h1>

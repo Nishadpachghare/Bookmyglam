@@ -158,7 +158,7 @@ function ManageStyle1() {
           to: email,
           code: otpCode.trim(),
           channel: "email",
-        }
+        },
       );
       if (resp.data?.ok) {
         toast.success("Email verified");
@@ -232,12 +232,12 @@ function ManageStyle1() {
         toast.success("✅ Stylist added and welcome email sent");
       } else if (result.welcomeEmailStatus === "fallback") {
         toast(
-          "Stylist added. Note: outgoing email not configured on server (logged to console)"
+          "Stylist added. Note: outgoing email not configured on server (logged to console)",
         );
       } else {
         toast(
           "Stylist added. Welcome email delivery status: " +
-            (result.welcomeEmailStatus || "unknown")
+            (result.welcomeEmailStatus || "unknown"),
         );
       }
 
@@ -265,40 +265,40 @@ function ManageStyle1() {
   };
 
   return (
-    <div className="p-10 bg-gray-50 min-h-screen pl-80 shadow-xl">
-      <h1 className="text-3xl font-semibold text-gray-900 mb-6">
+    <div className="min-h-screen w-full p-8 bg-black text-white pl-80">
+      <h1 className="text-3xl font-semibold text-white mb-6">
         Manage Stylists
       </h1>
 
-      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-5xl border rounded-md">
-        <FiSearch className="text-gray-500 text-xl" />
+      <div className="flex items-center bg-zinc-900 px-4 py-3 w-full max-w-5xl border border-zinc-700 rounded-md">
+        <FiSearch className="text-gray-300 text-xl" />
         <input
           type="text"
           placeholder="Search stylists"
-          className="bg-transparent outline-none ml-3 w-full text-gray-700 placeholder-gray-500"
+          className="bg-transparent outline-none ml-3 w-full text-white placeholder-gray-400"
         />
       </div>
 
-      <div className="flex gap-8 mt-6 pb-2 text-lg font-medium">
+      <div className="flex gap-8 mt-6 pb-2 text-lg font-medium border-b border-zinc-700">
         <button
           onClick={() => navigate("/managestyle")}
-          className="text-gray-500 hover:text-[#D3AF37] pb-1"
+          className="text-gray-300 hover:text-[#4C0099] pb-1"
         >
           All Stylists
         </button>
-        <button className="text-[#D3AF37] border-b border-[#D3AF37] pb-1">
+        <button className="text-[#4C0099] border-b border-[#4C0099] pb-1">
           Add Stylist
         </button>
         <button
           onClick={() => navigate("/Inactivestylist")}
-          className="text-gray-500 hover:text-[#D3AF37] pb-1"
+          className="text-gray-300 hover:text-[#4C0099] pb-1"
         >
           Inactive Stylists
         </button>
       </div>
 
-      <div className="p-10 max-w-3xl mx-auto text-gray-800 border rounded-md bg-white shadow-md mt-6">
-        <h1 className="text-3xl font-bold mb-8">Add New Stylist</h1>
+      <div className="p-8 max-w-3xl mx-auto border rounded-md bg-zinc-900 border-zinc-700 shadow-md mt-6 text-white">
+        <h1 className="text-3xl font-bold mb-8 text-white">Add New Stylist</h1>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           {["name", "phone", "email"].map((field) => (
@@ -314,8 +314,8 @@ function ManageStyle1() {
                   value={formData[field]}
                   onChange={handleInputChange}
                   className={`w-full border ${
-                    errors[field] ? "border-red-500" : "border-gray-200"
-                  } rounded-md p-3 focus:ring-1 focus:ring-[#D3AF37]`}
+                    errors[field] ? "border-red-500" : "border-zinc-700"
+                  } rounded-md p-3 bg-black text-white placeholder-gray-400 focus:ring-1 focus:ring-amber-300`}
                 />
 
                 {field === "email" && (
@@ -332,8 +332,8 @@ function ManageStyle1() {
                           disabled={otpCooldown > 0 || otpLoading}
                           className={`px-3 py-2 text-sm rounded-md font-medium ${
                             otpCooldown > 0
-                              ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-                              : "bg-[#D3AF37] text-black hover:bg-[#c5a230]"
+                              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                              : "bg-[#4C0099] text-white hover:bg-[#3A006F]"
                           }`}
                         >
                           {otpCooldown > 0
@@ -353,20 +353,20 @@ function ManageStyle1() {
                     placeholder="Enter OTP"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
-                    className="border border-gray-200 rounded-md p-2 text-sm w-40"
+                    className="border border-zinc-700 rounded-md p-2 text-sm w-40 bg-black text-white placeholder-gray-400"
                   />
                   <button
                     type="button"
                     onClick={verifyOtpEmail}
                     disabled={otpLoading || emailVerified}
-                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md disabled:opacity-60"
+                    className="px-3 py-2 bg-[#4C0099] text-white text-sm rounded-md hover:bg-[#3A006F] disabled:opacity-60"
                   >
                     Verify
                   </button>
                   <button
                     type="button"
                     onClick={cancelOtp}
-                    className="px-3 py-2 bg-red-100 text-red-600 text-sm rounded-md"
+                    className="px-3 py-2 bg-zinc-800 text-red-400 text-sm rounded-md"
                   >
                     Cancel
                   </button>
@@ -409,8 +409,8 @@ function ManageStyle1() {
             <div
               className={`border-2 border-dashed rounded-md p-4 text-center ${
                 dragActive
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-200 bg-white"
+                  ? "border-amber-300 bg-zinc-800"
+                  : "border-zinc-700 bg-zinc-900"
               }`}
               onDragOver={handleDragOver}
               onDragEnter={handleDragOver}
@@ -418,7 +418,7 @@ function ManageStyle1() {
               onDrop={handleDrop}
             >
               <div className="flex flex-col items-center gap-2">
-                <label className="inline-block bg-[#D3AF37] text-black px-4 py-2 rounded-md cursor-pointer hover:bg-[#c5a230]">
+                <label className="inline-block bg-[#4C0099] text-white px-4 py-2 rounded-md cursor-pointer hover:bg-[#3A006F]">
                   Browse File
                   <input
                     type="file"
@@ -428,7 +428,7 @@ function ManageStyle1() {
                     className="hidden"
                   />
                 </label>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-400">
                   Or drag & drop an image here
                 </div>
 
@@ -439,9 +439,9 @@ function ManageStyle1() {
                       alt="Preview"
                       className="h-28 w-28 object-cover rounded-md mx-auto"
                     />
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       Selected:{" "}
-                      <span className="font-medium">
+                      <span className="font-medium text-white">
                         {formData.photo?.name}
                       </span>
                     </p>
@@ -449,7 +449,7 @@ function ManageStyle1() {
                 ) : null}
 
                 {uploadingPhoto && (
-                  <div className="mt-2 text-sm text-gray-600">
+                  <div className="mt-2 text-sm text-gray-400">
                     Uploading photo…
                   </div>
                 )}
@@ -464,7 +464,7 @@ function ManageStyle1() {
             <button
               type="button"
               onClick={() => navigate("/managestyle")}
-              className="border border-gray-300 bg-gray-50 px-5 py-2 rounded-md hover:bg-gray-100"
+              className="border border-zinc-700 bg-zinc-800 text-white px-5 py-2 rounded-md hover:bg-zinc-700"
               disabled={isSubmitting}
             >
               Cancel
@@ -472,7 +472,7 @@ function ManageStyle1() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`bg-[#D3AF37] text-black px-5 py-2 rounded-md hover:bg-[#c5a230] disabled:bg-gray-400 disabled:cursor-not-allowed`}
+              className={`bg-[#4C0099] text-white px-5 py-2 rounded-md hover:bg-[#3A006F] disabled:bg-gray-700 disabled:cursor-not-allowed`}
             >
               {isSubmitting ? "Saving..." : "Save Stylist"}
             </button>

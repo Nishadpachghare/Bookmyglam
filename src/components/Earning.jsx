@@ -254,9 +254,10 @@ function Earning() {
 
   /* ================= UI ================= */
   return (
-    <div className="p-10 w-355 pl-80 mx-5 text-gray-800">
+    // <div className="p-10 w-355 pl-80 mx-5 text-gray-800">
+     <div className="p-10 pl-80 w-full min-h-screen bg-black text-gray-100">
       <h1 className="text-3xl font-bold mb-1">Earnings</h1>
-      <p className="text-[#D3AF37] mb-6 text-sm">
+    <p className="text-purple-500 mb-6 text-sm">
         View your monthly earnings summary
       </p>
 
@@ -298,13 +299,14 @@ function Earning() {
         </div>
       </div>
 
-      <div className="w-265 rounded-md border border-gray-300 shadow bg-white">
+      {/* <div className="w-265 rounded-md border border-gray-300 shadow bg-white"> */}
+      <div className="w-265 rounded-md border border-gray-700 shadow bg-gray-900">
         {loading ? (
           <p className="p-4 text-center text-gray-500">Loading earnings...</p>
         ) : (
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-[#D3AF37] text-black">
+              <tr className="bg-purple-600 text-white">
                 <th className="p-3 border border-gray-300 text-left">Month</th>
                 <th className="p-3 border border-gray-300 text-center">
                   Total Appointments

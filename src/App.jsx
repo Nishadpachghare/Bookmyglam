@@ -6,7 +6,8 @@ import Uppernav from "./layout/uppernav";
 
 import Loginpage from "./components/Loginpage";
 import Register from "./components/Register";
-import Dashboard from "./components/dashboard";
+import Dashboard from "./components/Dashboard";
+import Attendance from "./components/Attendance";
 import Booking from "./components/Booking";
 import Inventory from "./components/Inventory";
 import ManageStyle from "./components/ManageStyle";
@@ -19,6 +20,7 @@ import Pending from "./components/Pending";
 import AddExpense from "./components/Addexpenses";
 import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
+import OfferAndCoupon from "./components/Offer&Coupon";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -156,6 +158,24 @@ function App() {
           element={
             <ProtectedRoute>
               <Uploadimg />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/offersandcoupons"
+          element={
+            <ProtectedRoute>
+              <OfferAndCoupon />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/attendance"
+          element={
+            <ProtectedRoute>
+              <Attendance />
             </ProtectedRoute>
           }
         />

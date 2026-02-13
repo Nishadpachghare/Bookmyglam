@@ -81,9 +81,12 @@ function Sidenav() {
             Management
           </p>
           <ul className="space-y-1">
-            <li className="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:bg-zinc-800/50 hover:text-white cursor-pointer border-l-4 border-transparent">
-              <BsPeople size={22} /> <span>Attendance</span>
-            </li>
+            <NavItem
+              to="/attendance"
+              icon={<BsPeople size={22} />}
+              label="Attendance"
+              className={navLinkClasses}
+            />
             <NavItem
               to="/managestyle"
               icon={<LuScissors size={22} />}
@@ -115,6 +118,12 @@ function Sidenav() {
               to="/pending"
               icon={<MdOutlinePendingActions size={22} />}
               label="Pending Amount"
+              className={navLinkClasses}
+            />
+            <NavItem
+              to="/offersandcoupons"
+              icon={<MdOutlinePendingActions size={22} />}
+              label="Offers & Coupons"
               className={navLinkClasses}
             />
             <NavItem

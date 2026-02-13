@@ -35,7 +35,7 @@ function ManageStyle() {
     stylists || [],
     "createdAt",
     filterType,
-    filterValue
+    filterValue,
   );
 
   useEffect(() => {
@@ -62,7 +62,7 @@ function ManageStyle() {
         `http://localhost:5000/api/stylists/${id}/inactive`,
         {
           method: "PUT",
-        }
+        },
       );
       if (!res.ok) throw new Error();
       toast.success("Moved to inactive stylists");
@@ -98,15 +98,15 @@ function ManageStyle() {
         Manage Stylists
       </h1>
 
-      {/* ✅ Search Bar (now functional) */}
-      <div className="flex items-center bg-[#f0f0f0] px-4 py-3 w-full max-w-5xl border rounded-md">
-        <FiSearch className="text-gray-500 text-xl" />
+      {/* ✅ Search Bar (consistent dark style) */}
+      <div className="flex items-center bg-zinc-900 px-4 py-3 w-full max-w-5xl border border-zinc-700 rounded-md">
+        <FiSearch className="text-gray-300 text-xl" />
         <input
           type="text"
           placeholder="Search stylists by name or phone"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none ml-3 w-full text-gray-700"
+          className="bg-transparent outline-none ml-3 w-full text-white placeholder-gray-400"
         />
       </div>
 

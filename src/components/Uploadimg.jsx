@@ -43,15 +43,26 @@ export default function Uploadimg() {
       if (r.data?.media) {
         setReviewItems((prev) =>
           prev.map((c) =>
-            c.image?.backendId === id || c.video?.backendId === id || c.link?.backendId === id
+            c.image?.backendId === id ||
+            c.video?.backendId === id ||
+            c.link?.backendId === id
               ? {
                   ...c,
-                  image: c.image?.backendId === id ? { ...c.image, ...r.data.media } : c.image,
-                  video: c.video?.backendId === id ? { ...c.video, ...r.data.media } : c.video,
-                  link: c.link?.backendId === id ? { ...c.link, ...r.data.media } : c.link,
+                  image:
+                    c.image?.backendId === id
+                      ? { ...c.image, ...r.data.media }
+                      : c.image,
+                  video:
+                    c.video?.backendId === id
+                      ? { ...c.video, ...r.data.media }
+                      : c.video,
+                  link:
+                    c.link?.backendId === id
+                      ? { ...c.link, ...r.data.media }
+                      : c.link,
                 }
-              : c
-          )
+              : c,
+          ),
         );
         return r.data.media;
       }
@@ -303,8 +314,8 @@ export default function Uploadimg() {
                     backendId: r.data.media._id,
                   },
                 }
-              : c
-          )
+              : c,
+          ),
         );
       }
     } catch (e) {
@@ -381,7 +392,7 @@ export default function Uploadimg() {
       if (!item.uploaded) {
         uploadResp = await uploadSingleToServer(
           { ...item, stylist: combo.stylist, date: combo.date },
-          type
+          type,
         );
         if (uploadResp?.ok && uploadResp.media) {
           const media = uploadResp.media;
@@ -399,8 +410,8 @@ export default function Uploadimg() {
                     },
                     uploadedCount: c.uploadedCount + 1,
                   }
-                : c
-            )
+                : c,
+            ),
           );
           // reflect new item for next step
           item = { ...item, uploaded: true, backendId: media._id };
@@ -420,15 +431,15 @@ export default function Uploadimg() {
       // Call publish endpoint which should publish to web
       const r = await axios.put(
         `${API_BASE}/api/uploads/${backendId}/publish`,
-        { publish: true }
+        { publish: true },
       );
       if (r.data?.ok) {
         setReviewItems((p) =>
           p.map((c) =>
             c.id === comboId
               ? { ...c, [type]: { ...c[type], publishedToWeb: true } }
-              : c
-          )
+              : c,
+          ),
         );
         toast.success("Published to web");
       }
@@ -448,7 +459,7 @@ export default function Uploadimg() {
       // Ask backend to remove the asset from Cloudinary (if supported)
       const r = await axios.put(
         `${API_BASE}/api/uploads/${item.backendId}/publish`,
-        { publish: false, removeCloud: true }
+        { publish: false, removeCloud: true },
       );
       if (r.data?.ok) {
         // Keep the draft entry but mark it as not published
@@ -456,8 +467,8 @@ export default function Uploadimg() {
           p.map((c) =>
             c.id === comboId
               ? { ...c, [type]: { ...c[type], publishedToWeb: false } }
-              : c
-          )
+              : c,
+          ),
         );
         toast.success("Unpublished (removed from web)");
       }
@@ -473,19 +484,19 @@ export default function Uploadimg() {
 
     if (item?.backendId) {
       const confirmDelete = window.confirm(
-        "This will delete the item from the server (and Cloudinary if published). Are you sure?"
+        "This will delete the item from the server (and Cloudinary if published). Are you sure?",
       );
       if (!confirmDelete) return;
 
       try {
         setUploadingState((s) => ({ ...s, [comboId]: true }));
         const resp = await axios.delete(
-          `${API_BASE}/api/uploads/${item.backendId}`
+          `${API_BASE}/api/uploads/${item.backendId}`,
         );
         console.log("[handleDelete] delete response:", resp.data);
         if (!resp.data?.ok) {
           toast.error(
-            "Could not delete on server: " + (resp.data?.error || "unknown")
+            "Could not delete on server: " + (resp.data?.error || "unknown"),
           );
           return;
         }
@@ -505,7 +516,7 @@ export default function Uploadimg() {
 
     setReviewItems((prev) => {
       const updated = prev.map((c) =>
-        c.id === comboId ? { ...c, [type]: null } : c
+        c.id === comboId ? { ...c, [type]: null } : c,
       );
       const filtered = updated.filter((c) => c.image || c.video || c.link);
       return filtered;
@@ -532,12 +543,12 @@ export default function Uploadimg() {
   };
 
   return (
-    <div className="p-6 bg-white text-gray-800 min-h-screen w-355 pl-76">
+    <div className="min-h-screen w-full p-8 bg-black text-white pl-80">
       {/* Header */}
-      <div className="flex items-center justify-between max-w-7xl mx-auto mb-6">
+      <div className="flex items-center justify-between max-w-6xl mx-auto mb-6 px-4">
         <div>
-          <h1 className="text-2xl font-bold">Upload Gallery</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-white">Upload Gallery</h1>
+          <p className="text-sm text-gray-300">
             Upload real-time photos, videos & links of your work to showcase on
             your salon portal.
           </p>
@@ -565,7 +576,7 @@ export default function Uploadimg() {
                 }
               }
             }}
-            className="p-2 rounded border border-gray-300 text-sm"
+            className="p-2 rounded border border-zinc-700 bg-black text-white text-sm"
             aria-label="Filter upload sections"
           >
             <option value="all">Show: All</option>
@@ -579,8 +590,8 @@ export default function Uploadimg() {
             disabled={!canReviewAny}
             className={`px-4 py-2 rounded-md font-semibold transition ${
               canReviewAny
-                ? "bg-[#D3AF37]  hover:bg-yellow-500 text-black"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                : "bg-gray-700 text-gray-500 cursor-not-allowed"
             }`}
           >
             Review All
@@ -593,18 +604,18 @@ export default function Uploadimg() {
         {(selectedSection === "all" || selectedSection === "image") && (
           <div
             ref={imageSectionRef}
-            className={`bg-white rounded-lg p-6 border ${
+            className={`rounded-lg p-6 border ${
               highlightSection === "image"
-                ? "ring-2 ring-yellow-300 bg-yellow-50"
-                : ""
+                ? "ring-2 ring-amber-300 bg-zinc-800 border-amber-300"
+                : "bg-zinc-900 border-zinc-700"
             }`}
           >
             <h2 className="text-base font-semibold mb-3">Upload Photo</h2>
             <div
               className={`h-56 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
                 highlightSection === "image"
-                  ? "border-yellow-400 bg-yellow-50"
-                  : "border-black"
+                  ? "border-amber-300 bg-zinc-800"
+                  : "border-zinc-700 bg-zinc-900"
               }`}
               onDragOver={onDragOver}
               onDrop={(e) => handleFileDrop(e, "image")}
@@ -629,14 +640,14 @@ export default function Uploadimg() {
                       e.stopPropagation();
                       clearSelected("image");
                     }}
-                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    className="absolute top-2 right-2 bg-zinc-800 bg-opacity-90 rounded-full p-1 shadow text-red-400 hover:bg-opacity-100"
                     aria-label="Remove selected photo"
                   >
                     ✕
                   </button>
 
                   {/* filename overlay */}
-                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute left-3 bottom-3 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
                     {form.image.file?.name || "Selected"}
                   </div>
                 </>
@@ -645,10 +656,10 @@ export default function Uploadimg() {
                   <div className="text-sm font-medium">
                     Drag and drop photos here
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-400 mt-1">
                     Or click to browse your files
                   </div>
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-xs text-gray-400 mt-2">
                     Accepted: jpg, png, webp
                   </div>
                 </div>
@@ -667,7 +678,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Enter captions"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.image.caption}
                 onChange={(e) =>
                   updateFormField("image", "caption", e.target.value)
@@ -676,7 +687,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Stylist"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.image.stylist}
                 onChange={(e) =>
                   updateFormField("image", "stylist", e.target.value)
@@ -684,7 +695,7 @@ export default function Uploadimg() {
               />
               <input
                 type="date"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.image.date}
                 onChange={(e) =>
                   updateFormField("image", "date", e.target.value)
@@ -695,8 +706,8 @@ export default function Uploadimg() {
                 disabled={!canStageImage}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageImage
-                    ? "bg-[#D3AF37]  hover:bg-yellow-600 text-black"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 Add to Review
@@ -709,18 +720,18 @@ export default function Uploadimg() {
         {(selectedSection === "all" || selectedSection === "video") && (
           <div
             ref={videoSectionRef}
-            className={`bg-white rounded-lg p-6 border ${
+            className={`rounded-lg p-6 border ${
               highlightSection === "video"
-                ? "ring-2 ring-yellow-300 bg-yellow-50"
-                : ""
+                ? "ring-2 ring-amber-300 bg-zinc-800 border-amber-300"
+                : "bg-zinc-900 border-zinc-700"
             }`}
           >
             <h2 className="text-base font-semibold mb-3">Upload Video</h2>
             <div
               className={`h-56 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
                 highlightSection === "video"
-                  ? "border-yellow-400 bg-yellow-50"
-                  : "border-black"
+                  ? "border-amber-300 bg-zinc-800"
+                  : "border-zinc-700 bg-zinc-900"
               }`}
               onDragOver={onDragOver}
               onDrop={(e) => handleFileDrop(e, "video")}
@@ -745,13 +756,13 @@ export default function Uploadimg() {
                       e.stopPropagation();
                       clearSelected("video");
                     }}
-                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    className="absolute top-2 right-2 bg-zinc-800 bg-opacity-90 rounded-full p-1 shadow text-red-400 hover:bg-opacity-100"
                     aria-label="Remove selected video"
                   >
                     ✕
                   </button>
 
-                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute left-3 bottom-3 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
                     {form.video.file?.name || "Selected"}
                   </div>
                 </>
@@ -760,10 +771,10 @@ export default function Uploadimg() {
                   <div className="text-sm font-medium">
                     Drag and drop video here
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-400 mt-1">
                     Or click to browse your files
                   </div>
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-xs text-gray-400 mt-2">
                     Accepted: mp4, mov, webm
                   </div>
                 </div>
@@ -782,7 +793,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Enter captions"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.video.caption}
                 onChange={(e) =>
                   updateFormField("video", "caption", e.target.value)
@@ -791,7 +802,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Stylist"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.video.stylist}
                 onChange={(e) =>
                   updateFormField("video", "stylist", e.target.value)
@@ -799,7 +810,7 @@ export default function Uploadimg() {
               />
               <input
                 type="date"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.video.date}
                 onChange={(e) =>
                   updateFormField("video", "date", e.target.value)
@@ -810,8 +821,8 @@ export default function Uploadimg() {
                 disabled={!canStageVideo}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageVideo
-                    ? "bg-[#D3AF37]  hover:bg-yellow-600 text-black"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 Add to Review
@@ -824,10 +835,10 @@ export default function Uploadimg() {
         {(selectedSection === "all" || selectedSection === "link") && (
           <div
             ref={linkSectionRef}
-            className={`bg-white rounded-lg p-6 border ${
+            className={`rounded-lg p-6 border ${
               highlightSection === "link"
-                ? "ring-2 ring-yellow-300 bg-yellow-50"
-                : ""
+                ? "ring-2 ring-amber-300 bg-zinc-800 border-amber-300"
+                : "bg-zinc-900 border-zinc-700"
             }`}
           >
             <h2 className="text-base font-semibold mb-3">
@@ -836,17 +847,17 @@ export default function Uploadimg() {
 
             {/* Link area */}
             <div className="mb-4">
-              <div className="h-28 border-2 border-dashed border-black rounded-lg flex flex-col items-center justify-center px-4">
-                <div className="text-sm font-medium">
+              <div className="h-28 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center px-4 bg-zinc-900">
+                <div className="text-sm font-medium text-gray-300">
                   Paste your social link
                 </div>
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-xs text-gray-400 mb-2">
                   Instagram, Facebook, etc.
                 </div>
                 <input
                   type="text"
                   placeholder="Paste link here"
-                  className="w-full md:w-2/3 p-2 rounded border border-gray-300 text-xs"
+                  className="w-full md:w-2/3 p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                   value={form.link.url}
                   onChange={(e) =>
                     updateFormField("link", "url", e.target.value)
@@ -884,13 +895,13 @@ export default function Uploadimg() {
                       e.stopPropagation();
                       clearSelected("link");
                     }}
-                    className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1 shadow text-red-600 hover:bg-opacity-100"
+                    className="absolute top-2 right-2 bg-zinc-800 bg-opacity-90 rounded-full p-1 shadow text-red-400 hover:bg-opacity-100"
                     aria-label="Remove selected link photo"
                   >
                     ✕
                   </button>
 
-                  <div className="absolute left-3 bottom-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute left-3 bottom-3 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
                     {form.link.file?.name ||
                       (form.link.url ? "Link" : "Selected")}
                   </div>
@@ -919,7 +930,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Enter captions"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.link.caption}
                 onChange={(e) =>
                   updateFormField("link", "caption", e.target.value)
@@ -928,7 +939,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Stylist"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.link.stylist}
                 onChange={(e) =>
                   updateFormField("link", "stylist", e.target.value)
@@ -936,7 +947,7 @@ export default function Uploadimg() {
               />
               <input
                 type="date"
-                className="p-2 rounded border border-gray-300 text-xs"
+                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
                 value={form.link.date}
                 onChange={(e) =>
                   updateFormField("link", "date", e.target.value)
@@ -947,8 +958,8 @@ export default function Uploadimg() {
                 disabled={!canStageLink}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageLink
-                    ? "bg-[#D3AF37]  hover:bg-yellow-600 text-black"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 Add to Review
@@ -958,12 +969,12 @@ export default function Uploadimg() {
         )}
 
         {/* Review section */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+        <div className="bg-zinc-900 border border-zinc-700 shadow-lg rounded-lg p-6 text-white">
           <h3 className="text-lg font-semibold mb-4">
             Review ({reviewItems.length})
           </h3>
           {reviewItems.length === 0 ? (
-            <div className="text-sm text-gray-500 py-10 text-center">
+            <div className="text-sm text-gray-400 py-10 text-center">
               No items
             </div>
           ) : (
@@ -971,14 +982,14 @@ export default function Uploadimg() {
               {reviewItems.map((combo) => (
                 <div
                   key={combo.id}
-                  className="border border-gray-100 rounded-lg p-4 bg-white shadow-sm"
+                  className="border border-zinc-700 rounded-lg p-4 bg-zinc-800 shadow-sm text-white"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="text-sm">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-white">
                         {combo.stylist || "—"}{" "}
                         <span className="text-gray-400">•</span>{" "}
-                        <span className="text-gray-600 text-xs">
+                        <span className="text-gray-400 text-xs">
                           {combo.date}
                         </span>
                       </div>
@@ -995,8 +1006,8 @@ export default function Uploadimg() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* IMAGE CARD */}
                     {combo.image && (
-                      <div className="text-center border rounded p-2 bg-gray-50">
-                        <div className="h-20 mb-2 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                        <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden flex items-center justify-center">
                           {combo.image.preview ? (
                             <img
                               src={combo.image.preview}
@@ -1017,17 +1028,23 @@ export default function Uploadimg() {
                                 c.id === combo.id
                                   ? {
                                       ...c,
-                                      image: { ...c.image, caption: e.target.value },
+                                      image: {
+                                        ...c.image,
+                                        caption: e.target.value,
+                                      },
                                     }
-                                  : c
-                              )
+                                  : c,
+                              ),
                             )
                           }
                           onBlur={async (e) => {
                             const id = combo.image.backendId;
-                            if (id) await updateDraft(id, { caption: e.target.value });
+                            if (id)
+                              await updateDraft(id, {
+                                caption: e.target.value,
+                              });
                           }}
-                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          className="text-xs text-gray-200 mb-2 max-w-full truncate border border-zinc-700 rounded p-1 bg-transparent"
                           placeholder="Add caption"
                         />
                         <div className="text-xs font-semibold mb-2">
@@ -1043,7 +1060,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "image")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1051,9 +1068,11 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "image")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
-                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
+                              {uploadingState[combo.id]
+                                ? "Uploading..."
+                                : "Publish"}
                             </button>
                           )}
                           <button
@@ -1069,8 +1088,8 @@ export default function Uploadimg() {
 
                     {/* VIDEO CARD */}
                     {combo.video && (
-                      <div className="text-center border rounded p-2 bg-gray-50">
-                        <div className="h-20 mb-2 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                        <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden flex items-center justify-center">
                           {combo.video.preview ? (
                             <video
                               src={combo.video.preview}
@@ -1090,16 +1109,25 @@ export default function Uploadimg() {
                             setReviewItems((prev) =>
                               prev.map((c) =>
                                 c.id === combo.id
-                                  ? { ...c, video: { ...c.video, caption: e.target.value } }
-                                  : c
-                              )
+                                  ? {
+                                      ...c,
+                                      video: {
+                                        ...c.video,
+                                        caption: e.target.value,
+                                      },
+                                    }
+                                  : c,
+                              ),
                             )
                           }
                           onBlur={async (e) => {
                             const id = combo.video.backendId;
-                            if (id) await updateDraft(id, { caption: e.target.value });
+                            if (id)
+                              await updateDraft(id, {
+                                caption: e.target.value,
+                              });
                           }}
-                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          className="text-xs text-gray-200 mb-2 max-w-full truncate border border-zinc-700 rounded p-1 bg-transparent"
                           placeholder="Add caption"
                         />
 
@@ -1114,7 +1142,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "video")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1122,9 +1150,11 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "video")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
-                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
+                              {uploadingState[combo.id]
+                                ? "Uploading..."
+                                : "Publish"}
                             </button>
                           )}
                           <button
@@ -1140,8 +1170,8 @@ export default function Uploadimg() {
 
                     {/* LINK CARD */}
                     {combo.link && (
-                      <div className="text-center border rounded p-2 bg-gray-50">
-                        <div className="h-20 mb-2 bg-gray-100 rounded overflow-hidden p-1 flex items-center justify-center">
+                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                        <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden p-1 flex items-center justify-center">
                           {combo.link.preview ? (
                             <img
                               src={combo.link.preview}
@@ -1153,7 +1183,7 @@ export default function Uploadimg() {
                               href={combo.link.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-blue-600 text-sm truncate block"
+                              className="text-amber-400 text-sm truncate block"
                             >
                               {combo.link.url}
                             </a>
@@ -1169,16 +1199,25 @@ export default function Uploadimg() {
                             setReviewItems((prev) =>
                               prev.map((c) =>
                                 c.id === combo.id
-                                  ? { ...c, link: { ...c.link, caption: e.target.value } }
-                                  : c
-                              )
+                                  ? {
+                                      ...c,
+                                      link: {
+                                        ...c.link,
+                                        caption: e.target.value,
+                                      },
+                                    }
+                                  : c,
+                              ),
                             )
                           }
                           onBlur={async (e) => {
                             const id = combo.link.backendId;
-                            if (id) await updateDraft(id, { caption: e.target.value });
+                            if (id)
+                              await updateDraft(id, {
+                                caption: e.target.value,
+                              });
                           }}
-                          className="text-xs text-gray-600 mb-2 max-w-full truncate border rounded p-1"
+                          className="text-xs text-gray-200 mb-2 max-w-full truncate border border-zinc-700 rounded p-1 bg-transparent"
                           placeholder="Add caption"
                         />
 
@@ -1193,7 +1232,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "link")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-orange-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1201,9 +1240,11 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "link")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
-                              {uploadingState[combo.id] ? "Uploading..." : "Publish"}
+                              {uploadingState[combo.id]
+                                ? "Uploading..."
+                                : "Publish"}
                             </button>
                           )}
                           <button
