@@ -130,63 +130,74 @@ function ManageStyle() {
       </div>
 
       {/* Table */}
-      <div className="mt-8 bg-white rounded-lg border shadow-xl w-full max-w-5xl p-6">
+      <div className="mt-8 bg-zinc-900 rounded-lg border border-zinc-700 shadow-xl w-full max-w-5xl p-6 text-white">
         {loading ? (
-          <p>Loading stylists...</p>
+          <p className="text-zinc-400">Loading stylists...</p>
         ) : displayedStylists.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No stylists found.</p>
+          <p className="text-zinc-400 text-center py-4">No stylists found.</p>
         ) : (
-          <table className="w-full text-left border">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="py-3 px-4">Stylist Name</th>
-                <th className="py-3 px-4">Phone</th>
-                <th className="py-3 px-4">Photo</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleStylists.map((stylist) => (
-                <tr key={stylist._id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 font-medium">{stylist.name}</td>
-                  <td className="py-3 px-4">{stylist.phone}</td>
-                  <td className="py-3 px-4">
-                    {stylist.photoUrl ? (
-                      <div className="flex flex-col">
-                        <a
-                          href={stylist.photoUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 underline"
-                        >
-                          View photo
-                        </a>
-                        <span className="text-xs text-gray-500 break-all mt-1">
-                          {stylist.photoUrl.split("/").pop()}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-500">No Photo</div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                      Active
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => setInactive(stylist._id)}
-                      className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                    >
-                      Inactive
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-white">
+              <thead className="bg-zinc-800 border-b border-zinc-700 text-zinc-300">
+                <tr>
+                  <th className="py-3 px-4">Stylist Name</th>
+                  <th className="py-3 px-4">Phone</th>
+                  <th className="py-3 px-4">Photo</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {visibleStylists.map((stylist) => (
+                  <tr
+                    key={stylist._id}
+                    className="border-b hover:bg-zinc-800 transition-colors"
+                  >
+                    <td className="py-3 px-4 font-medium text-white">
+                      {stylist.name}
+                    </td>
+                    <td className="py-3 px-4 text-zinc-300">{stylist.phone}</td>
+
+                    <td className="py-3 px-4">
+                      {stylist.photoUrl ? (
+                        <div className="flex flex-col">
+                          <a
+                            href={stylist.photoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-purple-400 underline"
+                          >
+                            View photo
+                          </a>
+                          <span className="text-xs text-zinc-400 break-all mt-1">
+                            {stylist.photoUrl.split("/").pop()}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-zinc-400">No Photo</div>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="px-3 py-1 rounded-full bg-green-900 text-green-300 text-sm">
+                        Active
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => setInactive(stylist._id)}
+                        className="bg-red-700 text-white px-4 py-1 rounded hover:bg-red-600 transition"
+                      >
+                        Inactive
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

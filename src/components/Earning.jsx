@@ -69,7 +69,7 @@ function Earning() {
         (bookings || [])
           .map((b) => new Date(b.date))
           .filter((d) => !isNaN(d))
-          .map((d) => d.getFullYear())
+          .map((d) => d.getFullYear()),
       ),
     ].sort();
   }, [bookings]);
@@ -131,7 +131,7 @@ function Earning() {
     displayYears.forEach((y) => {
       const m = [...monthlyData[y]];
       m.sort((a, b) =>
-        sortOrder === "asc" ? a.index - b.index : b.index - a.index
+        sortOrder === "asc" ? a.index - b.index : b.index - a.index,
       );
       arr.push(...m);
     });
@@ -241,8 +241,8 @@ function Earning() {
     if (selectedEarning.length === 0) return;
     toast.info(
       `Delete action clicked for months: ${selectedEarning.join(
-        ", "
-      )} (frontend only)`
+        ", ",
+      )} (frontend only)`,
     );
     setSelectedEarning([]);
   };
@@ -255,9 +255,9 @@ function Earning() {
   /* ================= UI ================= */
   return (
     // <div className="p-10 w-355 pl-80 mx-5 text-gray-800">
-     <div className="p-10 pl-80 w-full min-h-screen bg-black text-gray-100">
+    <div className="p-10 pl-80 w-full min-h-screen bg-black text-gray-100">
       <h1 className="text-3xl font-bold mb-1">Earnings</h1>
-    <p className="text-purple-500 mb-6 text-sm">
+      <p className="text-purple-400 mb-6 text-sm">
         View your monthly earnings summary
       </p>
 
@@ -265,16 +265,16 @@ function Earning() {
       <div className="flex gap-4 text-sm my-2 pl-200">
         <button
           onClick={handleDelete}
-          className="flex items-center gap-1 text-red-600 border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={selectedEarning.length === 0}
+          className="flex items-center gap-1 text-red-400 border border-red-700 px-3 py-1 rounded-md hover:bg-red-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          🗑 Delete {selectedEarning.length > 0 && `(${selectedEarning.length})`}
+          🗑 Delete{" "}
+          {selectedEarning.length > 0 && `(${selectedEarning.length})`}
         </button>
 
         <div className="relative">
           <button
             onClick={() => setShowSortOptions(!showSortOptions)}
-            className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-1 text-purple-600 border border-zinc-700 px-3 py-1 rounded-md hover:bg-zinc-800/30"
           >
             🔍 Sort {sortOrder === "asc" ? "(Jan-Dec)" : "(Dec-Jan)"}
           </button>
@@ -300,24 +300,24 @@ function Earning() {
       </div>
 
       {/* <div className="w-265 rounded-md border border-gray-300 shadow bg-white"> */}
-      <div className="w-265 rounded-md border border-gray-700 shadow bg-gray-900">
+      <div className="w-265 rounded-md border border-zinc-700 shadow bg-zinc-900 text-white">
         {loading ? (
-          <p className="p-4 text-center text-gray-500">Loading earnings...</p>
+          <p className="p-4 text-center text-zinc-400">Loading earnings...</p>
         ) : (
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-purple-600 text-white">
-                <th className="p-3 border border-gray-300 text-left">Month</th>
-                <th className="p-3 border border-gray-300 text-center">
+                <th className="p-3 border border-zinc-700 text-left">Month</th>
+                <th className="p-3 border border-zinc-700 text-center">
                   Total Appointments
                 </th>
-                <th className="p-3 border border-gray-300 text-center">
+                <th className="p-3 border border-zinc-700 text-center">
                   Total Amount
                 </th>
-                <th className="p-3 border border-gray-300 text-center">
+                <th className="p-3 border border-zinc-700 text-center">
                   Paid Amount
                 </th>
-                <th className="p-3 border border-gray-300 text-center">
+                <th className="p-3 border border-zinc-700 text-center">
                   Not Paid Amount
                 </th>
               </tr>
@@ -329,12 +329,12 @@ function Earning() {
                   {/* Year Header */}
                   <tr
                     onClick={() => toggleYear(year)}
-                    className=" font-bold bg-gray-100 hover:bg-gray-200 cursor-pointer border-b border-gray-100 "
+                    className="font-bold bg-zinc-800 hover:bg-zinc-700 cursor-pointer border-b border-zinc-700"
                   >
                     <td colSpan={6} className="px-4 py-2">
                       <div className="flex justify-between items-center w-full">
-                        <span className="text-lg text-[#ae8b17]">{year}</span>
-                        <button className=" text-[11px] text-[#ae8b17]">
+                        <span className="text-lg text-purple-400">{year}</span>
+                        <button className="text-[11px] text-purple-400">
                           {openYears[year] ? "▲" : "▼"}
                         </button>
                       </div>
@@ -348,26 +348,26 @@ function Earning() {
                       .map((item) => (
                         <tr
                           key={`${item.year}-${item.month}`}
-                          className="bg-white hover:bg-gray-100"
+                          className="bg-zinc-900 hover:bg-zinc-800 transition-colors"
                         >
-                          <td className="p-2">{item.month}</td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-zinc-200">{item.month}</td>
+                          <td className="p-2 text-center text-zinc-300">
                             {item.totalAppointments}
                           </td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-center text-white">
                             ₹{format(item.totalAmount)}
                           </td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-center text-green-300">
                             ₹{format(item.paid)}
                           </td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-center text-purple-400">
                             ₹{format(item.notPaid)}
                           </td>
                         </tr>
                       ))}
 
                   {/* Yearly Total */}
-                  <tr className=" font-bold text-[#ae8b17] bg-gray-100 hover:bg-gray-200 border-b border-gray-300">
+                  <tr className="font-bold bg-zinc-800 text-white border-b border-zinc-700">
                     <td className="p-2">Total of {year}</td>
                     <td className="p-2 text-center">
                       {filteredMonthly
@@ -379,23 +379,23 @@ function Earning() {
                       {format(
                         filteredMonthly
                           .filter((m) => m.year === year)
-                          .reduce((acc, m) => acc + m.totalAmount, 0)
+                          .reduce((acc, m) => acc + m.totalAmount, 0),
                       )}
                     </td>
-                    <td className="p-2 text-center">
+                    <td className="p-2 text-center text-green-300">
                       ₹
                       {format(
                         filteredMonthly
                           .filter((m) => m.year === year)
-                          .reduce((acc, m) => acc + m.paid, 0)
+                          .reduce((acc, m) => acc + m.paid, 0),
                       )}
                     </td>
-                    <td className="p-2 text-center">
+                    <td className="p-2 text-center text-purple-400">
                       ₹
                       {format(
                         filteredMonthly
                           .filter((m) => m.year === year)
-                          .reduce((acc, m) => acc + m.notPaid, 0)
+                          .reduce((acc, m) => acc + m.notPaid, 0),
                       )}
                     </td>
                   </tr>

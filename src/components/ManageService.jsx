@@ -10,6 +10,7 @@ const ManageService = () => {
     service: "",
     description: "",
     duration: "",
+    customDuration: "",
     price: "",
   });
   const [editingId, setEditingId] = useState(null);
@@ -77,10 +78,21 @@ const ManageService = () => {
     const serviceToEdit = services.find((s) => s._id === id);
     if (serviceToEdit) {
       setEditingId(id);
+      const standardDurations = [
+        "10 Minutes",
+        "30 Minutes",
+        "1 Hour",
+        "1 Hour 30 Minutes",
+        "2 Hours",
+        "2 Hours 30 Minutes",
+        "3 Hours",
+      ];
+      const isStandard = standardDurations.includes(serviceToEdit.duration);
       setFormData({
         service: serviceToEdit.service || "",
         description: serviceToEdit.description || "",
-        duration: serviceToEdit.duration || "",
+        duration: isStandard ? serviceToEdit.duration || "" : "manual",
+        customDuration: isStandard ? "" : serviceToEdit.duration || "",
         price: serviceToEdit.price?.toString() || "",
       });
       // Scroll to form (guarded)
@@ -137,11 +149,23 @@ const ManageService = () => {
   };
 
   const handleSubmit = async () => {
-    const { service, description, duration, price } = formData;
-    if (!service || !description || !duration || !price) {
+    const { service, description, duration, customDuration, price } = formData;
+    if (!service || !description || !price) {
       toast.error("Please fill in all fields");
       return;
     }
+    if (!duration) {
+      toast.error("Please select a duration");
+      return;
+    }
+    if (duration === "manual" && !customDuration?.trim()) {
+      toast.error("Please enter custom duration");
+      return;
+    }
+
+    const durationToSave =
+      duration === "manual" ? customDuration.trim() : duration;
+
     try {
       if (editingId) {
         const response = await axios.put(
@@ -149,7 +173,7 @@ const ManageService = () => {
           {
             service,
             description,
-            duration,
+            duration: durationToSave,
             price: Number(price),
           },
         );
@@ -162,7 +186,7 @@ const ManageService = () => {
           {
             service,
             description,
-            duration,
+            duration: durationToSave,
             price: Number(price),
           },
         );
@@ -177,6 +201,7 @@ const ManageService = () => {
         service: "",
         description: "",
         duration: "",
+        customDuration: "",
         price: "",
       });
       setEditingId(null);
@@ -198,8 +223,8 @@ const ManageService = () => {
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Manage Service Form */}
-      <div className="bg-black p-6 shadow-xl rounded-lg border border-white h-130 w-100 manage-service-form">
-        <h2 className="text-center text-3xl font-semibold border-white text-white mb-4 pt-2">
+      <div className="bg-zinc-900 p-6 shadow-xl rounded-lg border border-zinc-700 w-125 manage-service-form">
+        <h2 className="text-center text-3xl font-semibold text-white mb-4 pt-2">
           {editingId ? "Edit Service" : "Add New Service"}
         </h2>
 
@@ -209,7 +234,7 @@ const ManageService = () => {
           placeholder="Service name"
           value={formData.service}
           onChange={handleChange}
-          className="w-full border text-white p-3 mb-3 rounded pt-5"
+          className="w-full border border-zinc-700 bg-zinc-800 text-white p-3 mb-3 rounded placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-600"
         />
 
         <textarea
@@ -217,24 +242,54 @@ const ManageService = () => {
           placeholder="Description"
           value={formData.description}
           onChange={handleChange}
-          className="w-full border text-white p-3 mb-3 rounded h-24"
+          className="w-full border border-zinc-700 bg-zinc-800 text-white p-3 mb-3 rounded h-24 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-600"
         />
 
         <select
           name="duration"
           value={formData.duration}
           onChange={handleChange}
-          className="w-full border text-white p-3 mb-2 rounded pt-5"
+          className="w-full border border-zinc-700 bg-zinc-800 text-white p-3 mb-3 rounded focus:outline-none focus:ring-1 focus:ring-purple-600"
         >
-          <option value="">Select Duration</option>
-          <option value="10 Minutes">10 Minutes</option>
-          <option value="30 Minutes">30 Minutes</option>
-          <option value="1 Hour">1 Hour</option>
-          <option value="1 Hour 30 Minutes">1 Hour 30 Minutes</option>
-          <option value="2 Hours">2 Hours</option>
-          <option value="2 Hours 30 Minutes">2 Hours 30 Minutes</option>
-          <option value="3 Hours">3 Hours</option>
+          <option value="" className="text-zinc-400 bg-zinc-800">
+            Select Duration
+          </option>
+          <option value="10 Minutes" className="bg-zinc-800 text-white">
+            10 Minutes
+          </option>
+          <option value="30 Minutes" className="bg-zinc-800 text-white">
+            30 Minutes
+          </option>
+          <option value="1 Hour" className="bg-zinc-800 text-white">
+            1 Hour
+          </option>
+          <option value="1 Hour 30 Minutes" className="bg-zinc-800 text-white">
+            1 Hour 30 Minutes
+          </option>
+          <option value="2 Hours" className="bg-zinc-800 text-white">
+            2 Hours
+          </option>
+          <option value="2 Hours 30 Minutes" className="bg-zinc-800 text-white">
+            2 Hours 30 Minutes
+          </option>
+          <option value="3 Hours" className="bg-zinc-800 text-white">
+            3 Hours
+          </option>
+          <option value="manual" className="bg-zinc-800 text-white">
+            Manual (enter custom)
+          </option>
         </select>
+
+        {formData.duration === "manual" && (
+          <input
+            type="text"
+            name="customDuration"
+            placeholder="e.g. 45 Minutes or 1 Hour 15 Minutes"
+            value={formData.customDuration}
+            onChange={handleChange}
+            className="w-full border border-zinc-700 bg-zinc-800 text-white p-3 mb-3 rounded placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-600"
+          />
+        )}
 
         <input
           type="number"
@@ -242,13 +297,13 @@ const ManageService = () => {
           placeholder="Price (₹)"
           value={formData.price}
           onChange={handleChange}
-          className="w-full border text-white p-3 mb-4 rounded "
+          className="w-full border border-zinc-700 bg-zinc-800 text-white p-3 mb-4 rounded placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-purple-600"
         />
 
         <div className="flex gap-2 pt-15">
           <button
             onClick={handleSubmit}
-            className="w-full bg-[#4C0099] py-3 rounded text-white font-medium hover:bg-[#D3AF37]"
+            className="w-full bg-purple-600 py-3 rounded text-white font-medium hover:bg-purple-700"
           >
             {editingId ? "Update Service" : "Add Service"}
           </button>
@@ -264,7 +319,7 @@ const ManageService = () => {
                   price: "",
                 });
               }}
-              className="w-1/4 bg-gray-200 py-3 rounded text-black font-medium hover:bg-gray-300"
+              className="w-1/4 bg-zinc-800 border border-zinc-700 py-3 rounded text-zinc-300 font-medium hover:bg-zinc-800/90"
             >
               Cancel
             </button>
@@ -273,7 +328,7 @@ const ManageService = () => {
       </div>
 
       {/* All Services */}
-      <div className="bg-black w-260 mt-10 p-6 rounded-lg shadow-xl border services-list">
+      <div className="bg-zinc-900 w-260 mt-10 p-6 rounded-lg shadow-xl border border-zinc-700 services-list text-white">
         <h2 className="text-center text-3xl text-white font-semibold mb-4">
           All Service
         </h2>
@@ -281,7 +336,7 @@ const ManageService = () => {
         <div className="flex gap-4 w-280 text-sm my-5 pl-190 m-2">
           <button
             onClick={handleDelete}
-            className="flex items-center gap-1 text-purple-600 border border-purple-600 px-3 py-1 rounded-md hover:bg-white-50"
+            className="flex items-center gap-1 text-purple-600 border border-purple-600 px-3 py-1 rounded-md hover:bg-purple-700/10 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={selectedServices.length === 0}
           >
             🗑 Delete{" "}
@@ -291,7 +346,7 @@ const ManageService = () => {
           <div className="relative">
             <button
               onClick={() => setShowSortOptions(!showSortOptions)}
-              className="flex items-center gap-1 text-purple-700 border px-3 py-1 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-1 text-purple-600 border border-zinc-700 px-3 py-1 rounded-md hover:bg-zinc-800/30"
             >
               🔍 Sort {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
             </button>
@@ -316,8 +371,8 @@ const ManageService = () => {
           </div>
         </div>
 
-        <table className="w-full border text-sm">
-          <thead className="bg-purple-900 text-white ">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-zinc-800 text-zinc-200 border-b border-zinc-700">
             <tr>
               <th className="border p-2 text-left w-1/5">Service</th>
               <th className="border p-2 text-left w-2/5">Description</th>
@@ -329,7 +384,10 @@ const ManageService = () => {
           </thead>
           <tbody>
             {displayedServices.map((s) => (
-              <tr key={s._id}>
+              <tr
+                key={s._id}
+                className="border-b hover:bg-zinc-800 transition-colors"
+              >
                 <td className="border py-5 p-2">{s.service}</td>
                 <td className="border py-5 p-2 align-top">
                   <div className="flex flex-col h-full">
@@ -345,7 +403,7 @@ const ManageService = () => {
                     {s.description && s.description.length > 120 && (
                       <button
                         onClick={() => toggleExpand(s._id)}
-                        className="text-blue-600 mt-2 self-end text-sm"
+                        className="text-purple-400 mt-2 self-end text-sm"
                       >
                         {expandedDescriptions[s._id]
                           ? "Read less"
@@ -354,12 +412,18 @@ const ManageService = () => {
                     )}
                   </div>
                 </td>
-                <td className="border py-5 p-2">{s.duration}</td>
-                <td className="border py-5 p-2">₹{s.price}</td>
+                <td className="border py-5 p-2">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-sm">
+                    {s.duration}
+                  </span>
+                </td>
+                <td className="border py-5 p-2 text-right font-semibold text-white">
+                  ₹{s.price}
+                </td>
                 <td className="border py-5 p-2 text-center">
                   <button
                     onClick={() => handleEdit(s._id)}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
                   >
                     Edit
                   </button>
@@ -367,7 +431,7 @@ const ManageService = () => {
                 <td className="border py-5 p-2 text-center">
                   <input
                     type="checkbox"
-                    className="w-4 h-4"
+                    className="w-4 h-4 accent-purple-600"
                     checked={selectedServices.includes(s._id)}
                     onChange={() => handleCheckbox(s._id)}
                   />

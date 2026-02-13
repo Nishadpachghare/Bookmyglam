@@ -41,7 +41,7 @@ export default function Inventory() {
     try {
       setLoading(true);
       const resp = await axios.get(
-        `${API_BASE}/api/inventory${showLowStockOnly ? "?lowStock=true" : ""}`
+        `${API_BASE}/api/inventory${showLowStockOnly ? "?lowStock=true" : ""}`,
       );
       if (resp.data?.ok) {
         setItems(resp.data.items || []);
@@ -67,14 +67,14 @@ export default function Inventory() {
     items || [],
     "date",
     filterType,
-    filterValue
+    filterValue,
   );
 
   // totals for the currently displayed (date-filtered) items
   const totalItems = displayedItems.length;
   const totalStockValue = displayedItems.reduce(
     (sum, it) => sum + Number(it.costPrice || 0) * Number(it.stockQty || 0),
-    0
+    0,
   );
 
   useEffect(() => {
@@ -525,7 +525,7 @@ export default function Inventory() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-[#4C0099] hover:bg-yellow-500 text-sm font-semibold rounded text-white"
+                className="px-4 py-2 bg-[#4C0099] hover:bg-purple-700 text-sm font-semibold rounded text-white"
               >
                 {saving ? "Saving..." : editingId ? "Update Item" : "Add Item"}
               </button>
@@ -534,18 +534,26 @@ export default function Inventory() {
         </div>
 
         {/* List */}
-        <div className="bg-black border rounded-lg p-5 shadow-sm w-286">
+        <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 shadow-sm w-286 text-white">
           <div className="flex justify-between items-center mb-3">
             <div>
-              <h2 className="text-base font-semibold">
-                Inventory Items ({totalItems})
-              </h2>
-              <div className="text-sm text-gray-600">
-                Total stock value: ₹{totalStockValue.toLocaleString()}
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-white">
+                  Inventory Items
+                </h2>
+                <span className="inline-flex items-center bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  {totalItems}
+                </span>
+              </div>
+              <div className="text-sm text-zinc-400 mt-1">
+                Total stock value:{" "}
+                <span className="font-semibold text-white">
+                  ₹{totalStockValue.toLocaleString()}
+                </span>
               </div>
             </div>
             {loading && (
-              <span className="text-sm text-gray-400">Loading...</span>
+              <span className="text-sm text-zinc-400">Loading...</span>
             )}
           </div>
 
@@ -557,7 +565,7 @@ export default function Inventory() {
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm border">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-700 border">
+                  <tr className="bg-zinc-800 text-zinc-200 border-b">
                     <th className="px-3 py-2 text-left">Item</th>
                     <th className="px-3 py-2 text-left">Category</th>
                     <th className="px-3 py-2 text-left">Brand</th>
@@ -573,69 +581,74 @@ export default function Inventory() {
                   {displayedItems.map((item) => (
                     <tr
                       key={item._id}
-                      className="border-b hover:bg-gray-50 transition"
+                      className="border-b hover:bg-zinc-900 transition-colors"
                     >
                       <td className="px-3 py-2">
-                        <div className="font-semibold">{item.name}</div>
+                        <div className="font-semibold text-white">
+                          {item.name}
+                        </div>
                         {item.sku && (
-                          <div className="text-[10px] text-gray-500">
+                          <div className="text-[10px] text-zinc-400">
                             SKU: {item.sku}
                           </div>
                         )}
                       </td>
-                      <td className="px-3 py-2">
+
+                      <td className="px-3 py-2 text-zinc-300">
                         {item.category || (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-zinc-400">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-2">
-                        {item.brand || <span className="text-gray-400">—</span>}
+
+                      <td className="px-3 py-2 text-zinc-300">
+                        {item.brand || <span className="text-zinc-400">—</span>}
                       </td>
 
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-3 py-2 text-center text-zinc-400">
                         {item.date ? (
                           formatDisplayDate(item.date)
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-zinc-400">—</span>
                         )}
                       </td>
+
                       <td className="px-3 py-2 text-center">
                         <div
-                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] ${
-                            isLowStock(item)
-                              ? "bg-red-100 text-red-700"
-                              : "bg-green-100 text-green-700"
-                          }`}
+                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] ${isLowStock(item) ? "bg-red-900 text-red-300" : "bg-green-900 text-green-300"}`}
                         >
                           {item.stockQty} {item.unit}
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-center">
+
+                      <td className="px-3 py-2 text-center text-zinc-400">
                         {item.reorderLevel || (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-zinc-400">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-center">
+
+                      <td className="px-3 py-2 text-center text-zinc-300">
                         {item.costPrice
                           ? `₹${Number(item.costPrice).toFixed(2)}`
                           : "—"}
                       </td>
-                      <td className="px-3 py-2 text-center">
+
+                      <td className="px-3 py-2 text-center text-zinc-300">
                         {item.supplierName || (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-zinc-400">—</span>
                         )}
                       </td>
+
                       <td className="px-3 py-2 text-center">
                         <div className="flex gap-3 justify-center">
                           <button
                             onClick={() => handleEdit(item)}
-                            className="px-2 py-1 text-blue-600 text-[15px]"
+                            className="px-2 py-1 bg-purple-600 text-white rounded text-[15px] hover:bg-purple-700"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(item._id)}
-                            className="px-2 py-1 border border-red-300 text-red-600 rounded text-[15px]"
+                            className="px-2 py-1 border border-red-700 text-red-400 rounded text-[15px] hover:bg-red-900/10"
                           >
                             Delete
                           </button>
@@ -644,17 +657,19 @@ export default function Inventory() {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-50">
+                <tfoot className="bg-zinc-800">
                   <tr>
-                    <td className="px-3 py-2 font-semibold">Totals</td>
+                    <td className="px-3 py-2 font-semibold text-white">
+                      Totals
+                    </td>
                     <td className="px-3 py-2" />
                     <td className="px-3 py-2" />
-                    <td className="px-3 py-2 text-center font-semibold">
+                    <td className="px-3 py-2 text-center font-semibold text-white">
                       {totalItems} items
                     </td>
                     <td className="px-3 py-2 text-center" />
                     <td className="px-3 py-2 text-center" />
-                    <td className="px-3 py-2 text-center font-semibold">
+                    <td className="px-3 py-2 text-center font-semibold text-white">
                       ₹{totalStockValue.toLocaleString()}
                     </td>
                     <td className="px-3 py-2 text-center" />

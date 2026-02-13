@@ -870,7 +870,7 @@ export default function Uploadimg() {
             <div
               className={`h-40 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
                 highlightSection === "link"
-                  ? "border-yellow-400 bg-yellow-50"
+                  ? "border-purple-200 bg-purple-50"
                   : "border-black"
               }`}
               onDragOver={onDragOver}

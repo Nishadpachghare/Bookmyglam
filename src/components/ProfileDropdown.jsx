@@ -4,11 +4,12 @@ import { FiEdit2, FiLogOut, FiSave, FiX } from "react-icons/fi";
 export default function ProfileDropdown({ onClose }) {
   return (
     <div className="absolute top-12 right-0 mt-2 w-85 bg-white rounded-3xl border  shadow-lg p-6 z-50  m-8">
-      
-        <FiX size={28} onClick={onClose}
+      <FiX
+        size={28}
+        onClick={onClose}
         className="absolute top-4 right-4 text-gray hover:text-black"
-        aria-label="Close profile" />
-     
+        aria-label="Close profile"
+      />
 
       <div className="flex flex-col items-center mb-4">
         <div className="relative">
@@ -21,7 +22,9 @@ export default function ProfileDropdown({ onClose }) {
             <FiEdit2 className="text-gray-700" size={14} />
           </div>
         </div>
-        <h2 className="text-lg font-semibold mt-3">Hi, <span className="text-gray-700">Shraddha!</span></h2>
+        <h2 className="text-lg font-semibold mt-3">
+          Hi, <span className="text-gray-700">Shraddha!</span>
+        </h2>
       </div>
 
       <div className="space-y-3">
@@ -30,7 +33,7 @@ export default function ProfileDropdown({ onClose }) {
           <input
             type="text"
             defaultValue=""
-            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
           />
         </div>
 
@@ -39,7 +42,7 @@ export default function ProfileDropdown({ onClose }) {
           <input
             type="email"
             defaultValue=""
-            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
           />
         </div>
 
@@ -48,7 +51,7 @@ export default function ProfileDropdown({ onClose }) {
           <input
             type="text"
             defaultValue=""
-            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
           />
         </div>
 
@@ -57,13 +60,13 @@ export default function ProfileDropdown({ onClose }) {
           <input
             type="text"
             defaultValue=""
-            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+            className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
           />
         </div>
       </div>
 
       <div className="flex justify-between mt-6">
-        <button className="flex items-center gap-2 bg-[#d6b740] text-black px-4 py-2 rounded-md shadow hover:bg-yellow-500">
+        <button className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700">
           <FiSave /> Save
         </button>
         <button className="flex items-center gap-2 bg-white border px-4 py-2 rounded-md shadow hover:bg-gray-100">

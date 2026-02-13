@@ -31,7 +31,7 @@ export function Admin_page() {
             <input
               type="text"
               value=""
-              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
             />
           </div>
           <div>
@@ -39,7 +39,7 @@ export function Admin_page() {
             <input
               type="email"
               value=""
-              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
             />
           </div>
           <div>
@@ -47,7 +47,7 @@ export function Admin_page() {
             <input
               type="text"
               value=""
-              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
             />
           </div>
           <div>
@@ -55,13 +55,13 @@ export function Admin_page() {
             <input
               type="text"
               value=""
-              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              className="w-full border rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-1 focus:ring-purple-600"
             />
           </div>
         </div>
         {/* Buttons */}
         <div className="flex justify-between mt-6">
-          <button className="flex items-center gap-2 bg-[#d6b740] text-black px-4 py-2 rounded-md shadow hover:bg-yellow-500">
+          <button className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700">
             <FiSave /> Save
           </button>
           <button className="flex items-center gap-2 bg-white border px-4 py-2 rounded-md shadow hover:bg-gray-100">

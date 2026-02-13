@@ -321,11 +321,11 @@ const AddExpense = () => {
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center py-10 px-4 pl-55">
-      <div className="w-full max-w-xl p-6 rounded-lg shadow border border-white">
+      <div className="w-full max-w-xl p-6 rounded-lg shadow border border-zinc-700 bg-zinc-900 text-white">
         <h2 className="text-2xl font-bold text-white mb-1">
           {editingId ? "Edit expense" : "Add expenses"}
         </h2>
-        <p className="text-purple-400 text-sm mb-6">
+        <p className="text-zinc-400 text-sm mb-6">
           {editingId
             ? "Update the selected expense"
             : "Add expenses for remind"}
@@ -387,16 +387,17 @@ const AddExpense = () => {
 
           {/* Receipt Upload (drag & drop) */}
           <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center bg-black border-gray text-white
-${dragActive ? "border-green-400 bg-purple-600" : ""}`}
+            className={`border-2 border-dashed rounded-lg p-6 text-center bg-zinc-900 border-zinc-700 text-white ${
+              dragActive ? "border-green-400 bg-purple-700/80" : ""
+            }`}
             onDragOver={handleDragOver}
             onDragEnter={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <p className="font-medium text-gray-700 mb-1">
+            <p className="font-medium text-white mb-1">
               Upload Receipt{" "}
-              <span className="text-gray-500 text-sm">(Optional)</span>
+              <span className="text-zinc-400 text-sm">(Optional)</span>
             </p>
 
             <div className="mt-3 flex flex-col items-center gap-2">
@@ -409,12 +410,12 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
                 />
               </label>
 
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-zinc-400">
                 Or drag & drop your file here
               </div>
 
               {uploading && (
-                <div className="text-sm text-gray-600 mt-2">Uploading...</div>
+                <div className="text-sm text-zinc-400 mt-2">Uploading...</div>
               )}
 
               {/* Preview or existing link */}
@@ -425,8 +426,9 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
                     alt="preview"
                     className="max-h-40 mx-auto rounded"
                   />
-                  <p className="text-xs text-gray-600 mt-1">
-                    Selected: <span className="font-medium">{file?.name}</span>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Selected:{" "}
+                    <span className="font-medium text-white">{file?.name}</span>
                   </p>
                 </div>
               ) : currentFileUrl ? (
@@ -435,14 +437,15 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
                     href={currentFileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 underline"
+                    className="text-purple-400 underline"
                   >
                     View uploaded receipt
                   </a>
                 </div>
               ) : file ? (
-                <p className="text-xs text-gray-600 mt-3 bg-white p-2 rounded-md inline-block border">
-                  Selected: <span className="font-medium">{file.name}</span>
+                <p className="text-xs text-zinc-300 mt-3 bg-zinc-800 p-2 rounded-md inline-block border border-zinc-700">
+                  Selected:{" "}
+                  <span className="font-medium text-white">{file.name}</span>
                 </p>
               ) : null}
             </div>
@@ -470,16 +473,27 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
       </div>
 
       {/* EXPENSE LIST */}
-      <div className="w-full max-w-6xl border mt-10 p-6 rounded-lg shadow border-white">
-        <h3 className="text-center text-2xl font-semibold text-white mb-4">
-          All Expenses
-        </h3>
+      <div className="w-full max-w-6xl mt-10 p-6 rounded-lg shadow border border-zinc-700 bg-zinc-900 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-2xl font-semibold">All Expenses</h3>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-zinc-400">
+              Total:{" "}
+              <span className="font-semibold text-white">
+                ₹{totalExpensesAmount.toLocaleString()}
+              </span>
+            </div>
+            <div className="inline-flex items-center bg-purple-700 text-white text-xs font-medium px-2 py-1 rounded-md">
+              {totalExpensesCount} items
+            </div>
+          </div>
+        </div>
 
         {/* Controls */}
         <div className="flex gap-4 items-center m-3 pl-195">
           <button
             onClick={handleDelete}
-            className="text-red-600 border border-red-600 px-3 py-1 rounded-md"
+            className="text-red-400 border border-red-600/30 px-3 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={selectedExpenses.length === 0}
           >
             🗑 Delete{" "}
@@ -489,21 +503,21 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
           <div className="relative">
             <button
               onClick={() => setShowSortOptions(!showSortOptions)}
-              className="flex items-center gap-1 text-gray-700 border px-3 py-1 rounded-md"
+              className="flex items-center gap-1 text-zinc-300 border border-zinc-700 px-3 py-1 rounded-md bg-black/20"
             >
               🔍 Sort by {sortOrder === "asc" ? "(Old–New)" : "(New–Old)"}
             </button>
             {showSortOptions && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md shadow bg-white border z-10">
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow bg-zinc-800 border border-zinc-700 z-10 text-zinc-300">
                 <button
                   onClick={() => handleSort("asc")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                  className="block w-full text-left px-4 py-2 hover:bg-zinc-700 text-sm"
                 >
                   Oldest → Newest
                 </button>
                 <button
                   onClick={() => handleSort("desc")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                  className="block w-full text-left px-4 py-2 hover:bg-zinc-700 text-sm"
                 >
                   Newest → Oldest
                 </button>
@@ -513,9 +527,9 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
 
           {/* Current Global Filter Indicator */}
           {filterType && filterType !== "all" && (
-            <div className="ml-4 flex items-center gap-2 text-sm text-gray-600">
+            <div className="ml-4 flex items-center gap-2 text-sm text-zinc-400">
               <span className="font-medium">Filter:</span>
-              <span className="truncate">
+              <span className="truncate text-white">
                 {filterType} {filterValue ? `- ${filterValue}` : ""}
               </span>
               <button
@@ -523,7 +537,7 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
                   setFilterType("all");
                   setFilterValue(null);
                 }}
-                className="ml-2 text-xs text-red-600 hover:underline"
+                className="ml-2 text-xs text-purple-400 hover:underline"
               >
                 Clear
               </button>
@@ -532,101 +546,109 @@ ${dragActive ? "border-green-400 bg-purple-600" : ""}`}
         </div>
 
         {/* Table */}
-        <table className="w-full border text-sm">
-          <thead className="bg-purple-700 text-white">
-            <tr>
-              <th className="border p-2 text-center">Select</th>
-              <th className="border p-2">Amount</th>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Expiry</th>
-              <th className="border p-2">Notes</th>
-              <th className="border p-2">Receipt</th>
-              <th className="border p-2 text-center">Edit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedExpenses.map((exp) => (
-              <tr
-                key={exp._id}
-                className="even:bg-gray-900 hover:bg-gray-800 transition-colors"
-              >
-                <td className="border text-center p-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedExpenses.includes(exp._id)}
-                    onChange={() => handleCheckbox(exp._id)}
-                    className="w-4 h-4 accent-[#d6b740] cursor-pointer"
-                  />
-                </td>
-                <td className="border p-2">
-                  ₹{Number(exp.amount).toLocaleString("en-IN")}
-                </td>
-                <td className="border p-2">
-                  {formatDisplayDate(exp.date) || "-"}
-                </td>
-                <td className="border p-2">
-                  {formatDisplayDate(exp.expiryDate) || "-"}
-                </td>
-                <td className="border p-2 max-w-lg break-words whitespace-pre-wrap">
-                  {exp.notes}
-                </td>
-                <td className="border p-2">
-                  {exp.fileName ? (
-                    exp.fileName.startsWith("http") ||
-                    exp.fileName.startsWith("/") ? (
-                      <a
-                        href={exp.fileName}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      <span className="italic">{exp.fileName}</span>
-                    )
-                  ) : (
-                    <span className="text-gray-500">No file</span>
-                  )}
-                </td>
-                <td className="border text-center p-2">
-                  <button
-                    onClick={() => handleEdit(exp._id)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {displayedExpenses.length === 0 && (
+        <div className="overflow-x-auto rounded-md border border-zinc-700">
+          <table className="w-full text-sm border-collapse bg-transparent">
+            <thead className="bg-purple-700 text-white">
               <tr>
-                <td
-                  colSpan={7}
-                  className="text-center text-gray-500 py-5 border"
+                <th className="border border-zinc-700 p-2 text-center">
+                  Select
+                </th>
+                <th className="border border-zinc-700 p-2">Amount</th>
+                <th className="border border-zinc-700 p-2">Date</th>
+                <th className="border border-zinc-700 p-2">Expiry</th>
+                <th className="border border-zinc-700 p-2">Notes</th>
+                <th className="border border-zinc-700 p-2">Receipt</th>
+                <th className="border border-zinc-700 p-2 text-center">Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayedExpenses.map((exp) => (
+                <tr
+                  key={exp._id}
+                  className="even:bg-zinc-800 odd:bg-zinc-900 hover:bg-zinc-700/30 transition-colors"
                 >
-                  No expenses added yet.
+                  <td className="border border-zinc-700 text-center p-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedExpenses.includes(exp._id)}
+                      onChange={() => handleCheckbox(exp._id)}
+                      className="w-4 h-4 accent-purple-600 cursor-pointer"
+                    />
+                  </td>
+                  <td className="border border-zinc-700 p-2 text-zinc-100">
+                    ₹{Number(exp.amount).toLocaleString("en-IN")}
+                  </td>
+                  <td className="border border-zinc-700 p-2 text-zinc-300">
+                    {formatDisplayDate(exp.date) || "-"}
+                  </td>
+                  <td className="border border-zinc-700 p-2 text-zinc-300">
+                    {formatDisplayDate(exp.expiryDate) || "-"}
+                  </td>
+                  <td className="border border-zinc-700 p-2 max-w-lg break-words whitespace-pre-wrap text-zinc-200">
+                    {exp.notes}
+                  </td>
+                  <td className="border border-zinc-700 p-2">
+                    {exp.fileName ? (
+                      exp.fileName.startsWith("http") ||
+                      exp.fileName.startsWith("/") ? (
+                        <a
+                          href={exp.fileName}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-purple-400 underline"
+                        >
+                          View
+                        </a>
+                      ) : (
+                        <span className="italic text-zinc-300">
+                          {exp.fileName}
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-zinc-500">No file</span>
+                    )}
+                  </td>
+                  <td className="border border-zinc-700 text-center p-2">
+                    <button
+                      onClick={() => handleEdit(exp._id)}
+                      className="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-500"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+              {displayedExpenses.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="text-center text-zinc-400 py-5 border border-zinc-700 bg-zinc-900"
+                  >
+                    No expenses added yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            <tfoot className="bg-zinc-900">
+              <tr>
+                <td className="border border-zinc-700 p-2 text-center font-semibold">
+                  Totals
+                </td>
+                <td className="border border-zinc-700 p-2 font-semibold text-zinc-100">
+                  ₹{totalExpensesAmount.toLocaleString()}
+                </td>
+                <td className="border border-zinc-700 p-2 font-semibold" />
+                <td className="border border-zinc-700 p-2 font-semibold" />
+                <td className="border border-zinc-700 p-2 font-semibold" />
+                <td className="border border-zinc-700 p-2 font-semibold" />
+                <td className="border border-zinc-700 p-2 text-center font-semibold">
+                  {totalExpensesCount} items
                 </td>
               </tr>
-            )}
-          </tbody>
-          <tfoot className="bg-gray-50">
-            <tr>
-              <td className="border p-2 text-center font-semibold">Totals</td>
-              <td className="border p-2 font-semibold">
-                ₹{totalExpensesAmount.toLocaleString()}
-              </td>
-              <td className="border p-2 font-semibold" />
-              <td className="border p-2 font-semibold" />
-              <td className="border p-2 font-semibold" />
-              <td className="border p-2 font-semibold" />
-              <td className="border p-2 text-center font-semibold">
-                {totalExpensesCount} items
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   );

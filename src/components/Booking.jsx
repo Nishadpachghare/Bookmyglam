@@ -351,29 +351,37 @@ function Booking() {
               value=""
               onChange={handleChange}
               className={`w-full border ${
-                formErrors.services ? "border-red-500" : "border-gray-300"
-              } rounded-md px-4 py-3 bg-[#000000]`}
+                formErrors.services ? "border-red-500" : "border-zinc-700"
+              } rounded-md px-4 py-3 bg-[#000000] text-white`}
             >
-              <option value="">Select Service</option>
+              <option value="" className="text-zinc-400">
+                Select Service
+              </option>
               {services.map((service) => (
-                <option key={service._id} value={service._id}>
+                <option
+                  key={service._id}
+                  value={service._id}
+                  className="text-white bg-black"
+                >
                   {service.serviceName} ({service.duration}) - ₹{service.price}
                 </option>
               ))}
             </select>
             {formErrors.services && (
-              <p className="text-red-500 text-sm mt-1">{formErrors.services}</p>
+              <p className="text-red-400 text-sm mt-1">{formErrors.services}</p>
             )}
           </div>
 
           {/* Selected services list */}
           {selectedServices.length > 0 && (
-            <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-300">
-              <h3 className="font-medium mb-2">Selected Services:</h3>
+            <div className="bg-zinc-900 p-4 rounded-md border border-zinc-700 text-white">
+              <h3 className="font-medium mb-2 text-white">
+                Selected Services:
+              </h3>
               {formData.stylist ? (
-                <div className="text-sm text-gray-700 mb-2">
+                <div className="text-sm text-zinc-300 mb-2">
                   Stylist:{" "}
-                  <span className="font-semibold">
+                  <span className="font-semibold text-white">
                     {(stylists.find((s) => s._id === formData.stylist) || {})
                       .name || "—"}
                   </span>
@@ -383,29 +391,31 @@ function Booking() {
               {selectedServices.map((service) => (
                 <div
                   key={service._id}
-                  className="flex justify-between items-center py-2 "
+                  className="flex justify-between items-center py-2"
                 >
                   <div>
-                    <span className="font-medium">{service.serviceName}</span>
-                    <span className="text-sm text-gray-600 ml-2">
+                    <span className="font-medium text-white">
+                      {service.serviceName}
+                    </span>
+                    <span className="text-sm text-zinc-400 ml-2">
                       ({service.duration})
                     </span>
-                    <span className="text-sm text-gray-600 ml-2">
+                    <span className="text-sm text-zinc-400 ml-2">
                       ₹{service.price}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeService(service._id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-400 hover:text-red-300"
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                <span className="font-semibold">Total Amount:</span>
-                <span className="font-semibold">₹{totalPrice}</span>
+              <div className="mt-3 pt-3 border-t border-zinc-700 flex justify-between items-center">
+                <span className="font-semibold text-white">Total Amount:</span>
+                <span className="font-semibold text-white">₹{totalPrice}</span>
               </div>
             </div>
           )}
@@ -573,7 +583,7 @@ function Booking() {
 
           <button
             type="submit"
-            className="w-full bg-[#4C0099] text-white font-semibold py-3 rounded-md hover:bg-[#c1a235]"
+            className="w-full bg-[#4C0099] text-white font-semibold py-3 rounded-md hover:bg-[#7435c1]"
           >
             Add Booking
           </button>

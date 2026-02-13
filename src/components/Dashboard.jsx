@@ -436,7 +436,9 @@ function Dashboard() {
 
         <div className="bg-white rounded-xl shadow-md p-6 text-center">
           <p className="text-black text-sm">Active Stylists</p>
-          <h2 className="text-3xl font-bold mt-2 text-black">0</h2>
+          <h2 className="text-3xl font-bold mt-2 text-black">
+            {totalStylists}
+          </h2>
         </div>
       </div>
 
@@ -444,12 +446,15 @@ function Dashboard() {
       {editingBooking && (
         <div
           ref={editFormRef}
-          className="border rounded-xl shadow-md p-6 mb-6 "
+          className="bg-zinc-900 text-white border border-zinc-800 rounded-xl shadow-md p-6 mb-6"
         >
-          <h2 className="text-xl font-semibold mb-4">Edit Booking</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white">
+            Edit Booking
+          </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className="block text-sm text-zinc-300 mb-1">
                 Customer Name
               </label>
               <input
@@ -458,38 +463,42 @@ function Dashboard() {
                 onChange={(e) =>
                   handleEditChange("customerName", e.target.value)
                 }
-                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm bg-zinc-800 text-white border-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm text-zinc-300 mb-1">Phone</label>
               <input
                 type="text"
                 value={editingBooking.phone || ""}
                 onChange={(e) => handleEditChange("phone", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm bg-zinc-800 text-white border-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Date</label>
+              <label className="block text-sm text-zinc-300 mb-1">Date</label>
               <input
                 type="text"
                 value={editingBooking.date || ""}
                 onChange={(e) => handleEditChange("date", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm bg-zinc-800 text-white border-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Time</label>
+              <label className="block text-sm text-zinc-300 mb-1">Time</label>
               <input
                 type="text"
                 value={editingBooking.time || ""}
                 onChange={(e) => handleEditChange("time", e.target.value)}
-                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm bg-zinc-800 text-white border-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className="block text-sm text-zinc-300 mb-1">
                 Payment Status
               </label>
               <select
@@ -497,7 +506,7 @@ function Dashboard() {
                 onChange={(e) =>
                   handleEditChange("paymentStatus", e.target.value)
                 }
-                className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#d6b740]"
+                className="w-full border rounded-md p-2 text-sm bg-zinc-800 text-white border-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-600"
               >
                 <option value="Pending">Pending</option>
                 <option value="Paid">Paid</option>
@@ -507,7 +516,7 @@ function Dashboard() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className="block text-sm text-zinc-300 mb-1">
                 Add Service
               </label>
               <select
@@ -516,7 +525,7 @@ function Dashboard() {
                   handleAddServiceFromDropdown(e.target.value);
                   e.target.value = "";
                 }}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 bg-[#fdfaf6] text-sm"
+                className="w-full border border-zinc-700 rounded-md px-4 py-2 bg-zinc-800 text-sm text-white"
               >
                 <option value="" disabled>
                   Select Service
@@ -533,14 +542,14 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={handleAddService}
-                className="text-xs px-3 py-1 rounded-md border border-[#d6b740] text-[#d6b740] hover:bg-yellow-50"
+                className="text-xs px-3 py-1 rounded-md border border-purple-600 text-purple-600 hover:bg-purple-50"
               >
                 + Add Empty Service
               </button>
             </div>
 
             {editingBooking.services && editingBooking.services.length > 0 && (
-              <div className="bg-[#fdfaf6] p-4 rounded-md border border-gray-200 space-y-2">
+              <div className="bg-zinc-800 p-4 rounded-md border border-zinc-700 space-y-2">
                 {editingBooking.services.map((service, idx) => (
                   <div
                     key={idx}
@@ -557,7 +566,7 @@ function Dashboard() {
                             e.target.value,
                           )
                         }
-                        className="w-full border rounded-md p-2 text-xs"
+                        className="w-full border rounded-md p-2 text-xs bg-zinc-900 text-white border-zinc-700"
                       />
                     </div>
                     <div className="col-span-3">
@@ -567,7 +576,7 @@ function Dashboard() {
                         onChange={(e) =>
                           handleServiceChange(idx, "duration", e.target.value)
                         }
-                        className="w-full border rounded-md p-2 text-xs"
+                        className="w-full border rounded-md p-2 text-xs bg-zinc-900 text-white border-zinc-700"
                       />
                     </div>
                     <div className="col-span-3">
@@ -577,7 +586,7 @@ function Dashboard() {
                         onChange={(e) =>
                           handleServiceChange(idx, "price", e.target.value)
                         }
-                        className="w-full border rounded-md p-2 text-xs"
+                        className="w-full border rounded-md p-2 text-xs bg-zinc-900 text-white border-zinc-700"
                       />
                     </div>
                     <div className="col-span-1 flex justify-end">
@@ -591,7 +600,8 @@ function Dashboard() {
                     </div>
                   </div>
                 ))}
-                <div className="mt-3 pt-3 border-t flex justify-between font-semibold text-sm">
+
+                <div className="mt-3 pt-3 border-t border-zinc-700 flex justify-between font-semibold text-sm text-white">
                   <span>Total Amount:</span>
                   <span>₹{editingTotal}</span>
                 </div>
@@ -602,13 +612,13 @@ function Dashboard() {
           <div className="flex gap-3 justify-end mt-4">
             <button
               onClick={() => setEditingBooking(null)}
-              className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-200"
+              className="px-4 py-2 text-sm rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               Cancel
             </button>
             <button
               onClick={handleEditSave}
-              className="px-4 py-2 text-sm rounded-md bg-[#d6b740] text-black font-medium hover:bg-[#bca030]"
+              className="px-4 py-2 text-sm rounded-md bg-purple-600 text-white font-medium hover:bg-purple-700"
             >
               Save Changes
             </button>
@@ -617,107 +627,150 @@ function Dashboard() {
       )}
 
       {/* Table Section */}
-      <div className="bg-white border rounded-xl shadow-md overflow-hidden">
+      <div className="bg-black border border-zinc-800 rounded-xl shadow-md overflow-hidden text-white">
         {loading ? (
-          <p className="p-4 text-center text-gray-500">Loading data...</p>
+          <p className="p-6 text-center text-gray-400">Loading data...</p>
         ) : safeBookings.length === 0 ? (
-          <p className="p-4 text-center text-gray-500">No bookings found.</p>
+          <p className="p-6 text-center text-gray-400">No bookings found.</p>
         ) : (
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="py-3 px-6 text-gray-700 font-medium">Select</th>
-                <th className="py-3 px-6 text-gray-700 font-medium">
-                  Customer
-                </th>
-                <th className="py-3 px-6 text-gray-700 font-medium">Phone</th>
-                <th className="py-3 px-6 text-gray-700 font-medium">
-                  Date & Time
-                </th>
-                <th className="py-3 px-6 text-gray-700 font-medium">Service</th>
-                <th className="py-3 px-6 text-gray-700 font-medium">Amount</th>
-                <th className="py-3 px-6 text-gray-700 font-medium text-center">
-                  Payment
-                </th>
-                <th className="py-3 px-6 text-gray-700 font-medium text-center">
-                  Mode
-                </th>
-                <th className="py-3 px-6 text-gray-700 font-medium text-center">
-                  Edit
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBookings.map((b) => {
-                const totalAmount = Array.isArray(b.services)
-                  ? b.services.reduce(
-                      (sum, s) => sum + (Number(s.price) || 0),
-                      0,
-                    )
-                  : 0;
-                const serviceNames = Array.isArray(b.services)
-                  ? b.services.map((s) => s.serviceName).join(", ")
-                  : "";
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-zinc-800">
+              <thead className="bg-purple-700 text-white">
+                <tr>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Select
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Customer
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Phone
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Stylist
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Date & Time
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Service
+                  </th>
+                  <th className="py-3 px-6 text-left text-sm font-medium">
+                    Amount
+                  </th>
+                  <th className="py-3 px-6 text-center text-sm font-medium">
+                    Payment
+                  </th>
+                  <th className="py-3 px-6 text-center text-sm font-medium">
+                    Mode
+                  </th>
+                  <th className="py-3 px-6 text-center text-sm font-medium">
+                    Action
+                  </th>
+                </tr>
+              </thead>
 
-                // Case insensitive badge check
-                const isPaid =
-                  (b.paymentStatus || "").toString().toLowerCase() === "paid";
+              <tbody className="bg-black divide-y divide-zinc-800 text-white">
+                {filteredBookings.map((b) => {
+                  const totalAmount = Array.isArray(b.services)
+                    ? b.services.reduce(
+                        (sum, s) => sum + (Number(s.price) || 0),
+                        0,
+                      )
+                    : 0;
+                  const serviceNames = Array.isArray(b.services)
+                    ? b.services.map((s) => s.serviceName).join(", ")
+                    : "";
 
-                return (
-                  <tr
-                    key={b._id}
-                    className="border-t hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-4 px-6 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedBookings.includes(b._id)}
-                        onChange={() => handleSelectBooking(b._id)}
-                        className="w-4 h-4 accent-[#d6b740]"
-                      />
-                    </td>
-                    <td className="py-4 px-6">{b.customerName}</td>
-                    <td className="py-4 px-6">{b.phone}</td>
-                    <td className="py-4 px-6">
-                      {b.time}, {b.date}
-                    </td>
-                    <td className="py-4 px-6">{serviceNames}</td>
-                    <td className="py-4 px-6">₹{totalAmount}</td>
-                    <td className="py-4 px-6 text-center">
-                      <span
-                        className={`px-3 py-1 rounded-md text-xs font-semibold ${
-                          isPaid
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
+                  const isPaid =
+                    (b.paymentStatus || "").toString().toLowerCase() === "paid";
+
+                  const stylistEntry = (stylists || []).find(
+                    (s) =>
+                      (s._id ?? "").toString() ===
+                      (b.stylistId ?? "").toString(),
+                  );
+                  const stylistName =
+                    stylistEntry?.name || b.stylist?.name || "-";
+
+                  return (
+                    <tr
+                      key={b._id}
+                      className="even:bg-zinc-900 hover:bg-zinc-800 transition-colors"
+                    >
+                      <td className="py-4 px-6 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedBookings.includes(b._id)}
+                          onChange={() => handleSelectBooking(b._id)}
+                          className="w-4 h-4 accent-purple-600"
+                        />
+                      </td>
+
+                      <td className="py-4 px-6 text-sm font-medium text-white">
+                        {b.customerName}
+                      </td>
+
+                      <td className="py-4 px-6 text-sm text-gray-300">
+                        {b.phone}
+                      </td>
+
+                      <td className="py-4 px-6 text-sm text-gray-300">
+                        {stylistName}
+                      </td>
+
+                      <td className="py-4 px-6 text-sm text-gray-300">
+                        {b.time}, {b.date}
+                      </td>
+
+                      <td
+                        className="py-4 px-6 text-sm text-gray-300 max-w-xs truncate"
+                        title={serviceNames}
                       >
-                        {isPaid ? "Paid" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      {(b.mode || "").toString().toLowerCase() === "online" && (
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="h-3 w-3 bg-green-500 rounded-full animate-pulse shadow-lg"></span>
-                          <span className="text-xs text-green-700 font-medium">
+                        {serviceNames || "-"}
+                      </td>
+
+                      <td className="py-4 px-6 text-sm text-white">
+                        ₹{totalAmount}
+                      </td>
+
+                      <td className="py-4 px-6 text-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${isPaid ? "bg-green-900 text-green-300" : "bg-yellow-900 text-yellow-300"}`}
+                        >
+                          {isPaid ? "Paid" : "Pending"}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-6 text-center">
+                        {(b.mode || "").toString().toLowerCase() ===
+                        "online" ? (
+                          <span className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-green-900 text-green-300 text-xs font-medium">
+                            <span className="h-2 w-2 bg-green-500 rounded-full" />
                             Online
                           </span>
-                        </div>
-                      )}
-                      {(b.mode || "").toString().toLowerCase() ===
-                        "offline" && (
-                        <span className="text-xs text-gray-500 font-medium">
-                          Offline
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6 text-center text-blue-600 font-medium cursor-pointer hover:underline">
-                      <button onClick={() => handleEditClick(b)}>Edit</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-zinc-800 text-zinc-300 text-xs font-medium">
+                            Offline
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-4 px-6 text-center">
+                        <button
+                          onClick={() => handleEditClick(b)}
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-purple-600 text-white text-sm font-medium hover:bg-purple-700"
+                          aria-label={`Edit booking ${b.customerName || ""}`}
+                        >
+                          <FiEdit3 /> Edit
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -243,14 +243,14 @@ const Pending = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white w-full max-w-6xl rounded-lg shadow border overflow-x-auto">
+      <div className="bg-zinc-900 w-full max-w-6xl rounded-lg shadow border border-zinc-700 overflow-x-auto text-white">
         <table className="w-full text-sm border-collapse">
           <thead>
-            {/* <tr className="bg-[#D3AF37] text-black"> */}
             <tr className="bg-purple-600 text-white">
-              <th className="p-3 text-left">
+              <th className="p-3 text-left border-b border-zinc-700">
                 <input
                   type="checkbox"
+                  className="w-4 h-4 accent-purple-600"
                   checked={
                     filteredData.length > 0 &&
                     selectedRows.length === filteredData.length
@@ -258,12 +258,22 @@ const Pending = () => {
                   onChange={handleSelectAll}
                 />
               </th>
-              <th className="p-3 text-left">Customer</th>
-              <th className="p-3 text-left">Phone No</th>
-              <th className="p-3 text-left">Date and Time</th>
-              <th className="p-3 text-left">Service</th>
-              <th className="p-3 text-left">Amount</th>
-              <th className="p-3 text-left">Payment Status</th>
+              <th className="p-3 text-left border-b border-zinc-700">
+                Customer
+              </th>
+              <th className="p-3 text-left border-b border-zinc-700">
+                Phone No
+              </th>
+              <th className="p-3 text-left border-b border-zinc-700">
+                Date and Time
+              </th>
+              <th className="p-3 text-left border-b border-zinc-700">
+                Service
+              </th>
+              <th className="p-3 text-left border-b border-zinc-700">Amount</th>
+              <th className="p-3 text-left border-b border-zinc-700">
+                Payment Status
+              </th>
             </tr>
           </thead>
 
@@ -272,7 +282,7 @@ const Pending = () => {
               <tr>
                 <td
                   colSpan="7"
-                  className="text-center text-gray-600 py-6 text-md"
+                  className="text-center text-zinc-400 py-6 text-md"
                 >
                   Loading pending bookings...
                 </td>
@@ -281,7 +291,7 @@ const Pending = () => {
               <tr>
                 <td
                   colSpan="7"
-                  className="text-center text-gray-600 py-6 text-md"
+                  className="text-center text-zinc-400 py-6 text-md"
                 >
                   {pendingData.length === 0
                     ? "No pending bookings found."
@@ -292,32 +302,34 @@ const Pending = () => {
               filteredData.map((item) => (
                 <tr
                   key={item._id}
-                  className="border-b hover:bg-gray-50 transition-colors"
+                  className="border-b border-zinc-700 hover:bg-zinc-800 transition-colors"
                 >
                   <td className="p-3">
                     <input
                       type="checkbox"
+                      className="w-4 h-4 accent-purple-600"
                       checked={selectedRows.includes(item._id)}
                       onChange={() => handleCheckboxChange(item._id)}
                     />
                   </td>
-                  <td className="p-3 py-5">{item.customer}</td>
-                  <td className="p-3 py-5">{item.phone}</td>
-                  <td className="p-3 py-5">
+
+                  <td className="p-3 py-5 text-white">{item.customer}</td>
+                  <td className="p-3 py-5 text-zinc-300">{item.phone}</td>
+                  <td className="p-3 py-5 text-zinc-300">
                     {formatDisplayDate(item.date)}{" "}
                     {item.time && `at ${item.time}`}
                   </td>
                   <td
-                    className="p-3 py-5 max-w-xs truncate"
+                    className="p-3 py-5 max-w-xs truncate text-zinc-300"
                     title={item.service}
                   >
                     {item.service}
                   </td>
-                  <td className="p-3 py-5 font-semibold text-orange-600">
+                  <td className="p-3 py-5 font-semibold text-purple-600">
                     {item.amount}
                   </td>
                   <td className="p-3">
-                    <span className="bg-yellow-50 text-yellow-700 text-xs font-medium px-3 py-1 rounded-full border border-yellow-200">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-900 text-purple-300 border border-purple-700">
                       Pending
                     </span>
                   </td>
