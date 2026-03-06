@@ -102,7 +102,10 @@ const Pending = () => {
   }, [filteredData]);
 
   useEffect(() => {
-    setExportData(exportRows);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRows)) return prev;
+      return exportRows;
+    });
   }, [exportRows, setExportData]);
 
   const handleCheckboxChange = (id) => {

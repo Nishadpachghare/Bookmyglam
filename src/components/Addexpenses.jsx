@@ -261,7 +261,10 @@ const AddExpense = () => {
 
   useEffect(() => {
     const years = getAvailableYears(sortedExpenses || [], "date");
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [sortedExpenses, setAvailableYears]);
 
   const exportRowsExpenses = useMemo(() => {
@@ -275,7 +278,11 @@ const AddExpense = () => {
   }, [displayedExpenses]);
 
   useEffect(() => {
-    setExportData(exportRowsExpenses);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsExpenses))
+        return prev;
+      return exportRowsExpenses;
+    });
   }, [exportRowsExpenses, setExportData]);
 
   // ✅ Edit: load data into form

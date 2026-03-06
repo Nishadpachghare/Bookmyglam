@@ -27,10 +27,10 @@ function SummaryContent() {
     bookings: globalBookings,
   } = useContext(ExportContext);
   const [bookings, setBookings] = useState(
-    Array.isArray(globalBookings) ? globalBookings : []
+    Array.isArray(globalBookings) ? globalBookings : [],
   );
   const [loading, setLoading] = useState(
-    !Array.isArray(globalBookings) || globalBookings.length === 0
+    !Array.isArray(globalBookings) || globalBookings.length === 0,
   );
   const [selected] = useState("This Year");
 
@@ -66,7 +66,9 @@ function SummaryContent() {
 
     if (Array.isArray(globalBookings) && globalBookings.length > 0) {
       // Use the shared bookings and avoid an extra network call
-      setBookings(globalBookings);
+      if (globalBookings !== bookings) {
+        setBookings(globalBookings);
+      }
       setLoading(false);
     } else {
       fetchBookings();
@@ -75,7 +77,7 @@ function SummaryContent() {
     return () => {
       mounted = false;
     };
-  }, [globalBookings]);
+  }, [globalBookings, bookings]);
   // ===============================
   // TIME FILTER (UNCHANGED UI) + GLOBAL FILTER SUPPORT
   // If a global filter (set via Uppernav) is active, it overrides the local 'selected' timeframe
@@ -131,7 +133,7 @@ function SummaryContent() {
         effectiveBookings || [],
         "date",
         filterType,
-        filterValue
+        filterValue,
       );
     }
     return filteredBookingsByLocal;
@@ -157,7 +159,11 @@ function SummaryContent() {
   }, [filteredBookings]);
 
   useEffect(() => {
-    setExportData(exportRowsSummary);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsSummary))
+        return prev;
+      return exportRowsSummary;
+    });
   }, [exportRowsSummary, setExportData]);
 
   // ===============================
@@ -206,7 +212,7 @@ function SummaryContent() {
         name: m.label,
         value: m.totalAmount,
       })),
-    [monthlyAgg]
+    [monthlyAgg],
   );
 
   // ===============================
@@ -224,7 +230,7 @@ function SummaryContent() {
       Array.isArray(effectiveBookings) ? effectiveBookings : [],
       "date",
       filterType,
-      filterValue
+      filterValue,
     );
     return list.reduce((sum, b) => {
       const status = (b.paymentStatus || "Pending").toString().toLowerCase();
@@ -275,10 +281,8 @@ function SummaryContent() {
   // ===============================
   return (
     <div className="p-6 space-y-6 w-375 pl-80 bg-black w-full min-h-screen ">
-
       <div className="flex items-center justify-between mb-2">
-      <h1 className="text-2xl font-semibold text-white">
-
+        <h1 className="text-2xl font-semibold text-white">
           Summary (Master Report)
         </h1>
       </div>
@@ -299,8 +303,8 @@ function SummaryContent() {
         </div>
       </div> */}
 
-     <div className="bg-transperent p-5 rounded-xl shadow-md">
-       <h2 className="text-sm text-purple-200 mb-2">
+      <div className="bg-transperent p-5 rounded-xl shadow-md">
+        <h2 className="text-sm text-purple-200 mb-2">
           Total Revenue (Paid Only)
         </h2>
 
@@ -311,7 +315,7 @@ function SummaryContent() {
             <p className="text-3xl font-bold text-white">
               ₹{formatAmount(totalEarnings)}
             </p>
-           <p className="text-purple-200 text-sm mb-4">
+            <p className="text-purple-200 text-sm mb-4">
               {filterType && filterType !== "all"
                 ? "Filtered Snapshot"
                 : selected}{" "}
@@ -321,7 +325,7 @@ function SummaryContent() {
             <div className="w-full h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                 <XAxis dataKey="name"  />
+                  <XAxis dataKey="name" />
 
                   <Tooltip
                     formatter={(v) => [`₹${formatAmount(v)}`, "Earnings"]}
@@ -342,14 +346,13 @@ function SummaryContent() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-purple-900 text-white rounded-xl p-5 text-center shadow">
-
           <p className="text-sm">Total Appointments</p>
           <p className="text-3xl font-bold">
             {loading ? "..." : totalAppointments}
           </p>
         </div>
-<div className="bg-purple-900 rounded-xl p-5 text-center shadow">
-       <p className="text-sm text-purple-300">Client Retention Rate</p>
+        <div className="bg-purple-900 rounded-xl p-5 text-center shadow">
+          <p className="text-sm text-purple-300">Client Retention Rate</p>
           <p className="text-3xl font-bold text-white">
             {loading ? "..." : `${retentionRate.toFixed(1)}%`}
           </p>
@@ -384,7 +387,6 @@ class ErrorBoundary extends React.Component {
     if (this.state.error) {
       return (
         <div className="p-6 bg-black min-h-screen text-white">
-
           <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
           <p className="text-sm text-gray-600 mb-4">
             An error occurred while rendering this section. Try refreshing the
@@ -394,7 +396,6 @@ class ErrorBoundary extends React.Component {
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-purple-700 rounded text-white hover:bg-purple-800"
-
             >
               Reload
             </button>

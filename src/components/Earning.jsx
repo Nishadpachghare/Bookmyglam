@@ -75,7 +75,10 @@ function Earning() {
   }, [bookings]);
 
   useEffect(() => {
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [years, setAvailableYears]);
 
   // Determine the bookings to display after applying global filter
@@ -222,7 +225,11 @@ function Earning() {
   }, [filteredMonthly]);
 
   useEffect(() => {
-    setExportData(exportRowsEarning);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsEarning))
+        return prev;
+      return exportRowsEarning;
+    });
     // debug: ensure export data is set as expected
     console.log("[Earning] setExportData", {
       length: exportRowsEarning?.length,

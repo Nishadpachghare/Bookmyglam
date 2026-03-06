@@ -79,7 +79,10 @@ export default function Inventory() {
 
   useEffect(() => {
     const years = getAvailableYears(items || [], "date");
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [items, setAvailableYears]);
 
   const exportRowsInventory = useMemo(() => {
@@ -96,7 +99,11 @@ export default function Inventory() {
   }, [displayedItems]);
 
   useEffect(() => {
-    setExportData(exportRowsInventory);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsInventory))
+        return prev;
+      return exportRowsInventory;
+    });
   }, [exportRowsInventory, setExportData]);
 
   const handleChange = (field, value) => {

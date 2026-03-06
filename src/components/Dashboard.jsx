@@ -106,7 +106,10 @@ function Dashboard() {
 
   useEffect(() => {
     const years = getAvailableYears(safeBookings, "date");
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [bookings, setAvailableYears]);
 
   // Scroll to edit form when a booking is selected for editing (and focus)
@@ -174,7 +177,10 @@ function Dashboard() {
         "Total Amount": serviceSum,
       };
     });
-    setExportData(rows);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(rows)) return prev;
+      return rows;
+    });
   }, [filteredBookingsByGlobal, setExportData]);
 
   // Search Filter

@@ -23,7 +23,10 @@ export default function Gallery({ showAdminControls = false }) {
         const resp = await axios.get(`${API_BASE}/api/uploads`);
         if (resp.data?.ok) {
           const items = resp.data.items || [];
-          setGalleryItems(items);
+          setGalleryItems((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(items)) return prev;
+            return items;
+          });
           return;
         }
       } else {
@@ -34,12 +37,12 @@ export default function Gallery({ showAdminControls = false }) {
           return;
         }
       }
-      setGalleryItems([]);
+      setGalleryItems((prev) => (prev.length === 0 ? prev : []));
     } catch (error) {
       console.error("Gallery fetch error:", error);
       toast.error("Failed to fetch gallery. See console for details.");
     } finally {
-      setLoading(false);
+      setLoading((prev) => (prev ? false : prev));
     }
   };
 
@@ -53,7 +56,7 @@ export default function Gallery({ showAdminControls = false }) {
     if (!item) item = galleryItems.find((i) => i._id === itemId) || {};
     if (!item.uploaded && item.type !== "link" && publish) {
       toast.error(
-        "This item has not been uploaded to Cloudinary yet. Upload first from admin panel before publishing."
+        "This item has not been uploaded to Cloudinary yet. Upload first from admin panel before publishing.",
       );
       return;
     }
@@ -62,7 +65,7 @@ export default function Gallery({ showAdminControls = false }) {
       setActionLoading((s) => ({ ...s, [itemId]: true }));
       const resp = await axios.put(
         `${API_BASE}/api/uploads/${itemId}/publish`,
-        { publish }
+        { publish },
       );
       if (resp.data?.ok) {
         toast.success(publish ? "Published to web" : "Unpublished from web");
@@ -80,7 +83,7 @@ export default function Gallery({ showAdminControls = false }) {
 
   const deleteItem = async (itemId) => {
     const ok = window.confirm(
-      "Delete this item? This will remove it from the database and Cloudinary (if present)."
+      "Delete this item? This will remove it from the database and Cloudinary (if present).",
     );
     if (!ok) return;
 
@@ -110,7 +113,7 @@ export default function Gallery({ showAdminControls = false }) {
       if (adminFilter === "drafts")
         return !!it.uploaded === false || !it.publishedToWeb;
       return true;
-    }
+    },
   );
 
   return (
@@ -140,7 +143,7 @@ export default function Gallery({ showAdminControls = false }) {
             </select>
             <button
               onClick={fetchGallery}
-              className="p-2 bg-[#D3AF37] rounded text-black"
+              className="p-2 bg-purple-600 hover:bg-purple-500 text-white rounded"
             >
               Refresh
             </button>
@@ -195,7 +198,7 @@ export default function Gallery({ showAdminControls = false }) {
                         <button
                           disabled={!!actionLoading[item._id]}
                           onClick={() => publishItem(item._id, false, item)}
-                          className="px-2 py-1 bg-orange-500 text-white text-xs rounded"
+                          className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded"
                         >
                           {actionLoading[item._id] ? "Working..." : "Unpublish"}
                         </button>
@@ -203,7 +206,7 @@ export default function Gallery({ showAdminControls = false }) {
                         <button
                           disabled={!!actionLoading[item._id]}
                           onClick={() => publishItem(item._id, true, item)}
-                          className="px-2 py-1 bg-green-600 text-white text-xs rounded"
+                          className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded"
                         >
                           {actionLoading[item._id] ? "Working..." : "Publish"}
                         </button>
@@ -211,7 +214,7 @@ export default function Gallery({ showAdminControls = false }) {
                       <button
                         disabled={!!actionLoading[item._id]}
                         onClick={() => deleteItem(item._id)}
-                        className="px-2 py-1 bg-red-600 text-white text-xs rounded"
+                        className="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded"
                       >
                         Delete
                       </button>

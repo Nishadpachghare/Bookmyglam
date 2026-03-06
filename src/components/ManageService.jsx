@@ -37,7 +37,10 @@ const ManageService = () => {
 
   useEffect(() => {
     const years = getAvailableYears(services || [], "createdAt");
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [services, setAvailableYears]);
 
   const exportRowsServices = useMemo(() => {
@@ -50,7 +53,11 @@ const ManageService = () => {
   }, [displayedServices]);
 
   useEffect(() => {
-    setExportData(exportRowsServices);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsServices))
+        return prev;
+      return exportRowsServices;
+    });
   }, [exportRowsServices, setExportData]);
 
   const fetchServices = async () => {

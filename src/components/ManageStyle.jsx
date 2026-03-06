@@ -40,7 +40,10 @@ function ManageStyle() {
 
   useEffect(() => {
     const years = getAvailableYears(stylists || [], "createdAt");
-    setAvailableYears(years);
+    setAvailableYears((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
+      return years;
+    });
   }, [stylists, setAvailableYears]);
 
   const exportRowsStylists = useMemo(() => {
@@ -53,7 +56,11 @@ function ManageStyle() {
   }, [displayedStylists]);
 
   useEffect(() => {
-    setExportData(exportRowsStylists);
+    setExportData((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(exportRowsStylists))
+        return prev;
+      return exportRowsStylists;
+    });
   }, [exportRowsStylists, setExportData]);
 
   const setInactive = async (id) => {

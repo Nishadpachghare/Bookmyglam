@@ -124,7 +124,11 @@ export default function Uploadimg() {
             if (obj.uploaded) map[key].uploadedCount += 1;
           }
         });
-        setReviewItems(Object.values(map));
+        const newItems = Object.values(map);
+        setReviewItems((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(newItems)) return prev;
+          return newItems;
+        });
       }
     } catch (e) {
       console.error("Error fetching uploads:", e);
@@ -370,10 +374,18 @@ export default function Uploadimg() {
     fd.append("type", type);
     if (item.backendId) fd.append("draftId", item.backendId);
 
-    const r = await axios.post(`${API_BASE}/api/uploads/media`, fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return r.data;
+    try {
+      const r = await axios.post(`${API_BASE}/api/uploads/media`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return r.data;
+    } catch (err) {
+      // show backend error if available
+      const msg =
+        err.response?.data?.error || err.message || "Upload request failed";
+      toast.error(msg);
+      throw err; // rethrow so caller can handle as well
+    }
   };
 
   // NOTE: Bulk "Upload All" behavior removed. The staging/review area now only holds local previews and metadata.
@@ -590,7 +602,7 @@ export default function Uploadimg() {
             disabled={!canReviewAny}
             className={`px-4 py-2 rounded-md font-semibold transition ${
               canReviewAny
-                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                ? "bg-purple-600 hover:bg-purple-500 text-white"
                 : "bg-gray-700 text-gray-500 cursor-not-allowed"
             }`}
           >
@@ -706,7 +718,7 @@ export default function Uploadimg() {
                 disabled={!canStageImage}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageImage
-                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    ? "bg-purple-600 hover:bg-purple-500 text-white"
                     : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -821,7 +833,7 @@ export default function Uploadimg() {
                 disabled={!canStageVideo}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageVideo
-                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    ? "bg-purple-600 hover:bg-purple-500 text-white"
                     : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -958,7 +970,7 @@ export default function Uploadimg() {
                 disabled={!canStageLink}
                 className={`w-full md:w-auto px-4 py-2 rounded text-xs font-semibold ${
                   canStageLink
-                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    ? "bg-purple-600 hover:bg-purple-500 text-white"
                     : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -1060,7 +1072,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "image")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1068,7 +1080,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "image")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               {uploadingState[combo.id]
                                 ? "Uploading..."
@@ -1078,7 +1090,7 @@ export default function Uploadimg() {
                           <button
                             onClick={() => handleDelete(combo.id, "image")}
                             disabled={!!uploadingState[combo.id]}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
+                            className="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>
@@ -1142,7 +1154,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "video")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1150,7 +1162,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "video")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               {uploadingState[combo.id]
                                 ? "Uploading..."
@@ -1160,7 +1172,7 @@ export default function Uploadimg() {
                           <button
                             onClick={() => handleDelete(combo.id, "video")}
                             disabled={!!uploadingState[combo.id]}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
+                            className="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>
@@ -1232,7 +1244,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handleUnpublish(combo.id, "link")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-gray-500 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               Unpub
                             </button>
@@ -1240,7 +1252,7 @@ export default function Uploadimg() {
                             <button
                               onClick={() => handlePublish(combo.id, "link")}
                               disabled={!!uploadingState[combo.id]}
-                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded-md disabled:opacity-60"
+                              className="px-2 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded-md disabled:opacity-60"
                             >
                               {uploadingState[combo.id]
                                 ? "Uploading..."
@@ -1250,7 +1262,7 @@ export default function Uploadimg() {
                           <button
                             onClick={() => handleDelete(combo.id, "link")}
                             disabled={!!uploadingState[combo.id]}
-                            className="px-2 py-1 text-red-600 border border-red-200 text-xs rounded-md disabled:opacity-60"
+                            className="px-2 py-1 bg-red-700 hover:bg-red-600 text-white text-xs rounded-md disabled:opacity-60"
                           >
                             Delete
                           </button>

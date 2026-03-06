@@ -21,6 +21,7 @@ import AddExpense from "./components/Addexpenses";
 import Summary from "./components/Summary";
 import Uploadimg from "./components/Uploadimg";
 import OfferAndCoupon from "./components/Offer&Coupon";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -179,6 +180,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* payment success landing after online checkout */}
+        <Route path="/payment-success" element={<PaymentSuccess />} />
       </Routes>
     </>
   );
