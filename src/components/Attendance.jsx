@@ -278,7 +278,7 @@ function Attendance() {
                       onClick={() => markCheckout(s._id)}
                       className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 transition"
                     >
-                      Checkout
+                      Checkout  
                     </button>
                   </td>
                 </tr>
