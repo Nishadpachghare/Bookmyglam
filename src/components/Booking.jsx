@@ -291,38 +291,72 @@ function Booking() {
             className="w-full p-2 bg-black border border-zinc-700 rounded text-white"
           />
 
-          {/* EMAIL + OTP */}
-          <input
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full p-2 bg-black border border-zinc-700 rounded text-white"
-          />
+          {/* Email + OTP (email only) */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`flex-1 border ${
+                  formErrors.email ? "border-red-500" : "border-gray-300"
+                } rounded-md px-4 py-3 bg-[#000000]`}
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={sendOtpEmail}
+                  disabled={otpLoading || otpCooldown > 0}
+                  className="px-3 py-2 bg-[#4C0099] rounded text-white font-semibold"
+                >
+                  {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Send OTP"}
+                </button>
+                {otpCooldown > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpCooldown(0);
+                      setOtpCode("");
+                      setEmailVerified(false);
+                      toast("OTP cancelled", { icon: "⚠️" });
+                    }}
+                    className="px-2 py-2 border rounded text-sm text-slate-600 hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+            {formErrors.email && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+            )}
 
-          <div className="flex gap-2 items-center">
-            <button
-              type="button"
-              onClick={sendOtpEmail}
-              className="bg-purple-700 hover:bg-purple-600 px-3 py-2 rounded text-sm whitespace-nowrap"
-            >
-              Send OTP
-            </button>
-
-            <input
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value)}
-              placeholder="Enter OTP"
-              className="flex-1 bg-black border border-zinc-700 p-2 rounded text-white"
-            />
-
-            <button
-              type="button"
-              onClick={verifyOtpEmail}
-              className="bg-green-700 hover:bg-green-600 px-3 py-2 rounded text-sm whitespace-nowrap"
-            >
-              Verify
-            </button>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-md px-4 py-2 bg-000000"
+              />
+              <button
+                type="button"
+                onClick={verifyOtpEmail}
+                disabled={otpLoading || !otpCode}
+                className={`px-3 py-2 rounded text-white ${
+                  emailVerified ? "bg-purple-900" : "bg-purple-900"
+                }`}
+              >
+                {emailVerified ? "Verified" : "Verify"}
+              </button>
+            </div>
+            {otpCooldown > 0 && !emailVerified && (
+              <p className="text-sm text-slate-500 mt-2">
+                OTP sent — please check your inbox. Expires in {otpCooldown}s.
+              </p>
+            )}
           </div>
 
           {emailVerified && (

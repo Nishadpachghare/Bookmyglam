@@ -1,119 +1,309 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
-export default function Attendance() {
+function Attendance() {
+  const [stylists, setStylists] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedStylist, setSelectedStylist] = useState(null);
+  const [customerList, setCustomerList] = useState([]);
+
+  const [shopStartTime, setShopStartTime] = useState(() => {
+    return localStorage.getItem("shopStartTime") || "10:00";
+  });
+
+  const getLocalDateStr = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 10);
+  };
+
+  const todayStr = getLocalDateStr();
+
+  useEffect(() => {
+    localStorage.setItem("shopStartTime", shopStartTime);
+  }, [shopStartTime]);
+
+  // format time
+  const formatTime = (isoTime) => {
+    if (!isoTime) return "--";
+    return new Date(isoTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const markPresent = (stylistId) => {
+    const nowISO = new Date().toISOString();
+
+    localStorage.setItem(`attendance_${todayStr}_${stylistId}`, nowISO);
+    localStorage.setItem(`attendance_status_${todayStr}_${stylistId}`, "full");
+
+    setStylists((prev) =>
+      prev.map((s) =>
+        s._id === stylistId
+          ? { ...s, checkInTime: nowISO, status: "full" }
+          : s
+      )
+    );
+
+    toast.success("Marked Full Day");
+  };
+
+  const markHalfDay = (stylistId) => {
+    const nowISO = new Date().toISOString();
+
+    localStorage.setItem(`attendance_${todayStr}_${stylistId}`, nowISO);
+    localStorage.setItem(`attendance_status_${todayStr}_${stylistId}`, "half");
+
+    setStylists((prev) =>
+      prev.map((s) =>
+        s._id === stylistId
+          ? { ...s, checkInTime: nowISO, status: "half" }
+          : s
+      )
+    );
+
+    toast.success("Marked Half Day");
+  };
+
+  const markCheckout = (stylistId) => {
+    const nowISO = new Date().toISOString();
+
+    localStorage.setItem(`checkout_${todayStr}_${stylistId}`, nowISO);
+
+    setStylists((prev) =>
+      prev.map((s) =>
+        s._id === stylistId
+          ? { ...s, checkoutTime: nowISO }
+          : s
+      )
+    );
+
+    toast.success("Checkout time updated");
+  };
+
+
+  const clearLocalAttendance = () => {
+  stylists.forEach((s) => {
+    localStorage.removeItem(`attendance_${todayStr}_${s._id}`);
+    localStorage.removeItem(`attendance_status_${todayStr}_${s._id}`);
+    localStorage.removeItem(`checkout_${todayStr}_${s._id}`);
+  });
+
+  setStylists((prev) =>
+    prev.map((s) => ({
+      ...s,
+      checkInTime: null,
+      checkoutTime: null,
+      status: null,
+    }))
+  );
+
+  toast.success("Local attendance cleared");
+};
+
+  // Fetch data
+  const fetchData = async () => {
+    try {
+      const [stylistRes, bookingRes] = await Promise.all([
+        fetch("http://localhost:5000/api/stylists"),
+        fetch("http://localhost:5000/api/bookings"),
+      ]);
+
+      const stylistData = await stylistRes.json();
+      const bookingData = await bookingRes.json();
+
+      const todaysBookings = bookingData.filter(
+        (b) => b.date?.slice(0, 10) === todayStr
+      );
+
+      const bookingMap = {};
+      todaysBookings.forEach((b) => {
+        if (!bookingMap[b.stylist]) bookingMap[b.stylist] = [];
+        bookingMap[b.stylist].push(b);
+      });
+
+      // const withAttendance = stylistData
+      //   .filter((s) => s.status === "active")
+      //   .map((s) => ({
+      //     ...s,
+      //     checkInTime: null,
+      //     checkoutTime: null,
+      //     status: null,
+      //     customers: bookingMap[s._id]?.length || 0,
+      //     bookings: bookingMap[s._id] || [],
+      //   }));
+
+     const withAttendance = stylistData
+  .filter((s) => s.status === "active")
+  .map((s) => {
+    const savedCheckIn = localStorage.getItem(`attendance_${todayStr}_${s._id}`);
+    const savedStatus = localStorage.getItem(`attendance_status_${todayStr}_${s._id}`);
+    const savedCheckout = localStorage.getItem(`checkout_${todayStr}_${s._id}`);
+
+    return {
+      ...s,
+      checkInTime: savedCheckIn || null,
+      checkoutTime: savedCheckout || null,
+      status: savedStatus || null,
+      customers: bookingMap[s._id]?.length || 0,
+      bookings: bookingMap[s._id] || [],
+    };
+  });
+
+      setStylists(withAttendance);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load attendance data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const openCustomers = (stylist) => {
+    setSelectedStylist(stylist);
+    setCustomerList(stylist.bookings || []);
+  };
+
+  const saveAttendance = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stylists }),
+      });
+
+      if (!res.ok) throw new Error();
+      toast.success("Attendance saved successfully");
+    } catch {
+      toast.error("Failed to save attendance");
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full p-8 bg-black text-white pl-80 flex items-center justify-center">
-      <div className="mx-auto">
-        <style>{`
-          @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .gradient-anim {
-            background: linear-gradient(90deg, #4C0099 0%, #D3AF37 50%, #FFB347 100%);
-            background-size: 200% 200%;
-            animation: gradientMove 6s ease infinite;
-          }
-          .shine {
-            position: relative;
-            overflow: hidden;
-          }
-          .shine::after {
-            content: '';
-            position: absolute;
-            left: -75%;
-            top: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255,255,255,0.06);
-            transform: rotate(25deg);
-            animation: shineMove 2.8s linear infinite;
-          }
-          @keyframes shineMove {
-            0% { left: -75%; }
-            100% { left: 125%; }
-          }
-        `}</style>
+    <div className="p-10 min-h-screen pl-80 bg-black">
+      <h1 className="text-3xl font-semibold text-white mb-6">
+        Stylist Attendance
+      </h1>
 
-        <div className="w-[520px] rounded-xl border border-zinc-700 bg-zinc-900 p-10 text-center shadow-lg">
-          <div className="flex items-center justify-center mb-6">
-            {/* Animated calendar icon */}
-            <div className="p-4 rounded-md gradient-anim shadow-xl animate-bounce">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  x="3"
-                  y="4"
-                  width="18"
-                  height="16"
-                  rx="2"
-                  fill="#111827"
-                />
-                <path
-                  d="M7 2v4"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M17 2v4"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3 10h18"
-                  stroke="#ffffff"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="8" cy="15" r="1.2" fill="#ffffff" />
-                <circle cx="12" cy="15" r="1.2" fill="#ffffff" />
-                <circle cx="16" cy="15" r="1.2" fill="#ffffff" />
-              </svg>
-            </div>
-          </div>
+      <div className="bg-zinc-900 rounded-lg border border-zinc-700 p-6 text-white">
+        {loading ? (
+          <p className="text-zinc-400">Loading...</p>
+        ) : (
+          <table className="w-full text-left">
+            <thead className="bg-zinc-800 text-zinc-300">
+              <tr>
+                <th className="py-3 px-4">Name</th>
+                <th className="py-3 px-4">Check-in Time</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Checkout Time</th>
+                <th className="py-3 px-4">Customers</th>
+                <th className="py-3 px-4 flex justify-center gap-3">Action</th>
+              </tr>
+            </thead>
 
-          <h2 className="text-3xl font-bold mb-2 shine">
-            <span
-              style={{
-                background: "linear-gradient(90deg, #FFFFFF 0%, #FFD580 100%)",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              Coming Soon
-            </span>
-          </h2>
+            <tbody>
+              {stylists.map((s) => (
+                <tr key={s._id} className="border-b border-zinc-700">
+                  <td className="py-3 px-4">{s.name}</td>
 
-          <p className="text-sm text-gray-400 max-w-md mx-auto mb-6">
-            Attendance module is under development. We are working to bring a
-            simple and effective attendance experience — check back soon!
-          </p>
+                  <td className="py-3 px-4 text-zinc-300">
+                    {formatTime(s.checkInTime)}
+                  </td>
 
-          <div className="flex items-center justify-center gap-3">
-            <button className="px-5 py-2 rounded-md bg-[#4C0099] text-white font-semibold shadow-md hover:bg-[#3A006F] transition">
-              Notify Me
-            </button>
-            <button className="px-5 py-2 rounded-md border border-zinc-700 text-gray-300 hover:bg-zinc-800 transition">
-              Explore Dashboard
-            </button>
-          </div>
+                  <td className="py-3 px-4">
+                    {!s.checkInTime ? (
+                      <span className="px-2 py-1 rounded text-sm bg-zinc-600">
+                        Absent
+                      </span>
+                    ) : s.status === "half" ? (
+                      <span className="px-2 py-1 rounded text-sm bg-red-600">
+                        Half Day
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 rounded text-sm bg-green-600">
+                        Full Day
+                      </span>
+                    )}
+                  </td>
 
-          <div className="mt-6 text-xs text-gray-500">
-            We’ll notify you when it’s ready.
-          </div>
+                  <td className="py-3 px-4 text-zinc-300">
+                    {formatTime(s.checkoutTime)}
+                  </td>
+
+                  <td className="py-3 px-4">
+                    <button
+                      onClick={() => openCustomers(s)}
+                      className="underline text-purple-400"
+                      disabled={s.customers === 0}
+                    >
+                      {s.customers}
+                    </button>
+                  </td>
+
+                  <td className="py-3 px-4 flex gap-3">
+ <button
+  onClick={() => markPresent(s._id)}
+  disabled={!!s.checkInTime}
+  className={`px-4 py-2 rounded-lg text-sm font-medium transition
+    ${
+      s.checkInTime
+        ? "bg-gray-500 cursor-not-allowed"
+        : "bg-green-600 hover:bg-green-500"
+    }`}
+>
+  {s.checkInTime ? "Present" : "Mark Present"}
+</button>
+
+<button
+  onClick={() => markHalfDay(s._id)}
+  disabled={s.status === "half"}
+  className={`px-4 py-2 rounded-lg text-sm font-medium transition
+    ${
+      s.status === "half"
+        ? "bg-gray-500 cursor-not-allowed"
+        : "bg-red-600 hover:bg-red-500"
+    }`}
+>
+  {s.status === "half" ? "Half Day" : "Half Day"}
+</button>                                                 
+                    <button
+                      onClick={() => markCheckout(s._id)}
+                      className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 transition"
+                    >
+                      Checkout
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="mt-6">
+          <button
+            onClick={saveAttendance}
+            className="bg-purple-700 px-6 py-2 rounded hover:bg-purple-600"
+          >
+            Save Attendance
+          </button>
+           <button
+    onClick={clearLocalAttendance}
+    className="bg-red-700 px-6 py-2 rounded hover:bg-red-600"
+  >
+    Clear Local Data
+  </button>
         </div>
       </div>
     </div>
   );
 }
+
+export default Attendance;
