@@ -86,7 +86,6 @@ function Dashboard() {
   }, []);
 
   const safeBookings = Array.isArray(bookings) ? bookings : [];
-  const totalBookings = safeBookings.length;
   const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
 
   const {
@@ -96,13 +95,16 @@ function Dashboard() {
     setBookings: setGlobalBookings,
   } = useContext(ExportContext);
 
-  // apply global filter to bookings for display
+  // apply global filter to bookings for display and calculations
   const filteredBookingsByGlobal = filterByDate(
     safeBookings,
     "date",
     filterType,
     filterValue,
   );
+
+  // keep stats in sync with the currently visible set of bookings
+  const totalBookings = filteredBookingsByGlobal.length;
 
   useEffect(() => {
     const years = getAvailableYears(safeBookings, "date");
@@ -183,8 +185,8 @@ function Dashboard() {
     });
   }, [filteredBookingsByGlobal, setExportData]);
 
-  // Search Filter
-  const filteredBookings = safeBookings.filter((b) => {
+  // Search + global date filter
+  const filteredBookings = filteredBookingsByGlobal.filter((b) => {
     const name = (b.customerName || "").toString().toLowerCase();
     const phone = (b.phone || "").toString().toLowerCase();
     const q = searchTerm.toLowerCase().trim();

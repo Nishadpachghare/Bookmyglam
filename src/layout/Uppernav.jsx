@@ -80,12 +80,12 @@ function Uppernav() {
     return "Dashboard Overview";
   };
 
-  // Button Style Generator
+  // Button Style Generator – segment-style with icons and clearer hover
   const getBtnClass = (filter) => {
     const isActive = activeFilter === filter;
-    return `px-5 py-2 text-sm font-bold transition-all duration-300 rounded-lg flex items-center gap-2 ${
+    return `px-4 py-2  text-xs font-semibold transition-colors duration-200 rounded-md flex items-center gap-1 ${
       isActive
-        ? "bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]"
+        ? "bg-purple-600 text-white shadow-lg"
         : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
     }`;
   };
@@ -105,7 +105,7 @@ function Uppernav() {
 
         {/* CENTER SECTION: Multi-Section Filter */}
         <div
-          className="flex items-center bg-zinc-900/50 p-1.5 rounded-xl border border-zinc-800 relative"
+          className="flex items-center bg-zinc-900/50 p-1.5 rounded-xl border border-zinc-800 pr-2 relative"
           ref={filterRef}
         >
           <button
@@ -115,6 +115,7 @@ function Uppernav() {
             }}
             className={getBtnClass("all")}
           >
+            <FiCalendar className="w-4 h-4" />
             All
           </button>
 
@@ -129,6 +130,7 @@ function Uppernav() {
               }}
               className={getBtnClass("day")}
             >
+              <FiCalendar className="w-4 h-4" />
               Day
             </button>
             {dropdownOpen && activeFilter === "day" && (
@@ -152,6 +154,7 @@ function Uppernav() {
               }}
               className={getBtnClass("month")}
             >
+              <FiCalendar className="w-4 h-4" />
               Month
             </button>
             {dropdownOpen && activeFilter === "month" && (
@@ -193,6 +196,7 @@ function Uppernav() {
               }}
               className={getBtnClass("year")}
             >
+              <FiCalendar className="w-4 h-4" />
               Year
             </button>
             {dropdownOpen && activeFilter === "year" && (
@@ -218,10 +222,10 @@ function Uppernav() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleExport}
-            className="group inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-purple-400 border border-zinc-800 rounded-xl transition-all duration-200 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="group inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-purple-400 border border-zinc-800 rounded-lg shadow hover:from-purple-600 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <FiDownload className="size-4 group-hover:bounce" />
-            Export Excel
+            <FiDownload className="w-4 h-4" />
+            Export
           </button>
         </div>
       </div>

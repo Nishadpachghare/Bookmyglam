@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -8,6 +8,9 @@ function Booking() {
   const [services, setServices] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
+
+  // track any field-specific validation errors (email in particular)
+  const [formErrors, setFormErrors] = useState({});
 
   const [formData, setFormData] = useState({
     stylist: "",
@@ -21,6 +24,24 @@ function Booking() {
 
   const [otpCode, setOtpCode] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const otpTimerRef = useRef(null);
+
+  // keep cooldown ticking down
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    otpTimerRef.current = setInterval(() => {
+      setOtpCooldown((c) => {
+        if (c <= 1) {
+          clearInterval(otpTimerRef.current);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(otpTimerRef.current);
+  }, [otpCooldown]);
 
   // QR Modal state
   const [showQR, setShowQR] = useState(false);
@@ -83,12 +104,20 @@ function Booking() {
       return;
     }
 
+    // clear any existing error for this field, then update value
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
 
-    if (name === "email" && emailVerified) {
-      // user changed email after verifying; require re-verification
-      setEmailVerified(false);
+    if (name === "email") {
+      if (emailVerified) {
+        // user changed email after verifying; require re-verification
+        setEmailVerified(false);
+      }
       setOtpCode("");
+      setOtpCooldown(0);
+      clearInterval(otpTimerRef.current);
     }
   };
 
@@ -99,15 +128,26 @@ function Booking() {
   const sendOtpEmail = async () => {
     const email = formData.email?.trim();
     if (!email) return toast.error("Enter email first");
+    if (otpCooldown > 0) {
+      toast.error(`Please wait ${otpCooldown}s before resending`);
+      return;
+    }
+
     try {
+      setOtpLoading(true);
       const res = await axios.post("http://localhost:5000/api/auth/send-otp", {
         to: email,
         channel: "email",
       });
-      if (res.data.ok) toast.success("OTP Sent");
+      if (res.data.ok) {
+        toast.success("OTP Sent");
+        setOtpCooldown(60);
+      }
     } catch (err) {
       const msg = err.response?.data?.message;
       toast.error(msg || "OTP failed");
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -117,6 +157,7 @@ function Booking() {
     if (!otpCode) return toast.error("Enter OTP");
 
     try {
+      setOtpLoading(true);
       const res = await axios.post(
         "http://localhost:5000/api/auth/verify-otp",
         {
@@ -136,11 +177,17 @@ function Booking() {
     } catch (err) {
       const msg = err.response?.data?.message;
       toast.error(msg || "Invalid OTP");
+    } finally {
+      setOtpLoading(false);
     }
   };
 
   const validateForm = () => {
+    // clear previous errors
+    setFormErrors({});
+
     if (!formData.email?.trim()) {
+      setFormErrors((prev) => ({ ...prev, email: "Email is required" }));
       toast.error("Enter email");
       return false;
     }
