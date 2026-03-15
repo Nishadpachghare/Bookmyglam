@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import Sidenav from "./layout/Sidenav";
-import Uppernav from "./layout/uppernav";
+import Uppernav from "./layout/Uppernav";
 
 import Loginpage from "./components/Loginpage";
 import Register from "./components/Register";

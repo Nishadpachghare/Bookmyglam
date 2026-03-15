@@ -39,6 +39,18 @@ export function ExportProvider({ children }) {
   };
 
   const handleExport = (fileName) => {
+    // don't allow exports on certain pages
+    const disabledPaths = [
+      "/booking",
+      "/summary",
+      "/uploadimg",
+      "/offersandcoupons",
+    ];
+    if (disabledPaths.includes(location.pathname)) {
+      toast.error("Export unavailable on this page");
+      return;
+    }
+
     const generateFileName = () => {
       const base = pathToName(location?.pathname || "");
       let name = base || "Salon_Report";
@@ -75,14 +87,14 @@ export function ExportProvider({ children }) {
           if (headerRows.length > 0) {
             const lastHeader = headerRows[headerRows.length - 1];
             headers = Array.from(lastHeader.querySelectorAll("th")).map((th) =>
-              th.innerText.trim()
+              th.innerText.trim(),
             );
           } else {
             // Fallback to first row's cells
             const firstRow = table.querySelector("tr");
             if (firstRow) {
               headers = Array.from(firstRow.querySelectorAll("th,td")).map(
-                (h, i) => h.innerText.trim() || `Column ${i + 1}`
+                (h, i) => h.innerText.trim() || `Column ${i + 1}`,
               );
             }
           }
@@ -93,7 +105,7 @@ export function ExportProvider({ children }) {
             if (firstBodyRow) {
               const count = firstBodyRow.querySelectorAll("td,th").length || 1;
               headers = Array.from({ length: count }).map(
-                (_, i) => `Column ${i + 1}`
+                (_, i) => `Column ${i + 1}`,
               );
             }
           }
@@ -103,7 +115,7 @@ export function ExportProvider({ children }) {
 
           bodyRows.forEach((tr) => {
             const cells = Array.from(tr.querySelectorAll("td,th")).map((td) =>
-              td.innerText.trim()
+              td.innerText.trim(),
             );
 
             // Skip group header rows that have a single cell with colspan spanning all columns

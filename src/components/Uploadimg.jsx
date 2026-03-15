@@ -555,7 +555,7 @@ export default function Uploadimg() {
   };
 
   return (
-    <div className="min-h-screen w-full p-8 bg-black text-white pl-80">
+    <div className="min-h-screen w-full p-8 bg-zinc-900 text-white pl-80">
       {/* Header */}
       <div className="flex items-center justify-between max-w-6xl mx-auto mb-6 px-4">
         <div>
@@ -588,7 +588,7 @@ export default function Uploadimg() {
                 }
               }
             }}
-            className="p-2 rounded border border-zinc-700 bg-black text-white text-sm"
+            className="p-2 rounded border border-zinc-700 bg-zinc-900 text-white text-sm"
             aria-label="Filter upload sections"
           >
             <option value="all">Show: All</option>
@@ -690,7 +690,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Enter captions"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.image.caption}
                 onChange={(e) =>
                   updateFormField("image", "caption", e.target.value)
@@ -699,7 +699,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Stylist"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.image.stylist}
                 onChange={(e) =>
                   updateFormField("image", "stylist", e.target.value)
@@ -707,7 +707,7 @@ export default function Uploadimg() {
               />
               <input
                 type="date"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.image.date}
                 onChange={(e) =>
                   updateFormField("image", "date", e.target.value)
@@ -805,7 +805,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Enter captions"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.video.caption}
                 onChange={(e) =>
                   updateFormField("video", "caption", e.target.value)
@@ -814,7 +814,7 @@ export default function Uploadimg() {
               <input
                 type="text"
                 placeholder="Stylist"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.video.stylist}
                 onChange={(e) =>
                   updateFormField("video", "stylist", e.target.value)
@@ -822,7 +822,7 @@ export default function Uploadimg() {
               />
               <input
                 type="date"
-                className="p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                className="p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                 value={form.video.date}
                 onChange={(e) =>
                   updateFormField("video", "date", e.target.value)
@@ -869,7 +869,7 @@ export default function Uploadimg() {
                 <input
                   type="text"
                   placeholder="Paste link here"
-                  className="w-full md:w-2/3 p-2 rounded border border-zinc-700 bg-black text-white text-xs placeholder-gray-400"
+                  className="w-full md:w-2/3 p-2 rounded border border-zinc-700 bg-zinc-800 text-white text-xs placeholder-gray-400"
                   value={form.link.url}
                   onChange={(e) =>
                     updateFormField("link", "url", e.target.value)
@@ -883,7 +883,7 @@ export default function Uploadimg() {
               className={`h-40 relative border-2 border-dashed rounded-lg flex items-center justify-center mb-4 cursor-pointer overflow-hidden ${
                 highlightSection === "link"
                   ? "border-purple-200 bg-purple-50"
-                  : "border-black"
+                  : "border-zinc-700"
               }`}
               onDragOver={onDragOver}
               onDrop={(e) => handleFileDrop(e, "link")}
@@ -982,30 +982,30 @@ export default function Uploadimg() {
 
         {/* Review section */}
         <div className="bg-zinc-900 border border-zinc-700 shadow-lg rounded-lg p-6 text-white">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="text-lg font-semibold mb-4 text-white">
             Review ({reviewItems.length})
           </h3>
           {reviewItems.length === 0 ? (
-            <div className="text-sm text-gray-400 py-10 text-center">
+            <div className="text-sm text-zinc-400 py-10 text-center">
               No items
             </div>
           ) : (
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[50vh] overflow-y-auto">
               {reviewItems.map((combo) => (
                 <div
                   key={combo.id}
-                  className="border border-zinc-700 rounded-lg p-4 bg-zinc-800 shadow-sm text-white"
+                  className="border border-zinc-700 rounded-lg p-4 bg-zinc-800 shadow-lg text-white transform transition hover:scale-105"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="text-sm">
                       <div className="font-medium text-white">
                         {combo.stylist || "—"}{" "}
-                        <span className="text-gray-400">•</span>{" "}
-                        <span className="text-gray-400 text-xs">
+                        <span className="text-zinc-400">•</span>{" "}
+                        <span className="text-zinc-400 text-xs">
                           {combo.date}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-zinc-400 mt-1">
                         {combo.uploadedCount}/
                         {(combo.image ? 1 : 0) +
                           (combo.video ? 1 : 0) +
@@ -1015,10 +1015,10 @@ export default function Uploadimg() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="flex flex-wrap gap-4 justify-center">
                     {/* IMAGE CARD */}
                     {combo.image && (
-                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                      <div className="text-center border rounded-lg p-3 bg-zinc-800 border-zinc-700 shadow-lg">
                         <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden flex items-center justify-center">
                           {combo.image.preview ? (
                             <img
@@ -1100,7 +1100,7 @@ export default function Uploadimg() {
 
                     {/* VIDEO CARD */}
                     {combo.video && (
-                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                      <div className="text-center border rounded-lg p-3 bg-zinc-800 border-zinc-700 shadow-lg">
                         <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden flex items-center justify-center">
                           {combo.video.preview ? (
                             <video
@@ -1182,7 +1182,7 @@ export default function Uploadimg() {
 
                     {/* LINK CARD */}
                     {combo.link && (
-                      <div className="text-center border rounded p-2 bg-zinc-800 border-zinc-700">
+                      <div className="text-center border rounded-lg p-3 bg-zinc-800 border-zinc-700 shadow-lg">
                         <div className="h-20 mb-2 bg-zinc-700 rounded overflow-hidden p-1 flex items-center justify-center">
                           {combo.link.preview ? (
                             <img

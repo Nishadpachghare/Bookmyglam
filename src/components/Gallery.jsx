@@ -117,13 +117,13 @@ export default function Gallery({ showAdminControls = false }) {
   );
 
   return (
-    <div className="min-h-screen w-full bg-white">
+    <div className="min-h-screen w-full bg-zinc-900 text-white">
       {/* Header */}
       <div className="pt-24 md:pt-40 flex flex-col text-center px-4 max-w-4xl mx-auto">
-        <h1 className="font-bold text-3xl md:text-4xl mb-3">
+        <h1 className="font-bold text-3xl md:text-4xl mb-3 text-yellow-300">
           See Our Space, Feel the Vibe.
         </h1>
-        <p className="text-gray-500 md:text-lg leading-relaxed">
+        <p className="text-zinc-400 md:text-lg leading-relaxed">
           Step inside our world of style and transformation. Explore our curated
           interior, relaxing ambiance, and the stunning results we create for
           our clients every day.
@@ -131,7 +131,7 @@ export default function Gallery({ showAdminControls = false }) {
 
         {showAdminControls && (
           <div className="mt-4 flex justify-center gap-3 items-center">
-            <label className="text-sm text-gray-600">Filter:</label>
+            <label className="text-sm text-zinc-300">Filter:</label>
             <select
               value={adminFilter}
               onChange={(e) => setAdminFilter(e.target.value)}
@@ -155,14 +155,14 @@ export default function Gallery({ showAdminControls = false }) {
       <div className="max-w-7xl mx-auto px-4 pb-20 mt-10">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <p className="text-gray-500 animate-pulse">Loading Gallery...</p>
+            <p className="text-zinc-400 animate-pulse">Loading Gallery...</p>
           </div>
         ) : visibleItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {visibleItems.map((item, index) => (
               <div
                 key={item._id}
-                className={`relative h-64 rounded-lg overflow-hidden group border bg-gray-50 ${
+                className={`relative h-64 rounded-lg overflow-hidden group border bg-zinc-800 border-zinc-700 ${
                   index % 5 === 4 ? "md:col-span-2" : "col-span-1"
                 }`}
               >
@@ -190,7 +190,7 @@ export default function Gallery({ showAdminControls = false }) {
                     {item.caption || "Salon Work"}
                   </p>
                   {item.stylist && (
-                    <p className="text-gray-300 text-xs">by {item.stylist}</p>
+                    <p className="text-zinc-400 text-xs">by {item.stylist}</p>
                   )}
                   {showAdminControls && (
                     <div className="mt-2 flex gap-2">

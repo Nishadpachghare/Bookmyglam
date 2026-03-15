@@ -61,7 +61,7 @@ function Booking() {
 
   const fetchServices = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/Manageservices");
+      const res = await axios.get("http://localhost:5000/api/manageservices");
       // backend returns objects with a `service` field but many parts
       // of the client expect `serviceName`.  Normalize here so the rest
       // of the component doesn't need to worry about it.

@@ -62,7 +62,7 @@ function Dashboard() {
   // 3. Fetch Services
   const fetchAllServices = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/Manageservices");
+      const res = await axios.get("http://localhost:5000/api/manageservices");
       const arr = extractArray(res, "services");
       setAllServices(arr);
     } catch (error) {

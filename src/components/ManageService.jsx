@@ -63,7 +63,7 @@ const ManageService = () => {
   const fetchServices = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/Manageservices",
+        "http://localhost:5000/api/manageservices",
       );
       // server might return array directly or an object — handle both
       const data = Array.isArray(response.data)
@@ -128,7 +128,7 @@ const ManageService = () => {
       // parallel deletes for speed
       await Promise.all(
         selectedServices.map((id) =>
-          axios.delete(`http://localhost:5000/api/Manageservices/${id}`),
+          axios.delete(`http://localhost:5000/api/manageservices/${id}`),
         ),
       );
       toast.success("Deleted selected services", { id: toastId });
@@ -176,7 +176,7 @@ const ManageService = () => {
     try {
       if (editingId) {
         const response = await axios.put(
-          `http://localhost:5000/api/Manageservices/${editingId}`,
+          `http://localhost:5000/api/manageservices/${editingId}`,
           {
             service,
             description,
@@ -189,7 +189,7 @@ const ManageService = () => {
         );
       } else {
         const response = await axios.post(
-          "http://localhost:5000/api/Manageservices",
+          "http://localhost:5000/api/manageservices",
           {
             service,
             description,

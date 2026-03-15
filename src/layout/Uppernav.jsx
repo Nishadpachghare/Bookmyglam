@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { FiDownload, FiCalendar } from "react-icons/fi";
 import { ExportContext } from "../layout/ExportContext";
 
@@ -14,6 +15,15 @@ function Uppernav() {
 
   const { handleExport, setFilterType, setFilterValue, availableYears } =
     useContext(ExportContext);
+  const location = useLocation();
+  // routes where exporting should be disabled
+  const exportDisabledPaths = [
+    "/booking",
+    "/summary",
+    "/uploadimg",
+    "/offersandcoupons",
+  ];
+  const isExportDisabled = exportDisabledPaths.includes(location.pathname);
 
   const months = [
     { value: "01", label: "Jan" },
@@ -221,8 +231,14 @@ function Uppernav() {
         {/* RIGHT SECTION: Export */}
         <div className="flex items-center gap-4">
           <button
-            onClick={handleExport}
-            className="group inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-purple-400 border border-zinc-800 rounded-lg shadow hover:from-purple-600 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            onClick={isExportDisabled ? undefined : handleExport}
+            disabled={isExportDisabled}
+            className={`group inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white
+              ${
+                isExportDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-500 to-purple-400 border border-zinc-800 rounded-lg shadow hover:from-purple-600 hover:to-purple-500"
+              } focus:outline-none focus:ring-2 focus:ring-purple-500`}
           >
             <FiDownload className="w-4 h-4" />
             Export
