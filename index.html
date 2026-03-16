@@ -10,12 +10,16 @@
     <div id="root"></div>
     <script>
       (function(){
-        var blockedHost = 'api-js.mixpanel.com';
+        // Block Mixpanel beacon calls injected by browser privacy extensions.
+        // This prevents console noise when the browser blocks the request.
+        var blockedHosts = ['api-js.mixpanel.com', 'cdn.mxpnl.com'];
+
         // No-op mixpanel object to avoid uncaught errors
         window.mixpanel = window.mixpanel || { track: function(){}, init: function(){}, identify: function(){}, people: { set: function(){} } };
 
         function isBlockedUrl(url){
-          return url && typeof url === 'string' && url.indexOf(blockedHost) !== -1;
+          if (!url || typeof url !== 'string') return false;
+          return blockedHosts.some((host) => url.indexOf(host) !== -1);
         }
 
         // Intercept fetch requests to blocked host and resolve gracefully
@@ -87,7 +91,38 @@
           };
         } catch (e) { /* ignore */ }
 
+        // Also intercept image src on HTMLImageElement so <img src="..."> tags are blocked as well.
+        try {
+          var imgProto = HTMLImageElement && HTMLImageElement.prototype;
+          if (imgProto) {
+            var origDescriptor = Object.getOwnPropertyDescriptor(imgProto, 'src');
+            if (origDescriptor && typeof origDescriptor.set === 'function') {
+              Object.defineProperty(imgProto, 'src', {
+                set: function(value) {
+                  if (isBlockedUrl(value)) return;
+                  return origDescriptor.set.call(this, value);
+                },
+                get: function() {
+                  return origDescriptor.get.call(this);
+                },
+                configurable: true,
+                enumerable: true
+              });
+            }
+          }
+        } catch (e) { /* ignore */ }
+
         console.info('[Analytics] Intercepting Mixpanel calls to reduce blocked-by-client console noise.');
+
+        // Suppress console errors caused by blocked Mixpanel/beacon requests.
+        // Some browser extensions block these and emit `net::ERR_BLOCKED_BY_CLIENT`.
+        window.addEventListener('error', (event) => {
+          const msg = String(event.message || "");
+          if (msg.includes('net::ERR_BLOCKED_BY_CLIENT') || msg.includes('Failed to load resource')) {
+            event.preventDefault();
+          }
+        });
+
       })();
     </script>
     <script type="module" src="/src/main.jsx"></script>
