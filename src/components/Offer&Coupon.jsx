@@ -22,13 +22,30 @@ export default function FullOfferPage() {
   const [couponTill, setCouponTill] = useState("");
   const [minAmount, setMinAmount] = useState("");
   const [coupons, setCoupons] = useState([]);
+  const [activeOfferKey, setActiveOfferKey] = useState("");
 
   useEffect(() => {
     fetchServices();
     fetchOffers();
     fetchCoupons();
+    fetchActiveOffer();
   }, []);
 
+  const fetchActiveOffer = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/offers/active");
+      const active = res.data?.data || [];
+      if (active.length > 0) {
+        const key = active[0]._id || active[0].title || "";
+        setActiveOfferKey(key);
+      } else {
+        setActiveOfferKey("No active offer");
+      }
+    } catch (err) {
+      console.log("Active offer fetch error", err);
+      setActiveOfferKey("Unavailable");
+    }
+  };
   const fetchServices = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/manageservices");
@@ -281,6 +298,13 @@ export default function FullOfferPage() {
 
         {/* ACTIVE OFFERS LIST */}
         <div className="bg-[#141414] rounded-2xl p-8 border border-gray-800 mb-16 shadow-lg">
+          <h3 className="text-2xl font-semibold mb-2 text-purple-400">
+            Active Offer Key (for device sync)
+          </h3>
+          <p className="text-sm text-gray-300 mb-4">
+            {activeOfferKey || "Loading active offer..."}
+          </p>
+
           <h3 className="text-2xl font-semibold mb-8 text-purple-400 flex justify-between items-center">
             Active Offers
             <span className="bg-purple-900/30 text-purple-400 text-sm px-3 py-1 rounded-full border border-purple-800">
