@@ -65,14 +65,32 @@ const ManageService = () => {
       const response = await axios.get(
         "http://localhost:5000/api/manageservices",
       );
-      // server might return array directly or an object — handle both
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data?.services || response.data;
-      setServices(data || []);
+
+      // Normalize server response to array of services.
+      // Current backend returns { ok: true, data: [...]} for success,
+      // or { ok: false, message: '', data: [] } when DB is not ready.
+      const responseData = response.data;
+
+      let serviceArray = [];
+      if (Array.isArray(responseData)) {
+        serviceArray = responseData;
+      } else if (Array.isArray(responseData?.data)) {
+        serviceArray = responseData.data;
+      } else if (Array.isArray(responseData?.services)) {
+        serviceArray = responseData.services;
+      } else {
+        serviceArray = [];
+      }
+
+      setServices(serviceArray);
+
+      if (responseData?.ok === false) {
+        toast.error(responseData?.message || "Service data unavailable");
+      }
     } catch (error) {
       console.error("Error fetching services:", error);
       toast.error("Failed to fetch services");
+      setServices([]);
     }
   };
 
