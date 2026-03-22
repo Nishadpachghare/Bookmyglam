@@ -14,9 +14,13 @@ function ManageStyle() {
   const fetchStylists = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/stylists");
-      const data = await res.json();
+      if (!res.ok) throw new Error("Stylist fetch failed");
+      const body = await res.json();
+      let data = body?.data ?? body;
+      if (!Array.isArray(data)) data = [];
       setStylists(data.filter((s) => s.status === "active"));
-    } catch {
+    } catch (err) {
+      console.error("ManageStyle fetchStylists error:", err);
       toast.error("Failed to load stylists");
     } finally {
       setLoading(false);

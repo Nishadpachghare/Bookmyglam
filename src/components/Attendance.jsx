@@ -43,10 +43,8 @@ function Attendance() {
 
     setStylists((prev) =>
       prev.map((s) =>
-        s._id === stylistId
-          ? { ...s, checkInTime: nowISO, status: "full" }
-          : s
-      )
+        s._id === stylistId ? { ...s, checkInTime: nowISO, status: "full" } : s,
+      ),
     );
 
     toast.success("Marked Full Day");
@@ -60,10 +58,8 @@ function Attendance() {
 
     setStylists((prev) =>
       prev.map((s) =>
-        s._id === stylistId
-          ? { ...s, checkInTime: nowISO, status: "half" }
-          : s
-      )
+        s._id === stylistId ? { ...s, checkInTime: nowISO, status: "half" } : s,
+      ),
     );
 
     toast.success("Marked Half Day");
@@ -76,34 +72,31 @@ function Attendance() {
 
     setStylists((prev) =>
       prev.map((s) =>
-        s._id === stylistId
-          ? { ...s, checkoutTime: nowISO }
-          : s
-      )
+        s._id === stylistId ? { ...s, checkoutTime: nowISO } : s,
+      ),
     );
 
     toast.success("Checkout time updated");
   };
 
-
   const clearLocalAttendance = () => {
-  stylists.forEach((s) => {
-    localStorage.removeItem(`attendance_${todayStr}_${s._id}`);
-    localStorage.removeItem(`attendance_status_${todayStr}_${s._id}`);
-    localStorage.removeItem(`checkout_${todayStr}_${s._id}`);
-  });
+    stylists.forEach((s) => {
+      localStorage.removeItem(`attendance_${todayStr}_${s._id}`);
+      localStorage.removeItem(`attendance_status_${todayStr}_${s._id}`);
+      localStorage.removeItem(`checkout_${todayStr}_${s._id}`);
+    });
 
-  setStylists((prev) =>
-    prev.map((s) => ({
-      ...s,
-      checkInTime: null,
-      checkoutTime: null,
-      status: null,
-    }))
-  );
+    setStylists((prev) =>
+      prev.map((s) => ({
+        ...s,
+        checkInTime: null,
+        checkoutTime: null,
+        status: null,
+      })),
+    );
 
-  toast.success("Local attendance cleared");
-};
+    toast.success("Local attendance cleared");
+  };
 
   // Fetch data
   const fetchData = async () => {
@@ -113,11 +106,14 @@ function Attendance() {
         fetch("http://localhost:5000/api/bookings"),
       ]);
 
-      const stylistData = await stylistRes.json();
+      const stylistBody = await stylistRes.json();
+      let stylistData = stylistBody?.data ?? stylistBody;
+      if (!Array.isArray(stylistData)) stylistData = [];
+
       const bookingData = await bookingRes.json();
 
       const todaysBookings = bookingData.filter(
-        (b) => b.date?.slice(0, 10) === todayStr
+        (b) => b.date?.slice(0, 10) === todayStr,
       );
 
       const bookingMap = {};
@@ -137,22 +133,28 @@ function Attendance() {
       //     bookings: bookingMap[s._id] || [],
       //   }));
 
-     const withAttendance = stylistData
-  .filter((s) => s.status === "active")
-  .map((s) => {
-    const savedCheckIn = localStorage.getItem(`attendance_${todayStr}_${s._id}`);
-    const savedStatus = localStorage.getItem(`attendance_status_${todayStr}_${s._id}`);
-    const savedCheckout = localStorage.getItem(`checkout_${todayStr}_${s._id}`);
+      const withAttendance = stylistData
+        .filter((s) => s.status === "active")
+        .map((s) => {
+          const savedCheckIn = localStorage.getItem(
+            `attendance_${todayStr}_${s._id}`,
+          );
+          const savedStatus = localStorage.getItem(
+            `attendance_status_${todayStr}_${s._id}`,
+          );
+          const savedCheckout = localStorage.getItem(
+            `checkout_${todayStr}_${s._id}`,
+          );
 
-    return {
-      ...s,
-      checkInTime: savedCheckIn || null,
-      checkoutTime: savedCheckout || null,
-      status: savedStatus || null,
-      customers: bookingMap[s._id]?.length || 0,
-      bookings: bookingMap[s._id] || [],
-    };
-  });
+          return {
+            ...s,
+            checkInTime: savedCheckIn || null,
+            checkoutTime: savedCheckout || null,
+            status: savedStatus || null,
+            customers: bookingMap[s._id]?.length || 0,
+            bookings: bookingMap[s._id] || [],
+          };
+        });
 
       setStylists(withAttendance);
     } catch (err) {
@@ -249,36 +251,36 @@ function Attendance() {
                   </td>
 
                   <td className="py-3 px-4 flex gap-3">
- <button
-  onClick={() => markPresent(s._id)}
-  disabled={!!s.checkInTime}
-  className={`px-4 py-2 rounded-lg text-sm font-medium transition
+                    <button
+                      onClick={() => markPresent(s._id)}
+                      disabled={!!s.checkInTime}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition
     ${
       s.checkInTime
         ? "bg-gray-500 cursor-not-allowed"
         : "bg-green-600 hover:bg-green-500"
     }`}
->
-  {s.checkInTime ? "Present" : "Mark Present"}
-</button>
+                    >
+                      {s.checkInTime ? "Present" : "Mark Present"}
+                    </button>
 
-<button
-  onClick={() => markHalfDay(s._id)}
-  disabled={s.status === "half"}
-  className={`px-4 py-2 rounded-lg text-sm font-medium transition
+                    <button
+                      onClick={() => markHalfDay(s._id)}
+                      disabled={s.status === "half"}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition
     ${
       s.status === "half"
         ? "bg-gray-500 cursor-not-allowed"
         : "bg-red-600 hover:bg-red-500"
     }`}
->
-  {s.status === "half" ? "Half Day" : "Half Day"}
-</button>                                                 
+                    >
+                      {s.status === "half" ? "Half Day" : "Half Day"}
+                    </button>
                     <button
                       onClick={() => markCheckout(s._id)}
                       className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 transition"
                     >
-                      Checkout  
+                      Checkout
                     </button>
                   </td>
                 </tr>
@@ -294,12 +296,12 @@ function Attendance() {
           >
             Save Attendance
           </button>
-           <button
-    onClick={clearLocalAttendance}
-    className="bg-red-700 px-6 py-2 rounded hover:bg-red-600"
-  >
-    Clear Local Data
-  </button>
+          <button
+            onClick={clearLocalAttendance}
+            className="bg-red-700 px-6 py-2 rounded hover:bg-red-600"
+          >
+            Clear Local Data
+          </button>
         </div>
       </div>
     </div>

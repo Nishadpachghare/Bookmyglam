@@ -14,7 +14,9 @@ function InactiveStylish() {
     try {
       const res = await fetch("http://localhost:5000/api/stylists");
       if (!res.ok) throw new Error("Failed to fetch stylists");
-      const data = await res.json();
+      const body = await res.json();
+      let data = body?.data ?? body;
+      if (!Array.isArray(data)) data = [];
       setInactiveStylists(data.filter((s) => s.status === "inactive"));
     } catch (err) {
       console.error(err);

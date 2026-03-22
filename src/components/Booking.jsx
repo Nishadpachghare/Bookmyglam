@@ -82,13 +82,16 @@ function Booking() {
       const res = await axios.get("http://localhost:5000/api/stylists", {
         params: { status: "active" },
       });
-      const list = res.data || [];
+      const payload = res.data;
+      let list = payload?.data ?? payload;
+      if (!Array.isArray(list)) list = [];
       // extra guard in case server doesn't filter
       const activeOnly = list.filter(
         (s) => (s.status || "").toString().toLowerCase() === "active",
       );
       setStylists(activeOnly);
-    } catch {
+    } catch (err) {
+      console.error("Booking fetchStylists error:", err);
       toast.error("Unable to load stylists");
     }
   };
