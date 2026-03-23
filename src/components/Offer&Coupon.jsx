@@ -126,8 +126,22 @@ export default function FullOfferPage() {
     try {
       await axios.delete(`http://localhost:5000/api/offers/${id}`);
       setOffers(offers.filter((o) => o._id !== id));
+      fetchActiveOffer();
     } catch (err) {
       alert("Delete failed");
+    }
+  };
+
+  const handlePublishOffer = async (offer) => {
+    try {
+      // publish endpoint exists for setting published true
+      await axios.put(`http://localhost:5000/api/offers/publish/${offer._id}`);
+      alert(`${offer.title || "Offer"} published successfully`);
+      await fetchOffers();
+      await fetchActiveOffer();
+    } catch (err) {
+      console.error("Publish offer error", err);
+      alert("Failed to publish offer");
     }
   };
 
@@ -388,8 +402,15 @@ export default function FullOfferPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="flex-1 py-2 rounded-lg text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition-colors">
-                      Publish
+                    <button
+                      onClick={() => handlePublishOffer(offer)}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+                        offer.published
+                          ? "bg-green-700 text-white hover:bg-green-600"
+                          : "bg-purple-700 text-white hover:bg-purple-600"
+                      }`}
+                    >
+                      {offer.published ? "Published" : "Publish"}
                     </button>
 
                     <button
