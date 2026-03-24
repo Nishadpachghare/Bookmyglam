@@ -66,7 +66,7 @@
           if (navigator && navigator.sendBeacon) {
             var origBeacon = navigator.sendBeacon.bind(navigator);
             navigator.sendBeacon = function(url, data){
-              if (isBlockedUrl(url)) return true;
+              if (isBlockedUrl(url)) return false;
               return origBeacon(url, data);
             };
           }
@@ -116,12 +116,76 @@
 
         // Suppress console errors caused by blocked Mixpanel/beacon requests.
         // Some browser extensions block these and emit `net::ERR_BLOCKED_BY_CLIENT`.
+        // Suppress known extension/browser messaging errors
         window.addEventListener('error', (event) => {
           const msg = String(event.message || "");
+          // Suppress "message channel closed" errors from browser extensions
+          if (msg.includes('message channel closed') || msg.includes('asynchronous response')) {
+            event.preventDefault();
+            return;
+          }
           if (msg.includes('net::ERR_BLOCKED_BY_CLIENT') || msg.includes('Failed to load resource')) {
             event.preventDefault();
           }
         });
+
+        // Handle unhandled promise rejections from browser extensions
+        window.addEventListener('unhandledrejection', (event) => {
+          const msg = String(event.reason || "");
+          if (msg.includes('message channel') || msg.includes('Extension') || 
+              msg.includes('listener indicated') || msg.includes('asynchronous response')) {
+            event.preventDefault();
+          }
+        });
+
+        // Suppress extension-related console errors completely
+        var origConsoleError = console.error;
+        console.error = function() {
+          var args = Array.from(arguments);
+          var fullMsg = args.map(a => String(a || "")).join(' ');
+          // Silently suppress extension messaging errors
+          if (fullMsg.includes('listener indicated') || fullMsg.includes('message channel') ||
+              fullMsg.includes('Extension') || fullMsg.includes('asynchronous response')) {
+            return;
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+
+        // Wrap chrome.runtime to prevent extension messaging errors
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+          try {
+            var origOnMessage = chrome.runtime.onMessage;
+            if (origOnMessage && origOnMessage.addListener) {
+              var origAddListener = origOnMessage.addListener;
+              chrome.runtime.onMessage.addListener = function(callback) {
+                var wrappedCallback = function(request, sender, sendResponse) {
+                  try {
+                    var result = callback(request, sender, function(response) {
+                      try {
+                        sendResponse(response);
+                      } catch(e) { }
+                    });
+                    // If callback returns true (async), ensure sendResponse is called
+                    if (result === true) {
+                      setTimeout(function() {
+                        try {
+                          sendResponse(null);
+                        } catch(e) { }
+                      }, 100);
+                    }
+                    return result;
+                  } catch(e) {
+                    try {
+                      sendResponse(null);
+                    } catch(e2) { }
+                    return false;
+                  }
+                };
+                return origAddListener.call(this, wrappedCallback);
+              };
+            }
+          } catch(e) { /* ignore */ }
+        }
 
       })();
     </script>
