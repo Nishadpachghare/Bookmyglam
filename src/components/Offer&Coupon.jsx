@@ -213,6 +213,30 @@ export default function FullOfferPage() {
     }
   };
 
+  // ── TOGGLE OFFER ACTIVE STATUS ────────────────────────────────────────────
+  const handleToggleOfferActive = async (id, currentStatus) => {
+    try {
+      const res = await api.put(`/api/offers/${id}/toggle-active`);
+      if (res.data.success) {
+        setOffers((prev) =>
+          prev.map((o) =>
+            o._id === id ? { ...o, active: !currentStatus } : o,
+          ),
+        );
+        alert(
+          `Offer ${!currentStatus ? "activated" : "deactivated"} successfully!`,
+        );
+      }
+    } catch (err) {
+      console.error("Toggle offer error:", err);
+      const msg =
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to update offer status";
+      alert(msg);
+    }
+  };
+
   // ── ADD COUPON ────────────────────────────────────────────────────────────
   const handleAddCoupon = async () => {
     if (!couponCode.trim() || !couponDiscount) {
@@ -249,6 +273,30 @@ export default function FullOfferPage() {
       setCoupons((prev) => prev.filter((c) => c._id !== id));
     } catch {
       alert("Delete failed");
+    }
+  };
+
+  // ── TOGGLE COUPON ACTIVE STATUS ───────────────────────────────────────────
+  const handleToggleCouponActive = async (id, currentStatus) => {
+    try {
+      const res = await api.put(`/api/coupons/${id}/toggle-active`);
+      if (res.data.success) {
+        setCoupons((prev) =>
+          prev.map((c) =>
+            c._id === id ? { ...c, active: !currentStatus } : c,
+          ),
+        );
+        alert(
+          `Coupon ${!currentStatus ? "activated" : "deactivated"} successfully!`,
+        );
+      }
+    } catch (err) {
+      console.error("Toggle coupon error:", err);
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update coupon status";
+      alert(msg);
     }
   };
 
@@ -412,7 +460,11 @@ export default function FullOfferPage() {
               {offers.map((offer) => (
                 <div
                   key={offer._id}
-                  className="bg-black border border-gray-700 rounded-2xl overflow-hidden hover:border-purple-500 transition-all group shadow-md"
+                  className={`bg-black border rounded-2xl overflow-hidden transition-all group shadow-md ${
+                    offer.active
+                      ? "border-gray-700 hover:border-purple-500"
+                      : "border-gray-700 opacity-60 hover:border-gray-600"
+                  }`}
                 >
                   <div className="h-40 bg-gray-900 relative">
                     {offer.image ? (
@@ -436,6 +488,11 @@ export default function FullOfferPage() {
                     {offer.published && (
                       <div className="absolute top-3 left-3 bg-green-600 text-white font-bold px-2 py-1 rounded text-xs">
                         LIVE
+                      </div>
+                    )}
+                    {offer.active && (
+                      <div className="absolute bottom-3 left-3 bg-blue-600 text-white font-bold px-2 py-1 rounded text-xs">
+                        Active
                       </div>
                     )}
                   </div>
@@ -485,7 +542,7 @@ export default function FullOfferPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mb-2">
                       <button
                         onClick={() => handlePublishOffer(offer)}
                         className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
@@ -501,6 +558,21 @@ export default function FullOfferPage() {
                         className="flex-1 bg-red-600/10 text-red-500 border border-red-600/50 py-2 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition-all"
                       >
                         Delete
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          handleToggleOfferActive(offer._id, offer.active)
+                        }
+                        className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                          offer.active
+                            ? "bg-green-900/30 text-green-400 border border-green-600/50 hover:bg-yellow-600 hover:text-white hover:border-yellow-600"
+                            : "bg-red-900/30 text-red-400 border border-red-600/50 hover:bg-green-600 hover:text-white hover:border-green-600"
+                        }`}
+                      >
+                        {offer.active ? "Deactivate" : "Activate"}
                       </button>
                     </div>
                   </div>
@@ -568,7 +640,7 @@ export default function FullOfferPage() {
         {/* ── COUPONS LIST ── */}
         <div className="bg-[#141414] rounded-2xl p-8 border border-gray-800 mb-10 shadow-lg">
           <h3 className="text-2xl font-semibold mb-8 text-purple-400 flex justify-between items-center">
-            Active Coupons
+            All Coupons
             <span className="bg-purple-900/30 text-purple-400 text-sm px-3 py-1 rounded-full border border-purple-800">
               {coupons.length} Available
             </span>
@@ -579,7 +651,11 @@ export default function FullOfferPage() {
               coupons.map((coupon, index) => (
                 <div
                   key={coupon._id || index}
-                  className="relative bg-black border-2 border-dashed border-gray-700 rounded-2xl p-6 hover:border-purple-500 transition-all shadow-xl"
+                  className={`relative bg-black border-2 border-dashed rounded-2xl p-6 transition-all shadow-xl ${
+                    coupon.active
+                      ? "border-purple-500 hover:border-purple-400"
+                      : "border-gray-700 opacity-60 hover:border-gray-600"
+                  }`}
                 >
                   <div className="text-center">
                     <span className="text-[10px] text-gray-500 uppercase font-black tracking-[0.2em]">
@@ -604,10 +680,29 @@ export default function FullOfferPage() {
                           {(coupon.validTill || "Never").split("T")[0]}
                         </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span>Status:</span>
+                        <span
+                          className={`text-white font-bold ${
+                            coupon.active ? "text-green-400" : "text-red-400"
+                          }`}
+                        >
+                          {coupon.active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="flex-1 bg-green-900/20 text-green-500 border border-green-800/30 py-2 rounded-lg text-[10px] font-bold uppercase cursor-default">
-                        Active
+                      <button
+                        onClick={() =>
+                          handleToggleCouponActive(coupon._id, coupon.active)
+                        }
+                        className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                          coupon.active
+                            ? "bg-green-900/30 text-green-400 border border-green-600/50 hover:bg-yellow-600 hover:text-white hover:border-yellow-600"
+                            : "bg-red-900/30 text-red-400 border border-red-600/50 hover:bg-green-600 hover:text-white hover:border-green-600"
+                        }`}
+                      >
+                        {coupon.active ? "Deactivate" : "Activate"}
                       </button>
                       <button
                         onClick={() => handleDeleteCoupon(coupon._id)}
@@ -621,7 +716,7 @@ export default function FullOfferPage() {
               ))
             ) : (
               <div className="col-span-full text-center py-10 border border-dashed border-gray-800 rounded-xl text-gray-500 italic">
-                No active coupons available.
+                No coupons available.
               </div>
             )}
           </div>

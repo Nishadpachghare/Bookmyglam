@@ -8,6 +8,8 @@ function Booking() {
   const [services, setServices] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [availableOffers, setAvailableOffers] = useState([]);
 
   // track any field-specific validation errors (email in particular)
   const [formErrors, setFormErrors] = useState({});
@@ -21,6 +23,18 @@ function Booking() {
     time: "",
     mode: "offline",
   });
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponValidated, setCouponValidated] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [discountData, setDiscountData] = useState({
+    discountPercentage: 0,
+    discountAmount: 0,
+    finalAmount: 0,
+  });
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCouponSuggestions, setShowCouponSuggestions] = useState(false);
 
   const [otpCode, setOtpCode] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
@@ -46,6 +60,7 @@ function Booking() {
   // QR Modal state
   const [showQR, setShowQR] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
+  const [dateDisplay, setDateDisplay] = useState("");
 
   const totalPrice = selectedServices.reduce(
     (total, s) => total + Number(s.price || 0),
@@ -54,10 +69,100 @@ function Booking() {
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
+  // Convert yyyy-mm-dd to dd-mm-yyyy
+  const formatDateToDisplay = (yyyymmdd) => {
+    if (!yyyymmdd) return "";
+    const parts = yyyymmdd.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return yyyymmdd;
+  };
+
+  // Convert dd-mm-yyyy to yyyy-mm-dd
+  const convertToStorageFormat = (ddmmyyyy) => {
+    if (!ddmmyyyy) return "";
+    const parts = ddmmyyyy.split("-");
+    if (
+      parts.length === 3 &&
+      parts[0].length === 2 &&
+      parts[1].length === 2 &&
+      parts[2].length === 4
+    ) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return "";
+  };
+
+  // Handle date input with dd-mm-yyyy format
+  const handleDateInput = (e) => {
+    let value = e.target.value.replace(/[^\d-]/g, ""); // Remove non-digit and non-dash
+
+    // Auto-format as user types: dd-mm-yyyy
+    if (value.length === 2 && !value.includes("-")) {
+      value = value + "-";
+    } else if (value.length === 5 && value.split("-").length === 2) {
+      value = value + "-";
+    }
+
+    setDateDisplay(value);
+
+    // Validate and convert when complete (10 chars: DD-MM-YYYY)
+    if (value.length === 10) {
+      const parts = value.split("-");
+      if (parts.length === 3) {
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+
+        if (
+          day >= 1 &&
+          day <= 31 &&
+          month >= 1 &&
+          month <= 12 &&
+          year >= 2000
+        ) {
+          const storageFormat = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          setFormData({ ...formData, date: storageFormat });
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     fetchServices();
     fetchStylists();
+    fetchAvailableCoupons();
+    fetchAvailableOffers();
   }, []);
+
+  const fetchAvailableCoupons = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/coupons");
+      const data = res.data?.data || res.data || [];
+      // Filter only active coupons
+      const activeCoupons = Array.isArray(data)
+        ? data.filter((c) => c.active === true)
+        : [];
+      setAvailableCoupons(activeCoupons);
+    } catch (err) {
+      console.warn("Failed to fetch coupons:", err);
+    }
+  };
+
+  const fetchAvailableOffers = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/offers");
+      const data = res.data?.data || res.data || [];
+      // Filter only active and published offers
+      const activeOffers = Array.isArray(data)
+        ? data.filter((o) => o.active === true && o.published === true)
+        : [];
+      setAvailableOffers(activeOffers);
+    } catch (err) {
+      console.warn("Failed to fetch offers:", err);
+    }
+  };
 
   const fetchServices = async () => {
     try {
@@ -185,6 +290,69 @@ function Booking() {
     }
   };
 
+  const handleValidateCoupon = async () => {
+    const code = couponCode.trim();
+
+    if (!code) {
+      setCouponError("Enter coupon code or select an offer");
+      return;
+    }
+
+    if (totalPrice === 0) {
+      setCouponError("Select services first");
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      setCouponError("");
+
+      const res = await axios.post(
+        "http://localhost:5000/api/coupons/validate-discount",
+        {
+          code,
+          totalAmount: totalPrice,
+          selectedServices: selectedServices.map(
+            (s) => s.name || s.serviceName,
+          ),
+        },
+      );
+
+      if (res.data.success) {
+        setDiscountData({
+          discountPercentage: res.data.data.discount,
+          discountAmount: res.data.data.discountAmount,
+          finalAmount: res.data.data.finalAmount,
+        });
+        setCouponValidated(true);
+        const discountType = res.data.type === "coupon" ? "Coupon" : "Offer";
+        toast.success(
+          `${discountType} applied! Save ₹${res.data.data.discountAmount}`,
+        );
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      setCouponError(msg || "Invalid coupon code or offer");
+      setCouponValidated(false);
+      toast.error(msg || "Validation failed");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode("");
+    setCouponValidated(false);
+    setCouponError("");
+    setShowCouponSuggestions(false);
+    setDiscountData({
+      discountPercentage: 0,
+      discountAmount: 0,
+      finalAmount: 0,
+    });
+    toast.success("Coupon removed");
+  };
+
   const validateForm = () => {
     // clear previous errors
     setFormErrors({});
@@ -246,6 +414,7 @@ function Booking() {
           serviceName: s.serviceName ?? s.service ?? "",
         })),
         ...formData,
+        couponCode: couponValidated ? couponCode.toUpperCase() : null,
       });
 
       if (res.data.ok) {
@@ -270,6 +439,16 @@ function Booking() {
     setSelectedServices([]);
     setEmailVerified(false);
     setOtpCode("");
+    setCouponCode("");
+    setCouponValidated(false);
+    setCouponError("");
+    setShowCouponSuggestions(false);
+    setDiscountData({
+      discountPercentage: 0,
+      discountAmount: 0,
+      finalAmount: 0,
+    });
+    setDateDisplay("");
     setFormData({
       stylist: "",
       customerName: "",
@@ -321,6 +500,134 @@ function Booking() {
           {selectedServices.length > 0 && (
             <div className="text-right text-purple-400 font-medium">
               Total: ₹{totalPrice}
+            </div>
+          )}
+
+          {/* COUPON SECTION */}
+          {selectedServices.length > 0 && (
+            <div className="bg-zinc-800 p-4 rounded border border-zinc-700 space-y-3">
+              <div className="text-sm text-zinc-300 font-semibold">
+                Apply Offer/Coupon
+              </div>
+
+              {!couponValidated ? (
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Select coupon or offer"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponError("");
+                        setShowCouponSuggestions(true);
+                      }}
+                      onFocus={() => setShowCouponSuggestions(true)}
+                      onBlur={() =>
+                        setTimeout(() => setShowCouponSuggestions(false), 200)
+                      }
+                      className="flex-1 bg-black border border-zinc-700 p-2 rounded text-white placeholder-zinc-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleValidateCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 rounded text-white font-semibold transition-colors"
+                    >
+                      {couponLoading ? "Checking..." : "Apply"}
+                    </button>
+                  </div>
+
+                  {/* Available Coupons & Offers Suggestions */}
+                  {showCouponSuggestions &&
+                    (availableCoupons.length > 0 ||
+                      availableOffers.length > 0) && (
+                      <div className="bg-zinc-800 border border-zinc-700 rounded p-3 space-y-2 max-h-48 overflow-y-auto">
+                        <p className="text-xs text-zinc-400 font-semibold">
+                          Available Offers & Coupons:
+                        </p>
+                        <div className="space-y-1">
+                          {/* Coupons */}
+                          {availableCoupons.map((coupon) => (
+                            <button
+                              key={`coupon-${coupon._id}`}
+                              type="button"
+                              onClick={() => {
+                                setCouponCode(coupon.code);
+                                setShowCouponSuggestions(false);
+                              }}
+                              className="w-full text-left px-2 py-1 text-xs bg-zinc-700 hover:bg-purple-700 rounded text-zinc-200 hover:text-white transition-colors"
+                            >
+                              <span className="font-bold text-purple-400">
+                                {coupon.code}
+                              </span>
+                              {" - "} Save {coupon.discount}%
+                              {coupon.minAmount > 0 &&
+                                ` (Min: ₹${coupon.minAmount})`}
+                            </button>
+                          ))}
+
+                          {/* Offers */}
+                          {availableOffers.map((offer) => (
+                            <button
+                              key={`offer-${offer._id}`}
+                              type="button"
+                              onClick={() => {
+                                setCouponCode(offer.title);
+                                setShowCouponSuggestions(false);
+                              }}
+                              className="w-full text-left px-2 py-1 text-xs bg-zinc-700 hover:bg-blue-700 rounded text-zinc-200 hover:text-white transition-colors"
+                            >
+                              <span className="font-bold text-blue-400">
+                                {offer.title}
+                              </span>
+                              {" - "} Save {offer.discount}% (Offer)
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ) : (
+                <div className="bg-green-900 border border-green-700 p-3 rounded flex justify-between items-center">
+                  <div>
+                    <p className="text-green-400 font-semibold">
+                      ✓ {couponCode} Applied
+                    </p>
+                    <p className="text-sm text-green-300">
+                      Save ₹{discountData.discountAmount}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-red-400 hover:text-red-300 font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-red-400 text-sm">{couponError}</p>
+              )}
+
+              {couponValidated && (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-zinc-300">
+                    <span>Subtotal:</span>
+                    <span>₹{totalPrice}</span>
+                  </div>
+                  <div className="flex justify-between text-red-400">
+                    <span>Discount ({discountData.discountPercentage}%):</span>
+                    <span>-₹{discountData.discountAmount}</span>
+                  </div>
+                  <div className="border-t border-zinc-600 pt-2 flex justify-between font-semibold text-green-400">
+                    <span>Final Price:</span>
+                    <span>₹{discountData.finalAmount}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -414,22 +721,41 @@ function Booking() {
           )}
 
           {/* DATE & TIME */}
-          <input
-            type="date"
-            name="date"
-            min={todayStr}
-            value={formData.date}
-            onChange={handleChange}
-            className="w-full p-2 bg-black border border-zinc-700 rounded text-white"
-          />
+          <div className="space-y-3">
+            {/* DATE INPUT - DD-MM-YYYY FORMAT */}
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                📅 Booking Date (DD-MM-YYYY)
+              </label>
+              <input
+                type="text"
+                placeholder="DD-MM-YYYY"
+                value={dateDisplay || formatDateToDisplay(formData.date)}
+                onChange={handleDateInput}
+                maxLength="10"
+                className="w-full p-2 bg-black border border-zinc-700 rounded text-white placeholder-zinc-600"
+              />
+              {formData.date && (
+                <p className="text-xs text-purple-400 mt-1">
+                  ✓ {formatDateToDisplay(formData.date)}
+                </p>
+              )}
+            </div>
 
-          <input
-            type="time"
-            name="time"
-            value={formData.time}
-            onChange={handleChange}
-            className="w-full p-2 bg-black border border-zinc-700 rounded text-white"
-          />
+            {/* TIME INPUT */}
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                🕐 Booking Time
+              </label>
+              <input
+                type="time"
+                name="time"
+                value={formData.time}
+                onChange={handleChange}
+                className="w-full p-2 bg-black border border-zinc-700 rounded text-white"
+              />
+            </div>
+          </div>
 
           {/* STYLIST */}
           {stylists.length > 0 ? (

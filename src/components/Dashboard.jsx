@@ -153,12 +153,14 @@ function Dashboard() {
       return sum;
     }
 
-    // Calculate total service price for this booking
-    const serviceSum = Array.isArray(booking.services)
-      ? booking.services.reduce((a, s) => a + Number(s.price || 0), 0)
-      : 0;
+    // Use finalAmount if coupon was applied, otherwise calculate from services
+    const bookingAmount = booking.finalAmount
+      ? Number(booking.finalAmount)
+      : Array.isArray(booking.services)
+        ? booking.services.reduce((a, s) => a + Number(s.price || 0), 0)
+        : 0;
 
-    return sum + serviceSum;
+    return sum + bookingAmount;
   }, 0);
 
   // Export: set dashboard data for export
@@ -169,6 +171,8 @@ function Dashboard() {
       const serviceSum = Array.isArray(b.services)
         ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
         : 0;
+      // Use finalAmount if coupon was applied
+      const displayAmount = b.finalAmount ? Number(b.finalAmount) : serviceSum;
       return {
         "Customer Name": b.customerName || "",
         Phone: b.phone || "",
@@ -176,7 +180,9 @@ function Dashboard() {
         Date: b.date || "",
         Time: b.time || "",
         "Payment Status": b.paymentStatus || "",
-        "Total Amount": serviceSum,
+        "Total Amount": displayAmount,
+        "Coupon Code": b.couponCode || "-",
+        "Discount Amount": b.discountAmount || 0,
       };
     });
     setExportData((prev) => {
@@ -364,10 +370,12 @@ function Dashboard() {
     }
   };
 
-  const editingTotal = (editingBooking?.services || []).reduce(
-    (sum, s) => sum + (Number(s.price) || 0),
-    0,
-  );
+  const editingTotal = editingBooking?.finalAmount
+    ? Number(editingBooking.finalAmount)
+    : (editingBooking?.services || []).reduce(
+        (sum, s) => sum + (Number(s.price) || 0),
+        0,
+      );
 
   return (
     <div className="min-h-screen w-full p-8 text-white  bg-black pl-80 ">
@@ -613,6 +621,29 @@ function Dashboard() {
                   <span>Total Amount:</span>
                   <span>₹{editingTotal}</span>
                 </div>
+
+                {editingBooking?.couponCode && (
+                  <div className="mt-3 p-3 bg-green-900/20 border border-green-700/50 rounded text-sm space-y-1">
+                    <div className="flex justify-between text-green-400">
+                      <span>Coupon Code:</span>
+                      <span className="font-bold">
+                        {editingBooking.couponCode}
+                      </span>
+                    </div>
+                    {editingBooking?.discountAmount > 0 && (
+                      <div className="flex justify-between text-green-300">
+                        <span>Discount:</span>
+                        <span>-₹{editingBooking.discountAmount}</span>
+                      </div>
+                    )}
+                    {editingBooking?.discountPercentage > 0 && (
+                      <div className="flex justify-between text-green-300">
+                        <span>Discount %:</span>
+                        <span>{editingBooking.discountPercentage}%</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -686,6 +717,12 @@ function Dashboard() {
                         0,
                       )
                     : 0;
+
+                  // Use finalAmount if coupon was applied, otherwise use calculated total
+                  const displayAmount = b.finalAmount
+                    ? Number(b.finalAmount)
+                    : totalAmount;
+
                   const serviceNames = Array.isArray(b.services)
                     ? b.services.map((s) => s.serviceName).join(", ")
                     : "";
@@ -739,7 +776,7 @@ function Dashboard() {
                       </td>
 
                       <td className="py-4 px-6 text-sm text-white">
-                        ₹{totalAmount}
+                        ₹{displayAmount}
                       </td>
 
                       <td className="py-4 px-6 text-center">
