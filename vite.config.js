@@ -33,24 +33,6 @@ export default defineConfig({
       }
     }
   ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return
-
-          if (id.includes('xlsx')) return 'vendor-xlsx'
-          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
-            return 'vendor-charts'
-          }
-          if (id.includes('react-router')) return 'vendor-router'
-          if (id.includes('react-hot-toast')) return 'vendor-toast'
-          if (id.includes('axios')) return 'vendor-network'
-          if (id.includes('react') || id.includes('scheduler')) return 'vendor-react'
-        },
-      },
-    },
-  },
   server: {
     middlewareMode: false,
   },
