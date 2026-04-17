@@ -1,9 +1,26 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, {
+  startTransition,
+  useCallback,
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import toast from "react-hot-toast";
 import { ExportContext } from "../layout/ExportContext";
 import { filterByDate, getAvailableYears } from "../layout/dateFilterUtils";
-import axios from "axios";
-import { FiSearch, FiCheck, FiEdit3, FiX } from "react-icons/fi";
+import { FiSearch, FiEdit3 } from "react-icons/fi";
+import {
+  deleteBookings,
+  getActiveStylists,
+  getBookingAmount,
+  getBookings,
+  getManageServices,
+  getServiceTotal,
+  updateBooking,
+} from "../services";
 
 function Dashboard() {
   const [bookings, setBookings] = useState([]);
@@ -18,101 +35,109 @@ function Dashboard() {
   const [, setIsSaving] = useState(false);
   const [, setIsClosing] = useState(false);
   const editFormRef = useRef(null);
-
-  // ✅ Helper to handle different backend response structures safely
-  const extractArray = (res, keyFallback) => {
-    if (!res) return [];
-    if (Array.isArray(res.data)) return res.data;
-    if (Array.isArray(res.data?.[keyFallback])) return res.data[keyFallback];
-    if (Array.isArray(res.data?.bookings)) return res.data.bookings;
-    if (Array.isArray(res.data?.data)) return res.data.data;
-    return [];
-  };
-
-  // 1. Fetch Bookings
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/bookings");
-      const arr = extractArray(res, "bookings");
-      setBookings(arr);
-      if (typeof setGlobalBookings === "function") setGlobalBookings(arr);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-      setBookings([]);
-      if (typeof setGlobalBookings === "function") setGlobalBookings([]);
-    }
-  };
-
-  // 2. Fetch Stylists
-  const fetchStylists = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/stylists");
-      const maybeArray = extractArray(res, "stylists");
-      const activeStylists = maybeArray.filter(
-        (stylist) =>
-          (stylist.status || "").toString().toLowerCase() === "active",
-      );
-      setStylists(activeStylists);
-    } catch (error) {
-      console.error("Error fetching stylists:", error);
-      setStylists([]);
-    }
-  };
-
-  // 3. Fetch Services
-  const fetchAllServices = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/manageservices");
-      const arr = extractArray(res, "services");
-      setAllServices(arr);
-    } catch (error) {
-      console.error("Error fetching services:", error);
-      setAllServices([]);
-    }
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    let mounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      await Promise.all([fetchBookings(), fetchStylists(), fetchAllServices()]);
-      if (mounted) setLoading(false);
-    };
-    fetchData();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const safeBookings = Array.isArray(bookings) ? bookings : [];
-  const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
-
   const {
     filterType,
     filterValue,
     setAvailableYears,
     setBookings: setGlobalBookings,
+    setExportData,
   } = useContext(ExportContext);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const normalizedSearchTerm = deferredSearchTerm.trim().toLowerCase();
 
-  // apply global filter to bookings for display and calculations
-  const filteredBookingsByGlobal = filterByDate(
-    safeBookings,
-    "date",
-    filterType,
-    filterValue,
+  // ✅ Helper to handle different backend response structures safely
+  // 1. Fetch Bookings
+  const fetchBookings = useCallback(async ({ force = false } = {}) => {
+    try {
+      const nextBookings = await getBookings({ force });
+      setBookings(nextBookings);
+      if (typeof setGlobalBookings === "function") {
+        setGlobalBookings(nextBookings);
+      }
+      return nextBookings;
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setBookings([]);
+      if (typeof setGlobalBookings === "function") {
+        setGlobalBookings([]);
+      }
+      return [];
+    }
+  }, [setGlobalBookings]);
+
+  // 2. Fetch Stylists
+  const fetchStylists = useCallback(async ({ force = false } = {}) => {
+    try {
+      const nextStylists = await getActiveStylists({ force });
+      setStylists(nextStylists);
+      return nextStylists;
+    } catch (error) {
+      console.error("Error fetching stylists:", error);
+      setStylists([]);
+      return [];
+    }
+  }, []);
+
+  // 3. Fetch Services
+  const fetchAllServices = useCallback(async ({ force = false } = {}) => {
+    try {
+      const nextServices = await getManageServices({ force });
+      setAllServices(nextServices);
+      return nextServices;
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      setAllServices([]);
+      return [];
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchBookings(), fetchStylists(), fetchAllServices()]);
+      if (active) setLoading(false);
+    };
+    fetchData();
+
+    // Check if returning from payment success - refetch after a short delay
+    const params = new URLSearchParams(window.location.search);
+    const fromPayment = params.get("from_payment");
+    if (fromPayment === "true") {
+      console.log("🔄 Detected return from payment - refetching bookings...");
+      const refetchTimeout = setTimeout(() => {
+        if (active) {
+          fetchBookings({ force: true });
+        }
+      }, 1000);
+      return () => {
+        active = false;
+        clearTimeout(refetchTimeout);
+      };
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [fetchAllServices, fetchBookings, fetchStylists]);
+
+  const safeBookings = useMemo(
+    () => (Array.isArray(bookings) ? bookings : []),
+    [bookings],
+  );
+  const totalStylists = Array.isArray(stylists) ? stylists.length : 0;
+
+  const filteredBookingsByGlobal = useMemo(
+    () => filterByDate(safeBookings, "date", filterType, filterValue),
+    [safeBookings, filterType, filterValue],
   );
 
   // keep stats in sync with the currently visible set of bookings
   const totalBookings = filteredBookingsByGlobal.length;
 
   useEffect(() => {
-    const years = getAvailableYears(safeBookings, "date");
-    setAvailableYears((prev) => {
-      if (JSON.stringify(prev) === JSON.stringify(years)) return prev;
-      return years;
-    });
-  }, [bookings, setAvailableYears]);
+    setAvailableYears(getAvailableYears(safeBookings, "date"));
+  }, [safeBookings, setAvailableYears]);
 
   // Scroll to edit form when a booking is selected for editing (and focus)
   useEffect(() => {
@@ -142,75 +167,90 @@ function Dashboard() {
   }, [editingBooking]);
 
   // ✅ REAL-LIFE LOGIC: Only calculate Earnings if status is "Paid"
-  const totalEarnings = filteredBookingsByGlobal.reduce((sum, booking) => {
-    // Convert status to lowercase to handle "Paid", "paid", "PAID"
-    const status = (booking.paymentStatus || "Pending")
-      .toString()
-      .toLowerCase();
+  const totalEarnings = useMemo(
+    () =>
+      filteredBookingsByGlobal.reduce((sum, booking) => {
+        const status = (booking.paymentStatus || "Pending")
+          .toString()
+          .toLowerCase();
 
-    // If not paid, do not add to total
-    if (status !== "paid") {
-      return sum;
-    }
+        if (status !== "paid") {
+          return sum;
+        }
 
-    // Use finalAmount if coupon was applied, otherwise calculate from services
-    const bookingAmount = booking.finalAmount
-      ? Number(booking.finalAmount)
-      : Array.isArray(booking.services)
-        ? booking.services.reduce((a, s) => a + Number(s.price || 0), 0)
-        : 0;
+        return sum + getBookingAmount(booking);
+      }, 0),
+    [filteredBookingsByGlobal],
+  );
 
-    return sum + bookingAmount;
-  }, 0);
-
-  // Export: set dashboard data for export
-  const { setExportData } = useContext(ExportContext);
+  const exportRows = useMemo(
+    () =>
+      filteredBookingsByGlobal.map((booking) => ({
+        "Customer Name": booking.customerName || "",
+        Phone: booking.phone || "",
+        Email: booking.email || "",
+        Date: booking.date || "",
+        Time: booking.time || "",
+        "Payment Status": booking.paymentStatus || "",
+        "Total Amount": getBookingAmount(booking),
+        "Coupon Code": booking.couponCode || "-",
+        "Discount Amount": booking.discountAmount || 0,
+      })),
+    [filteredBookingsByGlobal],
+  );
 
   useEffect(() => {
-    const rows = filteredBookingsByGlobal.map((b) => {
-      const serviceSum = Array.isArray(b.services)
-        ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
-        : 0;
-      // Use finalAmount if coupon was applied
-      const displayAmount = b.finalAmount ? Number(b.finalAmount) : serviceSum;
-      return {
-        "Customer Name": b.customerName || "",
-        Phone: b.phone || "",
-        Email: b.email || "",
-        Date: b.date || "",
-        Time: b.time || "",
-        "Payment Status": b.paymentStatus || "",
-        "Total Amount": displayAmount,
-        "Coupon Code": b.couponCode || "-",
-        "Discount Amount": b.discountAmount || 0,
-      };
-    });
-    setExportData((prev) => {
-      if (JSON.stringify(prev) === JSON.stringify(rows)) return prev;
-      return rows;
-    });
-  }, [filteredBookingsByGlobal, setExportData]);
+    setExportData(exportRows);
+  }, [exportRows, setExportData]);
 
-  // Search + global date filter
-  const filteredBookings = filteredBookingsByGlobal.filter((b) => {
-    const name = (b.customerName || "").toString().toLowerCase();
-    const phone = (b.phone || "").toString().toLowerCase();
-    const q = searchTerm.toLowerCase().trim();
-    if (!q) return true;
-    return name.includes(q) || phone.includes(q);
-  });
+  const filteredBookings = useMemo(() => {
+    if (!normalizedSearchTerm) {
+      return filteredBookingsByGlobal;
+    }
+
+    return filteredBookingsByGlobal.filter((booking) => {
+      const name = (booking.customerName || "").toString().toLowerCase();
+      const phone = (booking.phone || "").toString().toLowerCase();
+      return (
+        name.includes(normalizedSearchTerm) ||
+        phone.includes(normalizedSearchTerm)
+      );
+    });
+  }, [filteredBookingsByGlobal, normalizedSearchTerm]);
+
+  const selectedBookingSet = useMemo(
+    () => new Set(selectedBookings),
+    [selectedBookings],
+  );
+
+  const stylistNamesById = useMemo(
+    () =>
+      new Map(
+        (stylists || []).map((stylist) => [
+          (stylist._id ?? "").toString(),
+          stylist.name || "-",
+        ]),
+      ),
+    [stylists],
+  );
 
   // Sort Logic
   const handleSort = (order) => {
     setSortOrder(order);
     setShowSortOptions(false);
-    const sorted = [...safeBookings].sort((a, b) => {
-      const nameA = (a.customerName || "").toLowerCase();
-      const nameB = (b.customerName || "").toLowerCase();
-      if (order === "asc") return nameA.localeCompare(nameB);
-      return nameB.localeCompare(nameA);
+    startTransition(() => {
+      const sorted = [...safeBookings].sort((a, b) => {
+        const nameA = (a.customerName || "").toLowerCase();
+        const nameB = (b.customerName || "").toLowerCase();
+        if (order === "asc") return nameA.localeCompare(nameB);
+        return nameB.localeCompare(nameA);
+      });
+
+      setBookings(sorted);
+      if (typeof setGlobalBookings === "function") {
+        setGlobalBookings(sorted);
+      }
     });
-    setBookings(sorted);
   };
 
   // Selection Logic
@@ -224,13 +264,24 @@ function Dashboard() {
   const handleDelete = async () => {
     if (selectedBookings.length === 0) return;
     try {
-      for (const id of selectedBookings) {
-        await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+      await deleteBookings(selectedBookings);
+      setBookings((prev) =>
+        (Array.isArray(prev) ? prev : []).filter(
+          (booking) => !selectedBookings.includes(booking?._id),
+        ),
+      );
+      if (typeof setGlobalBookings === "function") {
+        setGlobalBookings((prev) =>
+          (Array.isArray(prev) ? prev : []).filter(
+            (booking) => !selectedBookings.includes(booking?._id),
+          ),
+        );
       }
-      await fetchBookings();
       setSelectedBookings([]);
+      toast.success("Selected bookings deleted");
     } catch (error) {
       console.error("Error deleting bookings:", error);
+      toast.error("Failed to delete bookings");
     }
   };
 
@@ -336,12 +387,7 @@ function Dashboard() {
         })),
       };
 
-      const res = await axios.put(
-        `http://localhost:5000/api/bookings/${editingBooking._id}`,
-        payload,
-      );
-
-      const updated = res.data.booking || res.data;
+      const updated = await updateBooking(editingBooking._id, payload);
 
       // Update the local bookings array immediately
       setBookings((prev) =>
@@ -372,10 +418,7 @@ function Dashboard() {
 
   const editingTotal = editingBooking?.finalAmount
     ? Number(editingBooking.finalAmount)
-    : (editingBooking?.services || []).reduce(
-        (sum, s) => sum + (Number(s.price) || 0),
-        0,
-      );
+    : getServiceTotal(editingBooking?.services);
 
   return (
     <div className="min-h-screen w-full p-8 text-white  bg-black pl-80 ">
@@ -669,8 +712,12 @@ function Dashboard() {
       <div className="bg-black border border-zinc-800 rounded-xl shadow-md overflow-hidden text-white">
         {loading ? (
           <p className="p-6 text-center text-gray-400">Loading data...</p>
-        ) : safeBookings.length === 0 ? (
-          <p className="p-6 text-center text-gray-400">No bookings found.</p>
+        ) : filteredBookings.length === 0 ? (
+          <p className="p-6 text-center text-gray-400">
+            {normalizedSearchTerm
+              ? "No matching bookings found."
+              : "No bookings found."}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-800">
@@ -711,17 +758,7 @@ function Dashboard() {
 
               <tbody className="bg-black divide-y divide-zinc-800 text-white">
                 {filteredBookings.map((b) => {
-                  const totalAmount = Array.isArray(b.services)
-                    ? b.services.reduce(
-                        (sum, s) => sum + (Number(s.price) || 0),
-                        0,
-                      )
-                    : 0;
-
-                  // Use finalAmount if coupon was applied, otherwise use calculated total
-                  const displayAmount = b.finalAmount
-                    ? Number(b.finalAmount)
-                    : totalAmount;
+                  const displayAmount = getBookingAmount(b);
 
                   const serviceNames = Array.isArray(b.services)
                     ? b.services.map((s) => s.serviceName).join(", ")
@@ -730,13 +767,10 @@ function Dashboard() {
                   const isPaid =
                     (b.paymentStatus || "").toString().toLowerCase() === "paid";
 
-                  const stylistEntry = (stylists || []).find(
-                    (s) =>
-                      (s._id ?? "").toString() ===
-                      (b.stylistId ?? "").toString(),
-                  );
                   const stylistName =
-                    stylistEntry?.name || b.stylist?.name || "-";
+                    stylistNamesById.get((b.stylistId ?? "").toString()) ||
+                    b.stylist?.name ||
+                    "-";
 
                   return (
                     <tr
@@ -746,7 +780,7 @@ function Dashboard() {
                       <td className="py-4 px-6 text-center">
                         <input
                           type="checkbox"
-                          checked={selectedBookings.includes(b._id)}
+                          checked={selectedBookingSet.has(b._id)}
                           onChange={() => handleSelectBooking(b._id)}
                           className="w-4 h-4 accent-purple-600"
                         />

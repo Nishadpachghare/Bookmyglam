@@ -14,10 +14,10 @@ const MONTH_LABELS = [
   "Nov",
   "Dec",
 ];
-import axios from "axios";
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ExportContext } from "../layout/ExportContext";
 import { filterByDate, formatDisplayDate } from "../layout/dateFilterUtils";
+import { getBookingAmount, getBookings } from "../services";
 
 function SummaryContent() {
   const {
@@ -25,6 +25,7 @@ function SummaryContent() {
     filterValue,
     setExportData,
     bookings: globalBookings,
+    setBookings: setGlobalBookings,
   } = useContext(ExportContext);
   const [bookings, setBookings] = useState(
     Array.isArray(globalBookings) ? globalBookings : [],
@@ -32,52 +33,44 @@ function SummaryContent() {
   const [loading, setLoading] = useState(
     !Array.isArray(globalBookings) || globalBookings.length === 0,
   );
-  const [selected] = useState("This Year");
+  const selected = "This Year";
 
   // 🔒 SAME helper as Dashboard
-  const extractArray = (res) => {
-    if (!res) return [];
-    if (Array.isArray(res.data)) return res.data;
-    if (Array.isArray(res.data?.bookings)) return res.data.bookings;
-    if (Array.isArray(res.data?.data)) return res.data.data;
-    return [];
-  };
-
   // ===============================
   // FETCH BOOKINGS (SAME AS DASHBOARD) — prefer shared bookings from ExportContext
   // If no global bookings are present, fall back to fetching locally
   // ===============================
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    const fetchBookings = async () => {
+    const loadBookings = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/bookings");
-        const arr = extractArray(res);
-        if (!mounted) return;
-        setBookings(arr);
+        setLoading(true);
+        const nextBookings = await getBookings();
+        if (!active) return;
+        setBookings(nextBookings);
+        if (typeof setGlobalBookings === "function") {
+          setGlobalBookings(nextBookings);
+        }
       } catch (err) {
-        console.error("Summary fetch error:", err);
-        if (mounted) setBookings([]);
+        console.error("Summary fetch error:", err.message);
+        if (active) setBookings([]);
       } finally {
-        if (mounted) setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     if (Array.isArray(globalBookings) && globalBookings.length > 0) {
-      // Use the shared bookings and avoid an extra network call
-      if (globalBookings !== bookings) {
-        setBookings(globalBookings);
-      }
+      setBookings(globalBookings);
       setLoading(false);
     } else {
-      fetchBookings();
+      loadBookings();
     }
 
     return () => {
-      mounted = false;
+      active = false;
     };
-  }, [globalBookings, bookings]);
+  }, [globalBookings, setGlobalBookings]);
   // ===============================
   // TIME FILTER (UNCHANGED UI) + GLOBAL FILTER SUPPORT
   // If a global filter (set via Uppernav) is active, it overrides the local 'selected' timeframe
@@ -148,9 +141,7 @@ function SummaryContent() {
         Date: formatDisplayDate(b.date) || "",
         Time: b.time || "",
         "Payment Status": b.paymentStatus || "",
-        "Total Amount": Array.isArray(b.services)
-          ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
-          : 0,
+        "Total Amount": getBookingAmount(b, { preferFinalAmount: false }),
       }));
     } catch (err) {
       console.error("[Summary] export data build failed", err);
@@ -159,11 +150,7 @@ function SummaryContent() {
   }, [filteredBookings]);
 
   useEffect(() => {
-    setExportData((prev) => {
-      if (JSON.stringify(prev) === JSON.stringify(exportRowsSummary))
-        return prev;
-      return exportRowsSummary;
-    });
+    setExportData(exportRowsSummary);
   }, [exportRowsSummary, setExportData]);
 
   // ===============================
@@ -189,9 +176,7 @@ function SummaryContent() {
       const isPaid =
         (b.paymentStatus || "").toString().toLowerCase() === "paid";
 
-      const serviceTotal = Array.isArray(b.services)
-        ? b.services.reduce((sum, s) => sum + Number(s.price || 0), 0)
-        : 0;
+      const serviceTotal = getBookingAmount(b, { preferFinalAmount: false });
 
       if (isPaid) {
         base[month].totalAmount += serviceTotal;
@@ -204,16 +189,28 @@ function SummaryContent() {
   }, [filteredBookings]);
 
   // ===============================
-  // CHART DATA
+  // CHART DATA (with validation)
   // ===============================
-  const chartData = useMemo(
-    () =>
-      monthlyAgg.map((m) => ({
-        name: m.label,
-        value: m.totalAmount,
-      })),
-    [monthlyAgg],
-  );
+  const chartData = useMemo(() => {
+    try {
+      if (!Array.isArray(monthlyAgg) || monthlyAgg.length === 0) {
+        return MONTH_LABELS.map((label) => ({
+          name: label,
+          value: 0,
+        }));
+      }
+      return monthlyAgg.map((m) => ({
+        name: m?.label || "Unknown",
+        value: Number(m?.totalAmount) || 0,
+      }));
+    } catch (err) {
+      console.error("Chart data generation error:", err);
+      return MONTH_LABELS.map((label) => ({
+        name: label,
+        value: 0,
+      }));
+    }
+  }, [monthlyAgg]);
 
   // ===============================
   // TOTALS (MATCH DASHBOARD)
@@ -226,20 +223,26 @@ function SummaryContent() {
 
   // Compute total earnings the same way as Dashboard: sum only 'Paid' bookings after applying the current date filter
   const totalEarnings = useMemo(() => {
-    const list = filterByDate(
-      Array.isArray(effectiveBookings) ? effectiveBookings : [],
-      "date",
-      filterType,
-      filterValue,
-    );
-    return list.reduce((sum, b) => {
-      const status = (b.paymentStatus || "Pending").toString().toLowerCase();
-      if (status !== "paid") return sum;
-      const serviceSum = Array.isArray(b.services)
-        ? b.services.reduce((a, s) => a + Number(s.price || 0), 0)
-        : 0;
-      return sum + serviceSum;
-    }, 0);
+    try {
+      const list = filterByDate(
+        Array.isArray(effectiveBookings) ? effectiveBookings : [],
+        "date",
+        filterType,
+        filterValue,
+      );
+      if (!Array.isArray(list) || list.length === 0) return 0;
+
+      return list.reduce((sum, b) => {
+        if (!b || typeof b !== "object") return sum;
+        const status = (b.paymentStatus || "Pending").toString().toLowerCase();
+        if (status !== "paid") return sum;
+        const serviceSum = getBookingAmount(b, { preferFinalAmount: false });
+        return sum + serviceSum;
+      }, 0);
+    } catch (err) {
+      console.error("Total earnings calculation error:", err);
+      return 0;
+    }
   }, [effectiveBookings, filterType, filterValue]);
 
   const { retentionRate, returningCustomerPercentage } = useMemo(() => {
@@ -280,7 +283,7 @@ function SummaryContent() {
   // UI — ❌ UNCHANGED
   // ===============================
   return (
-    <div className="p-6 space-y-6 w-375 pl-80 bg-black w-full min-h-screen ">
+    <div className="p-6 space-y-6 pl-80 bg-black w-full min-h-screen">
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold text-white">
           Summary (Master Report)

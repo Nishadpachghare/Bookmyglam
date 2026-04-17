@@ -1,23 +1,61 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useCallback, useMemo, useState } from "react";
 /* eslint-disable react-refresh/only-export-components */
 import { useLocation } from "react-router-dom";
-import * as XLSX from "xlsx";
 import { toast } from "react-hot-toast";
 
 export const ExportContext = createContext();
 
+function resolveUpdater(nextValue, previousValue) {
+  return typeof nextValue === "function" ? nextValue(previousValue) : nextValue;
+}
+
+function arePrimitiveArraysEqual(previousValue = [], nextValue = []) {
+  if (previousValue === nextValue) return true;
+  if (!Array.isArray(previousValue) || !Array.isArray(nextValue)) return false;
+  if (previousValue.length !== nextValue.length) return false;
+
+  return previousValue.every((value, index) => value === nextValue[index]);
+}
+
+function areExportRowsEqual(previousValue = [], nextValue = []) {
+  if (previousValue === nextValue) return true;
+  if (!Array.isArray(previousValue) || !Array.isArray(nextValue)) return false;
+  if (previousValue.length !== nextValue.length) return false;
+
+  return previousValue.every((row, rowIndex) => {
+    const nextRow = nextValue[rowIndex];
+
+    if (row === nextRow) return true;
+    if (
+      !row ||
+      !nextRow ||
+      typeof row !== "object" ||
+      typeof nextRow !== "object"
+    ) {
+      return false;
+    }
+
+    const previousKeys = Object.keys(row);
+    const nextKeys = Object.keys(nextRow);
+
+    if (previousKeys.length !== nextKeys.length) return false;
+
+    return previousKeys.every((key) => row[key] === nextRow[key]);
+  });
+}
+
 export function ExportProvider({ children }) {
-  const [exportData, setExportData] = useState([]);
+  const [exportData, setExportDataState] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [filterValue, setFilterValue] = useState(null);
-  const [availableYears, setAvailableYears] = useState([]);
+  const [availableYears, setAvailableYearsState] = useState([]);
 
   // Shared bookings so Summary can reflect the same data as Dashboard
   const [bookings, setBookings] = useState([]);
 
   // Use current location to include page name in exported filename
   const location = useLocation();
-  const pathToName = (path) => {
+  const pathToName = useCallback((path) => {
     const map = {
       "/dashboard": "Dashboard",
       "/inventory": "Inventory",
@@ -36,9 +74,27 @@ export function ExportProvider({ children }) {
     const parts = path.split("/").filter(Boolean);
     if (parts.length === 0) return "Salon_Report";
     return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("_");
-  };
+  }, []);
 
-  const handleExport = (fileName) => {
+  const setExportData = useCallback((nextValue) => {
+    setExportDataState((previousValue) => {
+      const resolvedValue = resolveUpdater(nextValue, previousValue);
+      return areExportRowsEqual(previousValue, resolvedValue)
+        ? previousValue
+        : resolvedValue;
+    });
+  }, []);
+
+  const setAvailableYears = useCallback((nextValue) => {
+    setAvailableYearsState((previousValue) => {
+      const resolvedValue = resolveUpdater(nextValue, previousValue);
+      return arePrimitiveArraysEqual(previousValue, resolvedValue)
+        ? previousValue
+        : resolvedValue;
+    });
+  }, []);
+
+  const handleExport = useCallback(async (fileName) => {
     // don't allow exports on certain pages
     const disabledPaths = [
       "/booking",
@@ -68,7 +124,7 @@ export function ExportProvider({ children }) {
     }
 
     const outFileName = fileName || generateFileName();
-
+    const exportToastId = toast.loading("Preparing export...");
     let dataToExport = exportData;
 
     console.log("[Export] starting", { exportDataLength: exportData?.length });
@@ -138,15 +194,23 @@ export function ExportProvider({ children }) {
       }
 
       if (!dataToExport || dataToExport.length === 0) {
+        toast.error("No data available to export", { id: exportToastId });
+        return;
+      }
+
+      if (!dataToExport || dataToExport.length === 0) {
         toast.error("❌ No data available to export");
         return;
       }
 
+      const XLSX = await import("xlsx");
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
       XLSX.writeFile(workbook, outFileName);
+
+      toast.dismiss(exportToastId);
 
       toast.success("✅ Exported " + outFileName);
       console.log("[Export] success", {
@@ -155,28 +219,34 @@ export function ExportProvider({ children }) {
       });
     } catch (err) {
       console.error("[Export] failed", err);
+      toast.dismiss(exportToastId);
       toast.error("❌ Export failed: " + (err?.message || err));
     }
-  };
+  }, [exportData, filterType, filterValue, location.pathname, pathToName]);
 
-  return (
-    <ExportContext.Provider
-      value={{
-        exportData,
-        setExportData,
-        filterType,
-        setFilterType,
-        filterValue,
-        setFilterValue,
-        availableYears,
-        setAvailableYears,
-        // shared bookings
-        bookings,
-        setBookings,
-        handleExport,
-      }}
-    >
-      {children}
-    </ExportContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      setExportData,
+      filterType,
+      setFilterType,
+      filterValue,
+      setFilterValue,
+      availableYears,
+      setAvailableYears,
+      bookings,
+      setBookings,
+      handleExport,
+    }),
+    [
+      availableYears,
+      bookings,
+      filterType,
+      filterValue,
+      handleExport,
+      setAvailableYears,
+      setExportData,
+    ],
   );
+
+  return <ExportContext.Provider value={contextValue}>{children}</ExportContext.Provider>;
 }
