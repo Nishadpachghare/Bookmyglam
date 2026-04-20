@@ -8,6 +8,10 @@ const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL ||
   "https://bookmyglam-backend.vercel.app";
 
+const PAYMENT_RETURN_DOMAIN =
+  import.meta.env.VITE_PAYMENT_RETURN_DOMAIN ||
+  window.location.origin;
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -1409,7 +1413,7 @@ function Booking() {
           email: formData.email,
           phone: formData.phone,
         },
-        clientOrigin: window.location.origin,
+        clientOrigin: PAYMENT_RETURN_DOMAIN,
       };
 
       console.log("📤 Sending create-order request:", createOrderPayload);
