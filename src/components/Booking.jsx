@@ -9,8 +9,7 @@ const API_BASE_URL =
   "https://bookmyglam-backend.vercel.app";
 
 const PAYMENT_RETURN_DOMAIN =
-  import.meta.env.VITE_PAYMENT_RETURN_DOMAIN ||
-  window.location.origin;
+  import.meta.env.VITE_PAYMENT_RETURN_DOMAIN || window.location.origin;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -1634,7 +1633,7 @@ function Booking() {
       if (res.data.ok) {
         toast.success(
           formData.mode === "online" && isPaymentVerified
-            ? "Booking saved successfully. Dashboard updated."
+            ? "Booking saved successfully."
             : formData.mode === "online"
               ? "Booking submitted! Admin will verify your payment."
               : "Booking confirmed! Pay at salon 💇",
@@ -1650,7 +1649,7 @@ function Booking() {
         paymentSubmissionRef.current = { orderId: null, inFlight: false };
         const redirectPath =
           formData.mode === "online" && isPaymentVerified
-            ? "/dashboard?from_payment=true"
+            ? `/booking?order_id=${orderId}`
             : "/booking";
         const redirectDelay =
           formData.mode === "online" && isPaymentVerified ? 1200 : 2000;
@@ -1718,7 +1717,7 @@ function Booking() {
     const params = new URLSearchParams(window.location.search);
     const returnedOrderId = params.get("order_id");
 
-    if (!returnedOrderId || formData.mode !== "online") {
+    if (!returnedOrderId) {
       return;
     }
 
