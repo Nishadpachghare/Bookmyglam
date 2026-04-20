@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_BACKEND_URL ||
-  "http://localhost:5000";
+  "https://bookmyglam-backend.vercel.app";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -1301,6 +1301,11 @@ function Booking() {
     // clear previous errors
     setFormErrors({});
 
+    if (!formData.stylist?.trim()) {
+      setFormErrors((prev) => ({ ...prev, stylist: "Stylist is required" }));
+      toast.error("❌ Please select a stylist to proceed");
+      return false;
+    }
     if (!formData.email?.trim()) {
       setFormErrors((prev) => ({ ...prev, email: "Email is required" }));
       toast.error("Enter email");
@@ -2132,18 +2137,31 @@ function Booking() {
 
           {/* STYLIST */}
           {stylists.length > 0 ? (
-            <select
-              name="stylist"
-              onChange={handleChange}
-              className="w-full bg-black border border-zinc-700 p-2 rounded text-white"
-            >
-              <option value="">Any Stylist</option>
-              {stylists.map((st) => (
-                <option key={st._id} value={st._id}>
-                  {st.name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                Select Stylist
+              </label>
+              <select
+                name="stylist"
+                value={formData.stylist}
+                onChange={handleChange}
+                className={`w-full bg-black border p-2 rounded text-white ${
+                  formErrors.stylist ? "border-red-500" : "border-zinc-700"
+                }`}
+              >
+                <option value="">-- Choose a Stylist --</option>
+                {stylists.map((st) => (
+                  <option key={st._id} value={st._id}>
+                    {st.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.stylist && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors.stylist}
+                </p>
+              )}
+            </div>
           ) : (
             <p className="text-zinc-400 text-sm">No stylist available</p>
           )}

@@ -36,7 +36,9 @@ function Earning() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/bookings");
+        const res = await axios.get(
+          "https://bookmyglam-backend.vercel.app/api/bookings",
+        );
         const data = Array.isArray(res.data)
           ? res.data
           : res.data?.bookings || [];

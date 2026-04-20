@@ -13,7 +13,9 @@ function ManageStyle() {
 
   const fetchStylists = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/stylists");
+      const res = await fetch(
+        "https://bookmyglam-backend.vercel.app/api/stylists",
+      );
       if (!res.ok) throw new Error("Stylist fetch failed");
       const body = await res.json();
       let data = body?.data ?? body;
@@ -70,7 +72,7 @@ function ManageStyle() {
   const setInactive = async (id) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/stylists/${id}/inactive`,
+        `https://bookmyglam-backend.vercel.app/api/stylists/${id}/inactive`,
         {
           method: "PUT",
         },

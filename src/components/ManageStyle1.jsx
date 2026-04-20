@@ -126,10 +126,13 @@ function ManageStyle1() {
 
     try {
       setOtpLoading(true);
-      const resp = await axios.post("http://localhost:5000/api/auth/send-otp", {
-        to: email,
-        channel: "email",
-      });
+      const resp = await axios.post(
+        "https://bookmyglam-backend.vercel.app/api/auth/send-otp",
+        {
+          to: email,
+          channel: "email",
+        },
+      );
       if (resp.data?.ok) {
         setOtpCooldown(60);
         toast.success(`OTP sent to ${email}`);
@@ -153,7 +156,7 @@ function ManageStyle1() {
     try {
       setOtpLoading(true);
       const resp = await axios.post(
-        "http://localhost:5000/api/auth/verify-otp",
+        "https://bookmyglam-backend.vercel.app/api/auth/verify-otp",
         {
           to: email,
           code: otpCode.trim(),
@@ -211,11 +214,14 @@ function ManageStyle1() {
         if (value) formDataToSend.append(key, value);
       });
 
-      const response = await fetch("http://localhost:5000/api/stylists", {
-        method: "POST",
-        body: formDataToSend,
-        signal: abortControllerRef.current.signal,
-      });
+      const response = await fetch(
+        "https://bookmyglam-backend.vercel.app/api/stylists",
+        {
+          method: "POST",
+          body: formDataToSend,
+          signal: abortControllerRef.current.signal,
+        },
+      );
 
       let result;
       try {

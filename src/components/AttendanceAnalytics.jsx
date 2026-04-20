@@ -48,7 +48,9 @@ function AttendanceAnalytics() {
     const fetchStylists = async () => {
       try {
         console.log("🔄 Fetching stylists...");
-        const res = await fetch("http://localhost:5000/api/stylists");
+        const res = await fetch(
+          "https://bookmyglam-backend.vercel.app/api/stylists",
+        );
         console.log("📦 Response status:", res.status);
 
         if (!res.ok) {
@@ -149,7 +151,7 @@ function AttendanceAnalytics() {
     try {
       const nowISO = new Date().toISOString();
       const response = await fetch(
-        "http://localhost:5000/api/attendance/mark",
+        "https://bookmyglam-backend.vercel.app/api/attendance/mark",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -188,7 +190,7 @@ function AttendanceAnalytics() {
     try {
       const nowISO = new Date().toISOString();
       const response = await fetch(
-        "http://localhost:5000/api/attendance/mark",
+        "https://bookmyglam-backend.vercel.app/api/attendance/mark",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -227,7 +229,7 @@ function AttendanceAnalytics() {
     try {
       const nowISO = new Date().toISOString();
       const response = await fetch(
-        "http://localhost:5000/api/attendance/mark",
+        "https://bookmyglam-backend.vercel.app/api/attendance/mark",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -260,7 +262,7 @@ function AttendanceAnalytics() {
     try {
       console.log("🔄 Fetching analytics for stylist:", stylistId);
       const res = await fetch(
-        `http://localhost:5000/api/attendance/analytics?stylistId=${stylistId}`,
+        `https://bookmyglam-backend.vercel.app/api/attendance/analytics?stylistId=${stylistId}`,
       );
       console.log("📦 Analytics response status:", res.status);
 
@@ -296,7 +298,7 @@ function AttendanceAnalytics() {
         year,
       );
       const res = await fetch(
-        `http://localhost:5000/api/attendance/monthly?stylistId=${stylistId}&month=${monthNum}&year=${year}`,
+        `https://bookmyglam-backend.vercel.app/api/attendance/monthly?stylistId=${stylistId}&month=${monthNum}&year=${year}`,
       );
       console.log("📦 Monthly data response status:", res.status);
 
@@ -318,7 +320,7 @@ function AttendanceAnalytics() {
     try {
       console.log("🔄 Fetching schedule for stylist:", stylistId);
       const res = await fetch(
-        `http://localhost:5000/api/attendance/schedule?stylistId=${stylistId}`,
+        `https://bookmyglam-backend.vercel.app/api/attendance/schedule?stylistId=${stylistId}`,
       );
       console.log("📦 Schedule response status:", res.status);
 
@@ -342,7 +344,7 @@ function AttendanceAnalytics() {
     try {
       console.log("🔄 Fetching attendance for date:", date);
       const res = await fetch(
-        `http://localhost:5000/api/attendance/by-date?date=${date}`,
+        `https://bookmyglam-backend.vercel.app/api/attendance/by-date?date=${date}`,
       );
       console.log("📦 Daily attendance response status:", res.status);
 
@@ -379,7 +381,7 @@ function AttendanceAnalytics() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/attendance/holiday",
+        "https://bookmyglam-backend.vercel.app/api/attendance/holiday",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

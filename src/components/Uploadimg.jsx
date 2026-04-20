@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE =
+  import.meta.env.VITE_API_URL || "https://bookmyglam-backend.vercel.app";
 
 export default function Uploadimg() {
   const [form, setForm] = useState({

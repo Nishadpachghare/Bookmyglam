@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_BACKEND_URL ||
-  "http://localhost:5000";
+  "https://bookmyglam-backend.vercel.app";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,7 +20,9 @@ function PaymentSuccess() {
   useEffect(() => {
     const handlePaymentSuccess = async () => {
       try {
-        const orderId = new URLSearchParams(window.location.search).get("order_id");
+        const orderId = new URLSearchParams(window.location.search).get(
+          "order_id",
+        );
 
         if (!orderId) {
           console.warn("❌ No order_id found in URL");
@@ -31,8 +33,12 @@ function PaymentSuccess() {
         console.log("✅ Payment Success - Order ID:", orderId);
 
         // Step 1: Retrieve booking data from localStorage
-        const formData = JSON.parse(localStorage.getItem("bookingFormData") || "{}");
-        const selectedServices = JSON.parse(localStorage.getItem("bookingSelectedServices") || "[]");
+        const formData = JSON.parse(
+          localStorage.getItem("bookingFormData") || "{}",
+        );
+        const selectedServices = JSON.parse(
+          localStorage.getItem("bookingSelectedServices") || "[]",
+        );
         const couponCode = localStorage.getItem("bookingCouponCode") || "";
 
         console.log("📦 Retrieved booking data from localStorage:", {
@@ -59,11 +65,11 @@ function PaymentSuccess() {
 
         // Step 3: Create booking with payment verified status
         console.log("📝 Creating booking entry with PAID status...");
-        
+
         const bookingPayload = {
-          selectedServices: selectedServices.map(s => ({
+          selectedServices: selectedServices.map((s) => ({
             ...s,
-            serviceName: s.serviceName || s.service || ""
+            serviceName: s.serviceName || s.service || "",
           })),
           customerName: formData.customerName,
           phone: formData.phone,
@@ -77,25 +83,32 @@ function PaymentSuccess() {
           orderId: orderId,
         };
 
-        console.log("📤 Booking Payload:", JSON.stringify(bookingPayload, null, 2));
+        console.log(
+          "📤 Booking Payload:",
+          JSON.stringify(bookingPayload, null, 2),
+        );
 
         try {
           const bookingResponse = await api.post(
             "/api/bookings",
             bookingPayload,
             {
-              headers: { 
+              headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                Accept: "application/json",
               },
-              timeout: 10000
-            }
+              timeout: 10000,
+            },
           );
 
           console.log("✅ Booking Response Status:", bookingResponse.status);
           console.log("✅ Booking Response Data:", bookingResponse.data);
 
-          if (bookingResponse.data.ok || bookingResponse.status === 201 || bookingResponse.status === 200) {
+          if (
+            bookingResponse.data.ok ||
+            bookingResponse.status === 201 ||
+            bookingResponse.status === 200
+          ) {
             console.log("✅✅ Booking created successfully!");
             toast.success("✅ Booking confirmed! Payment received 🎉");
 
@@ -110,8 +123,8 @@ function PaymentSuccess() {
               "bookingDiscountData",
               "bookingPaymentData",
               "bookingPaymentCompleted",
-              "bookingPaymentInProgress"
-            ].forEach(key => localStorage.removeItem(key));
+              "bookingPaymentInProgress",
+            ].forEach((key) => localStorage.removeItem(key));
 
             // Step 5: Redirect to dashboard with refresh flag
             console.log("🔄 Redirecting to dashboard with refresh...");
@@ -119,7 +132,10 @@ function PaymentSuccess() {
               navigate("/dashboard?from_payment=true");
             }, 1500);
           } else {
-            console.error("❌ Unexpected booking response:", bookingResponse.data);
+            console.error(
+              "❌ Unexpected booking response:",
+              bookingResponse.data,
+            );
             toast.error("Booking response invalid. Please check dashboard.");
             setTimeout(() => navigate("/dashboard?from_payment=true"), 2000);
           }
@@ -131,23 +147,28 @@ function PaymentSuccess() {
             config: {
               url: bookingError.config?.url,
               method: bookingError.config?.method,
-              data: bookingError.config?.data
-            }
+              data: bookingError.config?.data,
+            },
           });
-          
+
           if (bookingError.response?.status === 400) {
-            console.error("❌ Validation Error:", bookingError.response.data?.message);
-            toast.error(bookingError.response.data?.message || "Booking validation failed");
+            console.error(
+              "❌ Validation Error:",
+              bookingError.response.data?.message,
+            );
+            toast.error(
+              bookingError.response.data?.message ||
+                "Booking validation failed",
+            );
           } else if (bookingError.response?.status === 500) {
             console.error("❌ Server Error");
             toast.error("Server error. Please try again later.");
           } else {
             toast.error("Error creating booking. Redirecting...");
           }
-          
+
           setTimeout(() => navigate("/dashboard?from_payment=true"), 3000);
         }
-
       } catch (err) {
         console.error("❌ Unexpected Error in PaymentSuccess:", err);
         toast.error("Unexpected error. Please contact support.");
@@ -163,7 +184,9 @@ function PaymentSuccess() {
       <div className="text-center">
         <h2 className="text-3xl font-semibold mb-4">Payment Successful 🎉</h2>
         <p className="text-gray-400">Creating your booking entry...</p>
-        <p className="text-xs text-gray-500 mt-4">Please wait, this may take a few seconds...</p>
+        <p className="text-xs text-gray-500 mt-4">
+          Please wait, this may take a few seconds...
+        </p>
       </div>
     </div>
   );

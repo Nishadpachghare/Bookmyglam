@@ -12,7 +12,9 @@ function InactiveStylish() {
   // 🔹 Fetch inactive stylists
   const fetchInactiveStylists = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/stylists");
+      const res = await fetch(
+        "https://bookmyglam-backend.vercel.app/api/stylists",
+      );
       if (!res.ok) throw new Error("Failed to fetch stylists");
       const body = await res.json();
       let data = body?.data ?? body;
@@ -34,7 +36,7 @@ function InactiveStylish() {
   const activateStylist = async (id) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/stylists/${id}/active`,
+        `https://bookmyglam-backend.vercel.app/api/stylists/${id}/active`,
         {
           method: "PUT",
         },
@@ -56,9 +58,12 @@ function InactiveStylish() {
     )
       return;
     try {
-      const res = await fetch(`http://localhost:5000/api/stylists/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `https://bookmyglam-backend.vercel.app/api/stylists/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!res.ok) throw new Error();
       toast.success("Stylist deleted permanently!");
       setInactiveStylists((prev) => prev.filter((s) => s._id !== id));

@@ -17,7 +17,9 @@ const Pending = () => {
   const fetchPendingBookings = async () => {
     try {
       setLoading(true);
-      const bookingsRes = await axios.get("http://localhost:5000/api/bookings");
+      const bookingsRes = await axios.get(
+        "https://bookmyglam-backend.vercel.app/api/bookings",
+      );
       const raw = bookingsRes.data;
       const allBookings = Array.isArray(raw)
         ? raw
@@ -141,7 +143,9 @@ const Pending = () => {
 
     try {
       for (const bookingId of selectedRows) {
-        await axios.delete(`http://localhost:5000/api/bookings/${bookingId}`);
+        await axios.delete(
+          `https://bookmyglam-backend.vercel.app/api/bookings/${bookingId}`,
+        );
       }
 
       await fetchPendingBookings();
@@ -173,7 +177,7 @@ const Pending = () => {
         if (booking && booking.originalBooking) {
           const payload = { ...booking.originalBooking, paymentStatus: "Paid" };
           await axios.put(
-            `http://localhost:5000/api/bookings/${bookingId}`,
+            `https://bookmyglam-backend.vercel.app/api/bookings/${bookingId}`,
             payload,
           );
         }

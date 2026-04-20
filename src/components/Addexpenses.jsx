@@ -30,7 +30,9 @@ const AddExpense = () => {
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/expenses");
+        const res = await axios.get(
+          "https://bookmyglam-backend.vercel.app/api/expenses",
+        );
         setExpenses(res.data);
       } catch (error) {
         console.error("Error fetching expenses:", error);
@@ -76,7 +78,7 @@ const AddExpense = () => {
       const fd = new FormData();
       fd.append("file", fileToUpload);
       const res = await axios.post(
-        "http://localhost:5000/api/uploads/media",
+        "https://bookmyglam-backend.vercel.app/api/uploads/media",
         fd,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -134,7 +136,7 @@ const AddExpense = () => {
       if (editingId) {
         // 🔁 UPDATE EXISTING EXPENSE (PUT)
         const res = await axios.put(
-          `http://localhost:5000/api/expenses/${editingId}`,
+          `https://bookmyglam-backend.vercel.app/api/expenses/${editingId}`,
           payload,
         );
 
@@ -148,7 +150,7 @@ const AddExpense = () => {
       } else {
         // ➕ CREATE NEW EXPENSE (POST)
         const res = await axios.post(
-          "http://localhost:5000/api/expenses",
+          "https://bookmyglam-backend.vercel.app/api/expenses",
           payload,
         );
 
@@ -191,7 +193,9 @@ const AddExpense = () => {
 
     try {
       for (const id of selectedExpenses) {
-        await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+        await axios.delete(
+          `https://bookmyglam-backend.vercel.app/api/expenses/${id}`,
+        );
       }
 
       const remaining = expenses.filter(
