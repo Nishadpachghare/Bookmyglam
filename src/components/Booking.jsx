@@ -1626,7 +1626,7 @@ function Booking() {
 
       console.log("Submitting booking:", bookingPayload);
 
-      const res = await api.post("/bookings", bookingPayload);
+      const res = await api.post("/api/bookings", bookingPayload);
 
       console.log("Booking response:", res.data);
 
