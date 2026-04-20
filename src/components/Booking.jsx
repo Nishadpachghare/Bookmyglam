@@ -1393,18 +1393,35 @@ function Booking() {
       return;
     }
 
+    // ✅ VALIDATE AMOUNT
+    if (!payableAmount || payableAmount <= 0) {
+      toast.error("Invalid payment amount. Please check your booking details.");
+      console.error("❌ Invalid payableAmount:", payableAmount);
+      return;
+    }
+
     try {
       // 1. Create order from backend
-      const res = await api.post("/api/payment/create-order", {
+      const createOrderPayload = {
         amount: payableAmount,
         customer: {
           name: formData.customerName,
           email: formData.email,
           phone: formData.phone,
         },
-      });
+      };
+
+      console.log("📤 Sending create-order request:", createOrderPayload);
+
+      const res = await api.post("/api/payment/create-order", createOrderPayload);
 
       const { payment_session_id, order_id } = res.data;
+
+      if (!payment_session_id || !order_id) {
+        toast.error("Invalid payment response from server");
+        console.error("❌ Missing payment_session_id or order_id:", res.data);
+        return;
+      }
 
       // ✅ ENSURE ALL BOOKING DATA IS SAVED TO LOCALSTORAGE (for PaymentSuccess page)
       console.log(
@@ -1478,9 +1495,18 @@ function Booking() {
         },
       });
     } catch (err) {
-      console.error(err);
+      console.error("❌ Payment initialization error:", {
+        message: err.message,
+        status: err?.response?.status,
+        responseData: err?.response?.data,
+        config: {
+          url: err?.config?.url,
+          method: err?.config?.method,
+        },
+      });
       localStorage.removeItem("bookingPaymentInProgress");
-      toast.error("Payment failed to initialize");
+      const errorMsg = err?.response?.data?.error || err.message || "Payment failed to initialize";
+      toast.error(errorMsg);
     }
   };
 
