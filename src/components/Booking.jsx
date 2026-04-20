@@ -1413,7 +1413,10 @@ function Booking() {
 
       console.log("📤 Sending create-order request:", createOrderPayload);
 
-      const res = await api.post("/api/payment/create-order", createOrderPayload);
+      const res = await api.post(
+        "/api/payment/create-order",
+        createOrderPayload,
+      );
 
       const { payment_session_id, order_id } = res.data;
 
@@ -1505,7 +1508,10 @@ function Booking() {
         },
       });
       localStorage.removeItem("bookingPaymentInProgress");
-      const errorMsg = err?.response?.data?.error || err.message || "Payment failed to initialize";
+      const errorMsg =
+        err?.response?.data?.error ||
+        err.message ||
+        "Payment failed to initialize";
       toast.error(errorMsg);
     }
   };
@@ -1616,7 +1622,7 @@ function Booking() {
 
       console.log("Submitting booking:", bookingPayload);
 
-      const res = await api.post("/api/bookings", bookingPayload);
+      const res = await api.post("/bookings", bookingPayload);
 
       console.log("Booking response:", res.data);
 
