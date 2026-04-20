@@ -1409,6 +1409,7 @@ function Booking() {
           email: formData.email,
           phone: formData.phone,
         },
+        clientOrigin: window.location.origin,
       };
 
       console.log("📤 Sending create-order request:", createOrderPayload);
